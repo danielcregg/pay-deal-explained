@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pay Deal Explained: redesign direction (mock-up)</title>
+<style>
+  :root {
+    --ink: #101a33;          /* deep navy: the opening band, nav */
+    --ink-soft: #1c2a4d;
+    --paper: #faf8f3;
+    --card: #ffffff;
+    --text: #1d2433;
+    --muted: #5b6475;
+    --line: #e4e1d8;
+    --teal: #00897b;         /* pay (the site's existing, checked chart colour) */
+    --teal-soft: #d9f2ed;
+    --teal-on-ink: #2ec4a9;
+    --red: #b42318;          /* prices (existing, checked) */
+    --red-soft: #fde4e0;
+    --coral-on-ink: #f08a7e;
+    --gold: #f5b83d;         /* highlight and calls to action */
+    --sky: #2468b8;
+    --sky-soft: #e3eefb;
+    --violet: #5b4bc4;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; font: 1rem/1.55 var(--sans); color: var(--text); background: var(--paper); }
+  h1, h2 { font-family: var(--serif); line-height: 1.12; margin: 0; letter-spacing: -0.01em; }
+  p { margin: 0; }
+  button { font: inherit; }
+  .wrap { max-width: 68rem; margin: 0 auto; padding: 0 1.1rem; }
+
+  .mock-note { background: var(--gold); color: #33270a; font-size: 0.85rem; font-weight: 650; text-align: center; padding: 0.35rem 1rem; }
+
+  /* ---------- header ---------- */
+  .top { background: var(--ink); color: #fff; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255,255,255,.12); }
+  .top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.9rem; padding-top: 0.6rem; padding-bottom: 0.6rem; }
+  .brand { display: flex; flex-direction: column; line-height: 1.2; }
+  .brand b { font-family: var(--serif); font-size: 1.1rem; }
+  .brand span { font-size: 0.75rem; color: #b9c2d6; }
+  .chip { font-size: 0.8rem; font-weight: 650; border-radius: 999px; padding: 0.2rem 0.7rem; background: var(--gold); color: #33270a; white-space: nowrap; }
+  .mine { margin-left: auto; display: none; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #dfe5f2; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 0.25rem 0.3rem 0.25rem 0.8rem; }
+  .mine b { color: #fff; font-variant-numeric: tabular-nums; }
+  .mine button { border: 0; border-radius: 999px; background: #fff; color: var(--ink); font-weight: 650; font-size: 0.8rem; padding: 0.2rem 0.7rem; cursor: pointer; }
+  @media (min-width: 800px) { .mine { display: inline-flex; } }
+
+  /* ---------- opening band ---------- */
+  .hero { position: relative; background: var(--ink); color: #fff; padding: 2.4rem 0 7.5rem; overflow: hidden; }
+  .hero svg.weave { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.5; pointer-events: none; }
+  .hero .wrap { position: relative; }
+  .hero h1 { font-size: clamp(2rem, 1.3rem + 3.2vw, 3.5rem); max-width: 17ch; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero .lede { margin-top: 1rem; max-width: 36rem; font-size: 1.12rem; color: #cfd6e6; }
+  .cta { display: inline-flex; align-items: center; min-height: 2.9rem; margin-top: 1.4rem; padding: 0.5rem 1.25rem; border-radius: 8px; background: var(--gold); color: #2b2108; font-weight: 700; text-decoration: none; }
+  .cta:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 0.6rem 1.8rem; margin: 1.6rem 0 0; padding: 0; list-style: none; color: #cfd6e6; font-size: 0.92rem; }
+  .facts b { display: block; font-size: 1.5rem; color: #fff; font-variant-numeric: tabular-nums; }
+
+  /* ---------- the race card: pay against prices ---------- */
+  .race { position: relative; margin-top: -5.5rem; background: var(--card); border-radius: 16px; box-shadow: 0 18px 40px -18px rgba(16, 26, 51, 0.45), 0 2px 0 rgba(16, 26, 51, 0.06); padding: 1.1rem 1.1rem 1.25rem; }
+  .race h2 { font-size: 1.35rem; }
+  .race .sub { color: var(--muted); font-size: 0.95rem; margin-top: 0.2rem; }
+  .picks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.9rem 0 0.2rem; }
+  .picks button { border: 1.5px solid var(--line); background: #fff; color: var(--text); border-radius: 999px; padding: 0.35rem 0.85rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; min-height: 2.4rem; }
+  .picks button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin: 0.8rem 0 0.4rem; }
+  .tile { border-radius: 12px; padding: 0.6rem 0.75rem; }
+  .tile small { display: block; font-size: 0.78rem; font-weight: 650; }
+  .tile b { display: block; font-size: clamp(1.25rem, 0.9rem + 1.8vw, 1.9rem); line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .tile.pay { background: var(--teal-soft); color: #0b4f47; }
+  .tile.price { background: var(--red-soft); color: #7d1810; }
+  .tile.real { background: var(--ink); color: #fff; }
+  .tile.real b { color: var(--gold); }
+  .when { font-weight: 650; margin-top: 0.5rem; }
+  .chart { display: block; width: 100%; height: auto; margin-top: 0.3rem; touch-action: pan-y; }
+  .chart text { font: 12px var(--sans); fill: var(--muted); font-variant-numeric: tabular-nums; }
+  .chart .lab { font-weight: 700; font-size: 12.5px; }
+  .controls { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.4rem; }
+  .play { flex: none; width: 2.9rem; height: 2.9rem; border-radius: 50%; border: 0; background: var(--ink); color: #fff; font-size: 1rem; cursor: pointer; }
+  .controls input[type="range"] { flex: 1; accent-color: var(--teal); height: 2rem; }
+  .src { color: var(--muted); font-size: 0.82rem; margin-top: 0.6rem; }
+
+  /* ---------- chapters, colour-coded by what they are about ---------- */
+  .chapter { padding: 3.2rem 0 2.6rem; }
+  .chapter .head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.2rem 1rem; align-items: center; }
+  .num { grid-row: span 2; width: 3.4rem; height: 3.4rem; border-radius: 14px; display: grid; place-items: center; font: 700 1.6rem var(--sans); color: #fff; background: var(--c); }
+  .chapter h2 { font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.3rem); }
+  .chapter .lede { color: var(--muted); max-width: 40rem; }
+  .chapter.c-teal { --c: var(--teal); --tint: var(--teal-soft); }
+  .chapter.c-sky { --c: var(--sky); --tint: var(--sky-soft); background: #fff; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .body { margin-top: 1.4rem; display: grid; gap: 1rem; }
+  @media (min-width: 820px) { .body.two { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); } }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 1.1rem 1.2rem; }
+  .panel label { display: block; font-weight: 650; font-size: 0.92rem; margin: 0.7rem 0 0.25rem; }
+  .panel select { width: 100%; min-height: 2.8rem; border-radius: 8px; border: 1.5px solid #8a93a3; padding: 0 0.7rem; font: inherit; background: #fff; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.3rem; background: #eef0f4; border-radius: 10px; padding: 0.25rem; }
+  .seg span { text-align: center; padding: 0.5rem 0.2rem; border-radius: 8px; font-size: 0.9rem; font-weight: 650; }
+  .seg span.on { background: var(--ink); color: #fff; }
+  .result { background: var(--teal); color: #fff; border-radius: 14px; padding: 1.2rem 1.3rem; position: relative; overflow: hidden; }
+  .result small { color: #c9efe8; font-weight: 600; }
+  .result .big { font: 800 clamp(1.9rem, 1.2rem + 3.2vw, 3rem) var(--sans); letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; margin: 0.2rem 0; }
+  .result .big s { text-decoration: none; opacity: 0.75; font-weight: 600; font-size: 0.6em; }
+  .result .gain { font-size: 1.05rem; }
+  .real-chip { display: inline-block; margin-top: 0.8rem; background: var(--ink); color: #fff; border-radius: 999px; padding: 0.3rem 0.85rem; font-size: 0.9rem; font-weight: 650; }
+  .real-chip b { color: var(--gold); }
+  .ways { margin: 1rem 0 0; display: grid; gap: 0.25rem; }
+  .ways div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.75rem; padding: 0.4rem 0.6rem; border-radius: 8px; font-size: 0.95rem; }
+  .ways div.on { background: var(--teal-soft); color: #0b4f47; font-weight: 650; }
+  .ways dt, .ways dd { margin: 0; }
+  .ways dd { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .stairs { display: flex; align-items: flex-end; gap: 6px; height: 150px; margin-top: 0.8rem; }
+  .stairs i { flex: 1; border-radius: 5px 5px 0 0; background: var(--sky); transform-origin: bottom; animation: rise 0.7s cubic-bezier(.2,.8,.2,1) both; }
+  .stairs i.flat { background: #b45309; }
+  @keyframes rise { from { transform: scaleY(0); } }
+
+  /* ---------- the chapter rail ---------- */
+  .rail { position: fixed; right: 0.9rem; top: 50%; transform: translateY(-50%); display: none; flex-direction: column; gap: 9px; z-index: 5; }
+  .rail i { width: 11px; height: 11px; border-radius: 50%; background: var(--d); opacity: 0.4; }
+  .rail i.on { opacity: 1; transform: scale(1.5); box-shadow: 0 0 0 3px #fff; }
+  @media (min-width: 1160px) { .rail { display: flex; } }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="mock-note">Mock-up of a proposed new look. Not the live site. The numbers are real.</div>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><b>Pay Deal Explained</b><span>Updated 11 Nov 2026</span></div>
+    <span class="chip">Draft · ballot results due w/c 7 Dec</span>
+    <span class="mine">Your pay: Lecturer, point 11 <b>€118,684</b> by 2029 <button type="button">Change</button></span>
+  </div>
+</header>
+
+<section class="hero">
+  <svg class="weave" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1200 600">
+    <g fill="none" stroke="#2a3a66" stroke-width="1" id="weave"></g>
+  </svg>
+  <div class="wrap">
+    <h1><em>10.75%</em> over 33 months: what the draft deal means for TU lecturers</h1>
+    <p class="lede">An independent, plain-English guide, worked out on your own grade and point. Nothing you enter is sent anywhere.</p>
+    <a class="cta" href="#your-pay">Work out your own pay</a>
+    <ul class="facts">
+      <li><b>9</b> separate pay rises</li>
+      <li><b>€60k</b> lower-pay threshold</li>
+      <li><b>Sept 2026</b> first rise, backdated</li>
+    </ul>
+  </div>
+</section>
+
+<div class="wrap">
+  <section class="race" aria-labelledby="race-h">
+    <h2 id="race-h">Your pay against prices, month by month</h2>
+    <p class="sub">Press play, or drag along the chart. Pay rises in steps; prices creep up every month.</p>
+    <div class="picks" role="group" aria-label="Whose pay">
+      <button type="button" aria-pressed="true" data-salary="89894">A salary of €60,000 or more</button>
+      <button type="button" aria-pressed="false" data-salary="47572">Assistant Lecturer, point 1 (€47,572)</button>
+    </div>
+    <p class="when" id="when" aria-live="polite"></p>
+    <div class="tiles">
+      <div class="tile pay"><small>Pay is up</small><b id="t-pay">+0.0%</b></div>
+      <div class="tile price"><small>Prices are up</small><b id="t-price">+0.0%</b></div>
+      <div class="tile real"><small id="t-real-label">Pay buys</small><b id="t-real">0.0%</b></div>
+    </div>
+    <svg class="chart" id="chart" viewBox="0 0 640 300" role="img" aria-label="Pay and price indices from July 2026 to March 2029"></svg>
+    <div class="controls">
+      <button class="play" type="button" id="play" aria-label="Play">▶</button>
+      <input type="range" id="scrub" min="0" max="33" step="0.25" value="0" aria-label="Month, from July 2026 to March 2029">
+    </div>
+    <p class="src">Prices follow the Central Bank’s forecasts as reported by RTÉ (3.4% in 2026, 3.1% in 2027, 2% in 2028; 2029 assumed at 2%). Gross pay, general rises only. A projection, not a promise.</p>
+  </section>
+</div>
+
+<section class="chapter c-teal" id="your-pay">
+  <div class="wrap">
+    <div class="head"><span class="num">1</span><h2>Your pay</h2><p class="lede">Pick your grade and scale point. The rest of the page then uses your numbers.</p></div>
+    <div class="body two">
+      <div class="panel">
+        <div class="seg" aria-hidden="true"><span class="on">Full-time</span><span>Part-time</span><span>Hourly-paid</span></div>
+        <label for="g">Grade</label><select id="g"><option>Lecturer</option></select>
+        <label for="p">Scale point</label><select id="p"><option>Point 11 (€107,727)</option></select>
+      </div>
+      <div>
+        <div class="result">
+          <small>Lecturer, point 11 · by March 2029</small>
+          <p class="big"><s>€107,727 →</s> <span id="count">€107,727</span></p>
+          <p class="gain">+€10,957 a year (+10.2%), from the general rises.</p>
+          <span class="real-chip">After forecast inflation: about <b>+2.5%</b> in real terms</span>
+        </div>
+        <dl class="ways">
+          <div class="on"><dt>The general rises only</dt><dd>€118,684</dd></div>
+          <div><dt>Plus the 1% local bargaining due on 1 March 2029</dt><dd>€119,871</dd></div>
+          <div><dt>Plus the 1% owed since 1 September 2025, if it is paid too</dt><dd>€121,070</dd></div>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter c-sky">
+  <div class="wrap">
+    <div class="head"><span class="num">3</span><h2>The nine pay rises</h2><p class="lede">Each chapter gets its own colour, so you always know where you are. Charts keep their fixed meanings: teal for percentages, amber for flat minimums, red for prices.</p></div>
+    <div class="stairs" aria-hidden="true" id="stairs"></div>
+  </div>
+</section>
+
+<nav class="rail" aria-hidden="true">
+  <i style="--d:#00897b" class="on"></i><i style="--d:#b42318"></i><i style="--d:#2468b8"></i><i style="--d:#b45309"></i><i style="--d:#5b4bc4"></i><i style="--d:#00897b"></i><i style="--d:#5b4bc4"></i><i style="--d:#2468b8"></i><i style="--d:#475069"></i><i style="--d:#475069"></i><i style="--d:#475069"></i>
+</nav>
+
+<script>
+(function () {
+  // ----- the deal and the forecasts (the same figures the live site uses) -----
+  var STEPS = [ // [months after 1 July 2026, percent, minimum]
+    [2, 2, 1200], [9, 1, 0], [13, 1, 600], [16, 1.5, 900], [20, 1, 0], [23, 1, 600], [27, 1, 0], [32, 1.25, 750]
+  ];
+  var RATES = { 2026: 3.4, 2027: 3.1, 2028: 2, 2029: 2 };
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var N = 33;
+
+  var price = [100];
+  for (var k = 1; k <= N; k++) {
+    var year = 2026 + Math.floor((6 + k - 1) / 12);
+    price.push(price[k - 1] * Math.pow(1 + RATES[year] / 100, 1 / 12));
+  }
+  function payPath(salary) { // [[month, index], …] with a point before and after each step
+    var s = salary, pts = [[0, 100]];
+    STEPS.forEach(function (st) {
+      pts.push([st[0], (s / salary) * 100]);
+      s += Math.max((s * st[1]) / 100, st[2]);
+      pts.push([st[0], (s / salary) * 100]);
+    });
+    pts.push([N, (s / salary) * 100]);
+    return pts;
+  }
+  function payAt(pts, t) { var v = 100; for (var i = 0; i < pts.length; i++) if (pts[i][0] <= t) v = pts[i][1]; return v; }
+  function priceAt(t) { var a = Math.floor(t), b = Math.min(N, a + 1); return price[a] + (price[b] - price[a]) * (t - a); }
+
+  // ----- chart -----
+  var svg = document.getElementById('chart');
+  var NS = 'http://www.w3.org/2000/svg';
+  var W = 640, H = 300, M = { t: 14, r: 62, b: 30, l: 36 }, LO = 99, HI = 113;
+  function X(m) { return M.l + (m / N) * (W - M.l - M.r); }
+  function Y(v) { return H - M.b - ((v - LO) / (HI - LO)) * (H - M.t - M.b); }
+  function el(tag, attrs, text) {
+    var e = document.createElementNS(NS, tag);
+    for (var a in attrs) e.setAttribute(a, attrs[a]);
+    if (text) e.textContent = text;
+    return e;
+  }
+  var salary = 89894, pts = payPath(salary), t = 0, timer = null;
+
+  function draw() {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var payLine = 'M' + pts.map(function (p) { return X(p[0]) + ',' + Y(p[1]); }).join('L');
+    var priceLine = 'M' + price.map(function (v, i) { return X(i) + ',' + Y(v); }).join('L');
+    var floor = 'V' + (H - M.b) + 'H' + X(0) + 'Z', roof = 'V' + M.t + 'H' + X(0) + 'Z';
+    var defs = el('defs', {});
+    var c1 = el('clipPath', { id: 'above-price' }); c1.appendChild(el('path', { d: priceLine + roof }));
+    var c2 = el('clipPath', { id: 'above-pay' }); c2.appendChild(el('path', { d: payLine + roof }));
+    var c3 = el('clipPath', { id: 'seen' }); c3.appendChild(el('rect', { id: 'seen-rect', x: 0, y: 0, width: X(t), height: H }));
+    defs.appendChild(c1); defs.appendChild(c2); defs.appendChild(c3); svg.appendChild(defs);
+    for (var v = 100; v <= 112; v += 4) {
+      svg.appendChild(el('line', { x1: M.l, x2: W - M.r, y1: Y(v), y2: Y(v), stroke: '#e7e4dc' }));
+      svg.appendChild(el('text', { x: M.l - 6, y: Y(v) + 4, 'text-anchor': 'end' }, String(v)));
+    }
+    [[0, 'Jul 2026'], [6, '2027'], [18, '2028'], [30, '2029']].forEach(function (a) {
+      svg.appendChild(el('text', { x: X(a[0]), y: H - 8, 'text-anchor': a[0] ? 'middle' : 'start' }, a[1]));
+    });
+    var g = el('g', { 'clip-path': 'url(#seen)' });
+    g.appendChild(el('path', { d: payLine + floor, fill: '#d9f2ed', 'clip-path': 'url(#above-price)' }));
+    g.appendChild(el('path', { d: priceLine + floor, fill: '#fde4e0', 'clip-path': 'url(#above-pay)' }));
+    g.appendChild(el('path', { d: priceLine, fill: 'none', stroke: '#b42318', 'stroke-width': 2.5, 'stroke-linejoin': 'round' }));
+    g.appendChild(el('path', { d: payLine, fill: 'none', stroke: '#00897b', 'stroke-width': 3, 'stroke-linejoin': 'round' }));
+    svg.appendChild(g);
+    svg.appendChild(el('line', { id: 'head', y1: M.t, y2: H - M.b, stroke: '#101a33', 'stroke-width': 1.5 }));
+    svg.appendChild(el('circle', { id: 'dot-price', r: 5.5, fill: '#b42318', stroke: '#fff', 'stroke-width': 2 }));
+    svg.appendChild(el('circle', { id: 'dot-pay', r: 5.5, fill: '#00897b', stroke: '#fff', 'stroke-width': 2 }));
+    svg.appendChild(el('text', { id: 'lab-pay', class: 'lab', fill: '#0b4f47' }, 'Pay'));
+    svg.appendChild(el('text', { id: 'lab-price', class: 'lab', fill: '#7d1810' }, 'Prices'));
+    place();
+  }
+
+  function signed(n) { return (n < 0 ? '−' : '+') + Math.abs(n).toFixed(1) + '%'; }
+  function place() {
+    var p = payAt(pts, t), q = priceAt(t), x = X(t);
+    document.getElementById('seen-rect').setAttribute('width', x);
+    var head = document.getElementById('head'); head.setAttribute('x1', x); head.setAttribute('x2', x);
+    var dp = document.getElementById('dot-pay'); dp.setAttribute('cx', x); dp.setAttribute('cy', Y(p));
+    var dq = document.getElementById('dot-price'); dq.setAttribute('cx', x); dq.setAttribute('cy', Y(q));
+    var lp = document.getElementById('lab-pay'), lq = document.getElementById('lab-price');
+    var payAbove = p >= q;
+    lp.setAttribute('x', x + 9); lp.setAttribute('y', Y(p) + (payAbove ? -6 : 14));
+    lq.setAttribute('x', x + 9); lq.setAttribute('y', Y(q) + (payAbove ? 14 : -6));
+    var real = (p / q - 1) * 100;
+    document.getElementById('t-pay').textContent = signed(p - 100);
+    document.getElementById('t-price').textContent = signed(q - 100);
+    document.getElementById('t-real').textContent = Math.abs(real).toFixed(1) + '%';
+    document.getElementById('t-real-label').textContent = real >= 0 ? 'So pay buys this much more' : 'So pay buys this much less';
+    var month = 6 + Math.min(N - 1, Math.floor(t));
+    document.getElementById('when').textContent = t <= 0 ? 'Starting line: 1 July 2026'
+      : (t >= N ? 'By the end of March 2029' : 'By ' + MONTHS[month % 12] + ' ' + (2026 + Math.floor(month / 12)));
+    document.getElementById('scrub').value = t;
+  }
+
+  var playBtn = document.getElementById('play');
+  function stop() { clearInterval(timer); timer = null; playBtn.textContent = '▶'; playBtn.setAttribute('aria-label', 'Play'); }
+  function play() {
+    if (t >= N) t = 0;
+    playBtn.textContent = '❚❚'; playBtn.setAttribute('aria-label', 'Pause');
+    timer = setInterval(function () { t = Math.min(N, t + 0.25); place(); if (t >= N) stop(); }, 45);
+  }
+  playBtn.addEventListener('click', function () { if (timer) stop(); else play(); });
+  document.getElementById('scrub').addEventListener('input', function (e) { stop(); t = Number(e.target.value); place(); });
+  function fromPointer(e) {
+    var box = svg.getBoundingClientRect();
+    var m = (((e.clientX - box.left) / box.width) * W - M.l) / (W - M.l - M.r) * N;
+    stop(); t = Math.max(0, Math.min(N, Math.round(m * 4) / 4)); place();
+  }
+  svg.addEventListener('pointerdown', function (e) { svg.setPointerCapture(e.pointerId); fromPointer(e); });
+  svg.addEventListener('pointermove', function (e) { if (e.buttons) fromPointer(e); });
+  document.querySelectorAll('.picks button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.picks button').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+      salary = Number(b.dataset.salary); pts = payPath(salary); draw();
+    });
+  });
+
+  // ----- small touches -----
+  var weave = document.getElementById('weave');
+  for (var i = 0; i < 16; i++) {
+    var d = 'M-20 ' + (40 + i * 38);
+    for (var x = 0; x <= 1240; x += 155) d += ' q 38.75 ' + (i % 2 ? -26 : 26) + ' 77.5 0 t 77.5 0';
+    weave.appendChild(el('path', { d: d }));
+  }
+  var stairs = document.getElementById('stairs');
+  [18, 27, 36, 50, 59, 68, 77, 77, 91].forEach(function (h, i) {
+    var bar = document.createElement('i');
+    bar.style.height = h + '%'; bar.style.animationDelay = (i * 0.09) + 's';
+    stairs.appendChild(bar);
+  });
+  var count = document.getElementById('count'), from = 107727, to = 118684, n = 0;
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fmt(v) { return '€' + Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  if (still) { count.textContent = fmt(to); t = N; draw(); }
+  else {
+    var ticker = setInterval(function () { n += 1; count.textContent = fmt(from + (to - from) * (1 - Math.pow(1 - n / 40, 3))); if (n >= 40) clearInterval(ticker); }, 30);
+    draw(); play();
+  }
+})();
+</script>
+</body>
+</html>
