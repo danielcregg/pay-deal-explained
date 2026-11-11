@@ -6,7 +6,8 @@ import { createStore } from './state.js';
 import { longDate, shortDate } from './format.js';
 import { restoreSelection, loadSaved, saveSelection } from './selection.js';
 import { initPresent } from './present.js';
-import { trackHeaderHeight } from './header.js';
+import { trackHeaderHeight, mountMine } from './header.js';
+import { mountRail } from './rail.js';
 import * as hero from './sections/hero.js';
 import * as yourPay from './sections/your-pay.js';
 import * as staircase from './sections/staircase.js';
@@ -63,4 +64,6 @@ for (const [id, mod] of SECTIONS) {
     console.error(`Section "${id}" failed to render`, err);
   }
 }
+mountMine(document.querySelector('[data-mount="mine"]'), store, data);
+mountRail();
 initPresent();

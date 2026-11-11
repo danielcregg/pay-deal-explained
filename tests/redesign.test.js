@@ -3,6 +3,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { readCss, themes, contrast } from './helpers/css.js';
+import * as data from '../site/js/data.js';
+import { DEFAULT_SELECTION as D0 } from '../site/js/selection.js';
+import { mineText } from '../site/js/header.js';
+import { currentChapter } from '../site/js/rail.js';
 
 const html = readFileSync(new URL('../site/index.html', import.meta.url), 'utf8');
 const FAMILIES = ['teal', 'coral', 'sky', 'amber', 'violet', 'slate'];
@@ -38,4 +42,19 @@ test('chapters: pay against prices moves up to second, and every chapter has a c
     assert.equal(s.shown, i + 1, `${s.id} visible number`);
     assert.ok(FAMILIES.includes(s.family), `${s.id} family ${s.family}`);
   });
+});
+
+test('header: the chip carries the chosen pay, or invites a choice', () => {
+  assert.deepEqual(mineText(D0, data), { label: 'Example: Lecturer, point 5', figure: '€99,037', tail: 'by 2029', go: 'Choose yours' });
+  assert.deepEqual(mineText({ ...D0, touched: true, gradeId: 'lect', pointIndex: 10, includeLB: true }, data),
+    { label: 'Your pay: Lecturer, point 11', figure: '€119,871', tail: 'by 2029', go: 'Change' });
+  const hourly = mineText({ ...D0, touched: true, contract: 'hourly' }, data);
+  assert.deepEqual([hourly.figure, hourly.tail], ['€84.34', 'an hour by 2029']);
+});
+
+test('rail: the current chapter is the last one whose top has passed the reading line', () => {
+  assert.equal(currentChapter([-900, -200, 300, 900], 250), 1);
+  assert.equal(currentChapter([120, 800, 1500], 250), 0);
+  assert.equal(currentChapter([400, 900], 250), -1); // still above the first chapter
+  assert.equal(currentChapter([-3000, -2000, -900], 250), 2);
 });
