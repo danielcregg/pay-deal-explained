@@ -52,7 +52,8 @@ function enhanceTerms(doc, glossary) {
 
   doc.addEventListener('click', (e) => { if (openFor && !pop.contains(e.target)) close(); });
   doc.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && openFor) { const btn = openFor; close(); btn.focus(); }
+    // Marked as handled, so the same Esc does not also leave Present mode.
+    if (e.key === 'Escape' && openFor) { e.preventDefault(); const btn = openFor; close(); btn.focus(); }
   });
   window.addEventListener('resize', close);
 }

@@ -15,6 +15,18 @@ export function nextChapter(current, key, count, inFormControl) {
   }
 }
 
+/**
+ * What a key press does in Present mode: `{ exit: true }`, `{ to: chapter }` or null.
+ * A key something else already handled (Esc closing a glossary pop-up) does nothing here.
+ */
+export function presentKeyAction(e, current, count, owned) {
+  if (e.defaultPrevented) return null;
+  if (e.key === 'Escape') return { exit: true };
+  if (e.altKey || e.ctrlKey || e.metaKey) return null;
+  const to = nextChapter(current, e.key, count, owned);
+  return to === current ? null : { to };
+}
+
 /** Does the focused element own this key? Inputs and interactive charts own the arrows; buttons own Space. */
 function ownsKey(el, key) {
   if (!el || el === document.body) return false;
@@ -71,10 +83,10 @@ export function enterPresent(start = 0) {
   const nav = h('nav', { class: 'present-nav', 'aria-label': 'Presentation' },
     back, label, h('span', { class: 'present-dots', 'aria-hidden': 'true' }, dots), next, exit);
   const onKey = (e) => {
-    if (e.key === 'Escape') { exitPresent(); return; }
-    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
-    const target = nextChapter(state.index, e.key, all.length - 1, ownsKey(document.activeElement, e.key));
-    if (target !== state.index) { e.preventDefault(); goTo(target); }
+    const action = presentKeyAction(e, state.index, all.length - 1, ownsKey(document.activeElement, e.key));
+    if (!action) return;
+    e.preventDefault();
+    if (action.exit) exitPresent(); else goTo(action.to);
   };
   state = { sections: all, index: 0, nav, label, dots, back, next, onKey };
   back.addEventListener('click', () => goTo(state.index - 1));

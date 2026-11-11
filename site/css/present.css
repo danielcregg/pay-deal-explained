@@ -1,5 +1,37 @@
 /* Present mode: one chapter per screen, larger type, a fixed nav bar. */
 
+/* High contrast for projectors, which wash out pale greys: muted text at 7:1 or more,
+   darker rules and grid, and the "rises so far" grey well above 3:1. */
+body.present {
+  --muted: #3d4555;
+  --line: #c9c4b8;
+  --grid: #d6d1c5;
+  --field-border: #5f6878;
+  --mark-earlier: #7d8696;
+}
+
+@media (prefers-color-scheme: dark) {
+  body.present {
+    --muted: #c9ced8;
+    --line: #3d465a;
+    --grid: #343d50;
+    --field-border: #8d96aa;
+    --mark-earlier: #6e7890;
+  }
+}
+
+/* Chart text sized for the back of a room. */
+body.present .chart-svg .axis-label,
+body.present .ruler-year { font-size: 16px; }
+body.present .chart-svg .value-label,
+body.present .chart-svg .end-label,
+body.present .ruler-pct { font-size: 17px; }
+body.present .line-pay,
+body.present .line-price,
+body.present .line-prev { stroke-width: 3; }
+body.present .legend,
+body.present .tip { font-size: 1rem; }
+
 body.present .site-header,
 body.present .site-footer,
 body.present .skip-link { display: none; }

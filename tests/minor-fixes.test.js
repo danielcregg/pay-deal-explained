@@ -6,6 +6,8 @@ import { SCALES, SITE } from '../site/js/data.js';
 import { DEFAULT_SELECTION, parseSalary, clampHours, restoreSelection } from '../site/js/selection.js';
 import { createStore } from '../site/js/state.js';
 import { longDate, shortDate } from '../site/js/format.js';
+import { presentKeyAction } from '../site/js/present.js';
+import { readCss, ruleBody, tokens, themes, contrast } from './helpers/css.js';
 
 const read = (p) => readFileSync(new URL(`../site/${p}`, import.meta.url), 'utf8');
 const html = read('index.html');
@@ -63,4 +65,29 @@ test('M11: one failing subscriber does not stop the others', () => {
   s.subscribe((st) => seen.push(st.a));
   s.set({ a: 2 });
   assert.deepEqual([seen, errors], [[2], ['boom']]);
+});
+
+test('M2: Present mode is high contrast, with chart text big enough for a projector', () => {
+  const base = themes(readCss('base.css'));
+  const present = readCss('present.css');
+  const own = tokens(ruleBody(present, 'body.present'));
+  const ownDark = tokens(ruleBody(ruleBody(present, '@media (prefers-color-scheme: dark)') ?? '', 'body.present'));
+  for (const [mode, t] of [['light', { ...base.light, ...own }], ['dark', { ...base.dark, ...own, ...ownDark }]]) {
+    for (const bg of ['--paper', '--card']) {
+      assert.ok(contrast(t['--muted'], t[bg]) >= 7, `${mode}: --muted on ${bg} is ${contrast(t['--muted'], t[bg]).toFixed(2)}:1, want 7:1`);
+    }
+    assert.ok(contrast(t['--mark-earlier'], t['--card']) >= 3, `${mode}: --mark-earlier on --card`);
+  }
+  const px = (cls) => Math.max(0, ...[...present.matchAll(new RegExp(`body\\.present[^{}]*\\.${cls}\\b[^{}]*\\{[^}]*font-size:\\s*(\\d+)px`, 'g'))].map((m) => Number(m[1])));
+  for (const cls of ['axis-label', 'value-label', 'end-label', 'ruler-year', 'ruler-pct']) assert.ok(px(cls) >= 16, `${cls}: ${px(cls)}px in Present mode`);
+});
+
+test('M3: Esc that closed a glossary pop-up does not also exit Present mode', () => {
+  const key = (k, extra = {}) => ({ key: k, defaultPrevented: false, altKey: false, ctrlKey: false, metaKey: false, ...extra });
+  assert.equal(presentKeyAction(key('Escape', { defaultPrevented: true }), 3, 11, false), null);
+  assert.deepEqual(presentKeyAction(key('Escape'), 3, 11, false), { exit: true });
+  assert.deepEqual(presentKeyAction(key('ArrowRight'), 3, 11, false), { to: 4 });
+  assert.equal(presentKeyAction(key('ArrowRight', { ctrlKey: true }), 3, 11, false), null);
+  assert.equal(presentKeyAction(key('ArrowRight'), 3, 11, true), null);
+  assert.equal(presentKeyAction(key('ArrowRight'), 11, 11, false), null);
 });
