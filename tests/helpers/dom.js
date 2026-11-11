@@ -183,6 +183,11 @@ export class Document extends Element {
   getElementById(id) { return this.querySelector(`#${id}`); }
 }
 
+let reducedMotion = true;
+
+/** Tests run with reduced motion unless they switch it off to exercise the timed animations. */
+export function setReducedMotion(flag) { reducedMotion = flag; }
+
 /** Make `document`, `window` and `Node` available to the site's modules. Returns the document. */
 export function installDom() {
   const document = new Document();
@@ -190,7 +195,7 @@ export function installDom() {
     document,
     innerHeight: 768,
     addEventListener() {},
-    matchMedia: () => ({ matches: true }), // reduced motion: charts draw in their final state
+    matchMedia: () => ({ matches: reducedMotion }), // reduced motion: charts draw in their final state
   };
   Object.assign(globalThis, { document, window, Node });
   return document;

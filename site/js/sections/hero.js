@@ -233,6 +233,7 @@ export function render(root, { store, data }) {
     stop();
     if (t >= N) t = 0;
     const t0 = Date.now() - (t / N) * DURATION;
+    place(); // show the starting position at once, not on the first tick
     playBtn.textContent = '❚❚';
     playBtn.setAttribute('aria-label', 'Pause');
     // Timed, not frame-based: the chart finishes even where no frames are drawn.
@@ -275,9 +276,27 @@ export function render(root, { store, data }) {
 
     for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();
     wrap.prepend(chart.svg);
+    // A mouse scrubs at once. A finger scrubs on a sideways drag or a tap, so that
+    // swiping up or down past the chart scrolls the page and leaves it alone.
     const scrubTo = (e) => { stop(); t = chart.timeAt(e.clientX); place(); };
-    chart.svg.addEventListener('pointerdown', (e) => { chart.svg.setPointerCapture?.(e.pointerId); scrubTo(e); });
-    chart.svg.addEventListener('pointermove', (e) => { if (e.buttons) scrubTo(e); });
+    let touch = null;
+    chart.svg.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch') { touch = { x: e.clientX, y: e.clientY, dragging: false }; return; }
+      chart.svg.setPointerCapture?.(e.pointerId);
+      scrubTo(e);
+    });
+    chart.svg.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'touch') { if (e.buttons) scrubTo(e); return; }
+      if (!touch) return;
+      const dx = Math.abs(e.clientX - touch.x);
+      if (!touch.dragging && dx > 8 && dx > Math.abs(e.clientY - touch.y)) touch.dragging = true;
+      if (touch.dragging) scrubTo(e);
+    });
+    chart.svg.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'touch' && touch && !touch.dragging && Math.abs(e.clientY - touch.y) < 8) scrubTo(e);
+      touch = null;
+    });
+    chart.svg.addEventListener('pointercancel', () => { touch = null; });
     place();
   };
 

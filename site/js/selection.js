@@ -21,7 +21,7 @@ export const DEFAULT_SELECTION = Object.freeze({
   alScale: 'al-ne',
   hoursPerYear: 0,
   includeLB: SITE.includeLBDefault,
-  includeOwed: SITE.includeOwedDefault, // count the 1% owed since September 2025 (SCALES.owed)
+  includeOwed: SITE.includeOwedDefault, // count the 1% from September 2025 (the sector's `owed` entry)
   payMonth: '2027-01',
 });
 
@@ -123,7 +123,7 @@ export const lowestScalePoint = (scales, sectorId = scales.sectors[0].id) => Mat
 export function figuresFor(sel, scales) {
   const pay = resolvePay(sel, scales);
   const owedDef = owedFor(sel, scales);
-  const owed = sel.includeOwed && owedDef ? `, with the ${owedDef.pct}% owed since ${longDate(owedDef.since.slice(0, 7))}` : '';
+  const owed = sel.includeOwed && owedDef ? `, with the ${owedDef.pct}% from ${longDate(owedDef.since.slice(0, 7))}` : '';
   if (pay.isExample) return `Example: ${pay.label}${owed}. Pick your own grade and point in section 1.`;
   const part = sel.contract === 'part' ? `, ${Math.round(sel.fte * 1000) / 10}% of full-time` : '';
   return `Showing: ${pay.label}${part}${owed}.`;

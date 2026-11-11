@@ -12,7 +12,7 @@ export function model(sel, data) {
   const pay = resolvePay(sel, data.SCALES);
   const due = backPay(pay.base, data.DEAL.steps, { payMonth: sel.payMonth, includeLB: sel.includeLB });
   const f = pay.annualFactor;
-  // The 1% owed since September 2025, when the reader counts it, brings back pay of its own.
+  // The 1% from September 2025, when the reader counts it, brings back pay of its own.
   const owedDef = sel.includeOwed ? owedFor(sel, data.SCALES) : null;
   const earlier = owedDef ? owedBackPay(pay.published, owedDef, data.PREVIOUS_DEAL.steps, { payMonth: sel.payMonth }) : null;
   const owed = earlier && {
@@ -73,14 +73,14 @@ export function render(root, { store, data }) {
     context.textContent = figuresFor(sel, data.SCALES);
     const owedDef = owedFor(sel, data.SCALES); // only some occupations have one
     owedSwitch.hidden = !owedDef;
-    owedText.textContent = owedDef ? `Count the ${owedDef.pct}% owed since ${longDate(owedDef.since)} and its back pay. It is not confirmed yet` : '';
+    owedText.textContent = owedDef ? `Count the ${owedDef.pct}% local bargaining from ${longDate(owedDef.since)} and its back pay. ${owedDef.status}` : '';
     owedBox.checked = sel.includeOwed;
     owedOut.hidden = !m.owed || m.needsHours;
     if (m.owed && !m.needsHours) {
       const first = m.owed.items[0].month;
       const last = m.owed.items[m.owed.items.length - 1].month;
       owedOut.replaceChildren(
-        h('strong', {}, `Back pay for the ${m.owed.pct}% owed since ${longDate(m.owed.since)}: about ${eur(m.owed.total)}. `),
+        h('strong', {}, `Back pay for the ${m.owed.pct}% from ${longDate(m.owed.since)}: about ${eur(m.owed.total)}. `),
         `That is ${m.owed.pct}% of the pay scale in force in each of the ${m.owed.items.length} months from ${longDate(first)} to ${longDate(last)}, if it is paid and backdated in full. `
         + `With the ${eur(m.total)} above, the lump sum would be about ${eur(m.grandTotal)} before tax.`);
     }

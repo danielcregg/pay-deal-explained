@@ -36,21 +36,26 @@ export function model(sel, data) {
     scenarios.push(scenario('owed', lifted, false), scenario('both', lifted, true));
   }
   const owedCounted = Boolean(owed && sel.includeOwed);
+  const active = owedCounted ? (sel.includeLB ? 'both' : 'owed') : (sel.includeLB ? 'lb' : 'general');
+  const counted = scenarios.find((s) => s.id === active);
   const notes = pay.unit === 'hour'
     ? [`Based on how hourly rates were set in the 2026 pay circulars (point 1 of the annual scale, ${eur(today)}, divided by ${data.SCALES.hourlyDivisor} hours), your hourly rate would follow point 1 and get the flat minimums too.`]
     : sel.contract === 'part'
       ? ['Part-time pay is assumed to be your full-time point times your share of full-time hours, so the flat minimums are pro-rated.']
       : [];
   if (owedCounted) {
-    notes.push(`You are counting the ${owed.pct}% owed since ${longDate(owed.since)}: it is added to today’s scale figure before the new rises, and its back pay from that date is added to the back pay above.`);
+    notes.push(`You are counting the ${owed.pct}% local bargaining from ${longDate(owed.since)}: it is added to today’s scale figure before the new rises, and its back pay from that date is added to the back pay above. ${owed.status}`);
   }
   return {
     scenarios,
-    active: owedCounted ? (sel.includeLB ? 'both' : 'owed') : (sel.includeLB ? 'lb' : 'general'),
+    active,
+    // What the panel shows: from today’s scale figure to the marked way of counting.
+    shown: { from: today * factor, to: counted.end, pct: counted.pct },
     owed,
     owedCounted,
     lbStep,
-    real: payVsPrices(base, steps, data.INFLATION, { includeLB: sel.includeLB }).real,
+    // What the shown rise is worth once prices have risen too (the price index ends above 100).
+    real: ((1 + counted.pct / 100) * 100 / payVsPrices(base, steps, data.INFLATION, { includeLB: sel.includeLB }).price.at(-1).value - 1) * 100,
     published: today * factor,
     unit: pay.unit,
     label: pay.label,
@@ -209,7 +214,7 @@ export function render(root, { store, data }) {
     const owedDef = owedFor(sel, SCALES);
     owedSwitch.hidden = !owedDef;
     owedText.textContent = owedDef
-      ? `Count the ${owedDef.pct}% local bargaining owed since ${longDate(owedDef.since)}, with its back pay. It is not in the pay scales yet`
+      ? `Count the ${owedDef.pct}% local bargaining from ${longDate(owedDef.since)}, with its back pay. ${owedDef.status}`
       : '';
     gradeField.hidden = hourly;
     pointField.hidden = hourly || sel.gradeId === 'typed';
@@ -228,24 +233,27 @@ export function render(root, { store, data }) {
     const u = m.unit;
     const perText = u === 'hour' ? ' an hour' : ' a year';
     const opts = { cents: u === 'hour' };
-    const nowR = roundFor(m.now, u);
-    const genR = roundFor(m.endGeneral, u);
-    const lbR = roundFor(m.endWithLB, u);
-    const endR = sel.includeLB ? lbR : genR;
-    const endPct = sel.includeLB ? m.pctWithLB : m.pctGeneral;
+    const nowR = roundFor(m.shown.from, u);
+    const endR = roundFor(m.shown.to, u);
+    const counting = {
+      general: 'from the general rises',
+      lb: 'counting local bargaining as a 1% rise',
+      owed: `counting the general rises and the 1% from ${m.owed ? longDate(m.owed.since.slice(0, 7)) : ''}`,
+      both: 'counting the general rises and both local bargaining 1%s',
+    }[m.active];
 
     badge.hidden = !m.isExample;
     label.textContent = (sel.contract === 'part' ? `${m.label}, ${fteText(sel.fte)} of full-time` : m.label)
-      + (m.owedCounted ? `, with the ${m.owed.pct}% owed since ${longDate(m.owed.since.slice(0, 7))}` : '');
+      + (m.owedCounted ? `, with the ${m.owed.pct}% from ${longDate(m.owed.since.slice(0, 7))}` : '');
     from.textContent = money(nowR, u);
     const startFrom = shown && shown.unit === u ? shown.value : endR;
     countTo(to, startFrom, endR, (v) => money(roundFor(v, u), u));
     shown = { unit: u, value: endR };
     realLine.replaceChildren(
-      `On the Central Bank’s forecasts, that would buy about ${pct(Math.abs(m.real))} ${m.real >= 0 ? 'more' : 'less'} than in July 2026. `,
+      `After forecast inflation (${data.INFLATION.assumedYears.map((y) => `${y} assumed at ${data.INFLATION.rates[y]}%`).join(', ')}), that would buy about ${pct(Math.abs(m.real))} ${m.real >= 0 ? 'more' : 'less'} than in July 2026. `,
       h('a', { href: '#pay-vs-prices' }, 'See pay against prices'));
     per.textContent = u === 'hour' ? ' an hour' : '';
-    gain.textContent = `${signedEur(endR - nowR, opts)}${perText} (+${pct(endPct)}) by March 2029, ${sel.includeLB ? 'counting local bargaining as a 1% rise' : 'from the general rises'}.`;
+    gain.textContent = `${signedEur(endR - nowR, opts)}${perText} (+${pct(m.shown.pct)}) by March 2029, ${counting}.`;
     // Every way of counting, side by side; the one the big figure uses is marked.
     const cell = (id) => {
       const s = m.scenarios.find((x) => x.id === id);
@@ -258,7 +266,7 @@ export function render(root, { store, data }) {
     waysTitle.textContent = `By March 2029, counted ${m.owed ? 'four' : 'two'} ways`;
     ways.replaceChildren(h('div', { class: 'table-scroll' }, h('table', { class: 'pay-ways-table' },
       m.owed ? h('thead', {}, h('tr', {}, h('td', {}),
-        h('th', { scope: 'col' }, `Without the ${m.owed.pct}% owed since ${longDate(m.owed.since.slice(0, 7))}`),
+        h('th', { scope: 'col' }, `Without the ${m.owed.pct}% from ${longDate(m.owed.since.slice(0, 7))}`),
         h('th', { scope: 'col' }, 'With it, if it is paid'))) : null,
       h('tbody', {}, rows.map(([text, without, withOwed]) => h('tr', {},
         h('th', { scope: 'row' }, text), cell(without), m.owed ? cell(withOwed) : null))))));
@@ -269,7 +277,7 @@ export function render(root, { store, data }) {
       ? ['Add the hours you teach in a year to estimate it.']
       : [m.backPayOwed === null
         ? `About ${eur(m.backPay)} before tax, if the deal is accepted and first paid in ${longDate(sel.payMonth)}. `
-        : `About ${eur(m.backPay + m.backPayOwed)} before tax if both are paid in ${longDate(sel.payMonth)}: ${eur(m.backPay)} from this deal and ${eur(m.backPayOwed)} for the ${m.owed.pct}% owed since ${longDate(m.owed.since.slice(0, 7))}. `,
+        : `About ${eur(m.backPay + m.backPayOwed)} before tax if both are paid in ${longDate(sel.payMonth)}: ${eur(m.backPay)} from this deal and ${eur(m.backPayOwed)} for the ${m.owed.pct}% from ${longDate(m.owed.since.slice(0, 7))}. `,
         h('a', { href: '#back-pay' }, 'How it adds up')]));
     const hours = u === 'hour' ? sel.hoursPerYear : 0;
     hoursDiv.hidden = !hours;

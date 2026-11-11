@@ -107,8 +107,8 @@ input[type="number"] {
   line-height: 1.1;
   font-variant-numeric: lining-nums proportional-nums;
 }
-.pay-big .from { opacity: 0.8; font-weight: 600; font-size: 0.72em; }
-.pay-big .arrow { opacity: 0.8; font-weight: 400; font-size: 0.72em; }
+.pay-big .from { font-weight: 500; font-size: 0.72em; }
+.pay-big .arrow { font-weight: 400; font-size: 0.72em; }
 .pay-big .to { font-variant-numeric: tabular-nums; }
 .pay-big .per { font-family: var(--sans); font-size: 1rem; font-weight: 600; }
 
@@ -199,6 +199,11 @@ input[type="number"] {
   line-height: 1.15;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
+}
+@media (max-width: 380px) {
+  /* Three tiles across a narrow phone: tighter, so "+10.2%" stays on one line. */
+  .race-tile { padding: 0.5rem 0.4rem; }
+  .race-tile b { font-size: 1rem; }
 }
 .race-tile.pay { background: var(--teal-soft); color: var(--teal-ink); }
 .race-tile.price { background: var(--red-soft); color: var(--red-ink); }

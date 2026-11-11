@@ -3,7 +3,7 @@
 // (base.css: html { scroll-padding-top: calc(var(--header-h) + …) }).
 
 import { finalSalary } from './pay.js';
-import { resolvePay } from './selection.js';
+import { resolvePay, owedFor } from './selection.js';
 import { eur } from './format.js';
 import { h } from './dom.js';
 
@@ -15,7 +15,12 @@ export function mineText(sel, data) {
   return {
     label: pay.isExample ? `Example: ${pay.label}` : `Your pay: ${pay.label}`,
     figure: eur(end, { cents: hourly }),
-    tail: hourly ? 'an hour by 2029' : 'by 2029',
+    tail: (hourly ? 'an hour by 2029' : 'by 2029') + (() => {
+      const owed = Boolean(sel.includeOwed && owedFor(sel, data.SCALES));
+      if (owed && sel.includeLB) return ', with both 1%s';
+      if (owed) return ', with the 2025 1%';
+      return sel.includeLB ? ', with the 2029 1%' : '';
+    })(),
     go: pay.isExample ? 'Choose yours' : 'Change',
   };
 }
@@ -26,6 +31,7 @@ export function mountMine(el, store, data) {
   const show = () => {
     const t = mineText(store.get(), data);
     el.replaceChildren(h('span', { class: 'mine-label' }, t.label), ' ', h('b', {}, t.figure), ' ', h('span', {}, t.tail), ' ', h('span', { class: 'mine-go' }, t.go));
+    el.setAttribute('aria-label', `${t.label}: ${t.figure} ${t.tail}. ${t.go}`);
     el.hidden = false;
   };
   show();

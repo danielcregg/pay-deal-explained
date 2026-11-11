@@ -30,17 +30,22 @@ test('top of the Lecturer scale, counted three ways (the €119,000 and €121,0
   assert.deepEqual(model(D0, paid).scenarios.map((s) => s.id), ['general', 'lb']);
 });
 
-test('counting the 1% owed since September 2025 lifts the starting point for the whole page', () => {
+test('counting the 1% from September 2025: the new rises build on it, and the panel still starts from today', () => {
   const sel = { ...D0, touched: true, gradeId: 'lect', pointIndex: 10, includeOwed: true };
   const pay = resolvePay(sel, data.SCALES);
   assert.equal(pay.published, 107727);
   near(pay.base, 108804.27);
   const m = model(sel, data);
-  near(m.published, 107727); near(m.now, 108804.27);
+  near(m.published, 107727);
   near(m.endGeneral, 119870.98); near(m.endWithLB, 121069.69);
   assert.equal(m.active, 'owed');
-  assert.equal(model({ ...sel, includeLB: true }, data).active, 'both');
-  assert.equal(figuresFor(sel, data.SCALES), 'Showing: Lecturer, point 11, with the 1% owed since September 2025.');
+  // What the panel shows is the marked row of the table: same end figure, same percentage.
+  near(m.shown.from, 107727); near(m.shown.to, 119870.98); near(m.shown.pct, 11.27);
+  near(m.shown.pct, m.scenarios.find((s) => s.id === m.active).pct, 1e-9);
+  const both = model({ ...sel, includeLB: true }, data);
+  assert.equal(both.active, 'both');
+  near(both.shown.to, 121069.69); near(both.shown.pct, 12.39);
+  assert.equal(figuresFor(sel, data.SCALES), 'Showing: Lecturer, point 11, with the 1% from September 2025.');
 });
 
 test('the result says what the rise is worth after forecast inflation', () => {
@@ -55,4 +60,11 @@ test('assistant lecturer, typed, part-time and hourly', () => {
   const h = model({ ...D0, contract: 'hourly', alScale: 'al-ne', hoursPerYear: 0 }, data);
   near(h.now, 75.5111, 1e-4); near(h.endGeneral, 84.3428, 1e-4);
   assert.deepEqual([h.unit, h.backPay], ['hour', null]);
+});
+
+test('the after-inflation line follows the figure the panel shows', () => {
+  const top = { ...D0, touched: true, gradeId: 'lect', pointIndex: 10 };
+  near(model(top, data).real, 2.52); // +10.17% against prices up 7.47%
+  near(model({ ...top, includeOwed: true }, data).real, 3.54); // +11.27%
+  near(model({ ...top, includeOwed: true, includeLB: true }, data).real, 4.58); // +12.39%
 });

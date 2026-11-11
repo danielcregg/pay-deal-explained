@@ -115,7 +115,8 @@ export const SCALES = {
       owed: {
         pct: 1,
         since: '2025-09-01',
-        note: 'Local bargaining money is used as each sector negotiates, so neither 1% is certain to reach you as a rise. The 1% due from 1 September 2025 under the last agreement was not in the lecturer pay scales of 1 June 2026. TUI has claimed it for academic staff from that date, and second-level teachers were paid theirs, backdated, under a circular of 1 October 2026. If it is paid, the new rises build on it, which is why some calculations come out about 1% higher.',
+        note: 'Local bargaining money is used as each sector negotiates, so neither 1% is certain to reach you as a rise. The 1% due from 1 September 2025 under the last agreement was not in the lecturer pay scales of 1 June 2026. TUI has claimed it for academic staff from that date, and a circular of 1 October 2026 sanctioned it, backdated, for post-primary teachers. If it is paid to lecturers, the new rises build on it, which is why some calculations come out about 1% higher.',
+        status: 'It has not been agreed or paid for lecturers, and it is not in the pay scales.',
         sourceIds: ['tui-lb-dec2025', 'tui-senior-cycle-1pc'],
       },
     },

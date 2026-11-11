@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { installDom, Document } from './helpers/dom.js';
+import { installDom, Document, setReducedMotion } from './helpers/dom.js';
 import * as data from '../site/js/data.js';
 import { createStore } from '../site/js/state.js';
 import { DEFAULT_SELECTION } from '../site/js/selection.js';
@@ -13,6 +13,8 @@ import * as yourPay from '../site/js/sections/your-pay.js';
 import * as backPay from '../site/js/sections/back-pay.js';
 import { enhanceTerms } from '../site/js/sections/glossary.js';
 import { presentKeyAction } from '../site/js/present.js';
+import { countTo } from '../site/js/motion.js';
+import * as vsLastDeal from '../site/js/sections/vs-last-deal.js';
 
 const document = installDom();
 const key = (k) => ({ type: 'keydown', key: k, bubbles: true });
@@ -152,23 +154,25 @@ test('the race: the tiles show the end state, follow the slider, and the chips s
   assert.equal(root.querySelector('.race-picks').hidden, true);
 });
 
-test('your pay: counting the 1% owed since 2025 moves the figure, the starting point and the marked cell', () => {
+test('your pay: counting the 1% from 2025 moves the figure and the marked cell, and they agree', () => {
   const root = document.createElement('div');
   document.body.append(root);
   const store = createStore({ ...DEFAULT_SELECTION, touched: true, gradeId: 'lect', pointIndex: 10 });
   yourPay.render(root, { store, data });
   const text = (selector) => root.querySelector(selector).textContent;
   assert.equal(text('.pay-big .to'), '€118,684');
-  assert.match(text('.pay-ways-table td.on'), /^€118,684/);
-  assert.match(text('.pay-real'), /buy about 2.5% more than in July 2026/);
+  assert.match(text('.pay-ways-table td.on'), /^€118,684 \+10\.2%/);
+  assert.match(text('.pay-gain'), /\(\+10\.2%\)/);
+  assert.match(text('.pay-real'), /^After forecast inflation \(2029 assumed at 2%\), that would buy about 2\.5% more than in July 2026/);
 
   const owed = root.querySelector('#pp-owed');
   owed.checked = true;
   owed.dispatchEvent({ type: 'change', bubbles: true });
-  assert.equal(text('.pay-big .from'), '€108,804');
+  assert.equal(text('.pay-big .from'), '€107,727', 'the panel still starts from today’s scale figure');
   assert.equal(text('.pay-big .to'), '€119,871');
-  assert.match(text('.pay-ways-table td.on'), /^€119,871/);
-  assert.match(text('.pay-label'), /with the 1% owed since September 2025$/);
+  assert.match(text('.pay-gain'), /^\+€12,144 a year \(\+11\.3%\)/);
+  assert.match(text('.pay-ways-table td.on'), /^€119,871 \+11\.3%/);
+  assert.match(text('.pay-label'), /with the 1% from September 2025$/);
   assert.equal(root.querySelectorAll('.pay-ways-table td.on').length, 1);
 });
 
@@ -224,4 +228,63 @@ test('your pay: choosing another job swaps the grades and hides what does not ap
   assert.equal(root.querySelector('label.pill-hourly').hidden, true);
   assert.equal(root.querySelector('.pay-label').textContent, 'Test grade, point 1');
   assert.match(root.querySelector('.pay-caveat').textContent, /Basic pay only\.$/);
+});
+
+// ---- with motion on: the timed animations run and land on their final state ----
+
+test('motion: a counted figure runs on a timer and lands exactly on its target', (t) => {
+  t.mock.timers.enable({ apis: ['setInterval', 'Date'] });
+  setReducedMotion(false);
+  try {
+    const el = document.createElement('span');
+    el.textContent = '€100';
+    countTo(el, 100, 200, (v) => `€${Math.round(v)}`);
+    assert.equal(el.textContent, '€100', 'nothing moves until the first tick');
+    t.mock.timers.tick(300);
+    const midway = Number(el.textContent.slice(1));
+    assert.ok(midway > 100 && midway < 200, `midway: ${el.textContent}`);
+    t.mock.timers.tick(400);
+    assert.equal(el.textContent, '€200');
+    assert.equal(el.counting, null, 'the timer is cleared');
+  } finally {
+    setReducedMotion(true);
+  }
+});
+
+test('motion: the race replays from the start when first seen, then stops at the end', (t) => {
+  t.mock.timers.enable({ apis: ['setInterval', 'Date'] });
+  setReducedMotion(false);
+  try {
+    const root = document.createElement('div');
+    document.body.append(root);
+    hero.render(root, { store: createStore({ ...DEFAULT_SELECTION }), data });
+    const tiles = () => root.querySelectorAll('.race-tile b').map((b) => b.textContent);
+    const button = root.querySelector('.race-play');
+    assert.equal(button.getAttribute('aria-label'), 'Pause', 'it is playing');
+    t.mock.timers.tick(3500);
+    assert.notEqual(tiles()[0], '+10.2%', 'midway the pay tile has not reached the end');
+    t.mock.timers.tick(4000);
+    assert.deepEqual(tiles(), ['+10.2%', '+7.5%', '2.5% more']);
+    assert.equal(button.getAttribute('aria-label'), 'Play', 'it stopped at the end');
+    button.click();
+    assert.equal(root.querySelector('.race-when').textContent, 'Starting line: 1 July 2026', 'Play after the end starts again');
+    button.click();
+    assert.equal(button.getAttribute('aria-label'), 'Play', 'a second press pauses');
+  } finally {
+    setReducedMotion(true);
+  }
+});
+
+test('chapter 7: each deal counts its own local bargaining 1%, by its own switch', () => {
+  const root = document.createElement('div');
+  document.body.append(root);
+  const store = createStore({ ...DEFAULT_SELECTION, touched: true, gradeId: 'lect', pointIndex: 10 });
+  vsLastDeal.render(root, { store, data });
+  const yours = () => root.querySelectorAll('.vs-yours dd').map((d) => d.textContent);
+  assert.deepEqual(yours(), ['+9.6%', '+10.2%']);
+  store.set({ includeOwed: true }); // the 1% from 2025 belongs to the last deal
+  assert.deepEqual(yours(), ['+10.7%', '+10.2%']);
+  store.set({ includeOwed: false, includeLB: true }); // the 1% of 2029 belongs to the draft
+  assert.deepEqual(yours(), ['+9.6%', '+11.3%']);
+  assert.doesNotMatch(root.querySelector('.context-line').textContent, /September 2025/, 'both deals start from today’s scale figure');
 });

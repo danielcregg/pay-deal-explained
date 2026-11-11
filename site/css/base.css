@@ -262,7 +262,7 @@ td.r, th.r { text-align: right; }
   white-space: nowrap;
 }
 .mine b { color: var(--on-navy); font-variant-numeric: tabular-nums; }
-.mine-label { max-width: 20rem; overflow: hidden; text-overflow: ellipsis; }
+.mine-label { max-width: min(20rem, 18vw); overflow: hidden; text-overflow: ellipsis; }
 .mine .mine-go { padding: 0.15rem 0.7rem; border-radius: 999px; background: var(--on-navy); color: var(--navy); font-weight: 650; font-size: 0.8rem; }
 @media (min-width: 1040px) {
   .mine:not([hidden]) { display: inline-flex; }
@@ -464,7 +464,8 @@ details.data summary {
 }
 @media (min-width: 1240px) { .rail { display: flex; } }
 .rail a { position: relative; display: grid; place-items: center; width: 1.5rem; height: 1.5rem; text-decoration: none; }
-.rail-dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--fam); transition: transform 0.15s ease; }
+/* A pale ring keeps every dot visible where the rail crosses the navy band or footer. */
+.rail-dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--fam); box-shadow: 0 0 0 1.5px var(--card); transition: transform 0.15s ease; }
 .rail a:hover .rail-dot, .rail a:focus-visible .rail-dot { transform: scale(1.3); }
 .rail a[aria-current="true"] .rail-dot { transform: scale(1.6); box-shadow: 0 0 0 2px var(--card), 0 0 0 3.5px var(--fam); }
 .rail-label {

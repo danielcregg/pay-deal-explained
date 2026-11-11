@@ -44,10 +44,14 @@ test('chapters: pay against prices moves up to second, and every chapter has a c
   });
 });
 
-test('header: the chip carries the chosen pay, or invites a choice', () => {
+test('header: the chip carries the chosen pay, says what it counts, or invites a choice', () => {
   assert.deepEqual(mineText(D0, data), { label: 'Example: Lecturer, point 5', figure: '€99,037', tail: 'by 2029', go: 'Choose yours' });
-  assert.deepEqual(mineText({ ...D0, touched: true, gradeId: 'lect', pointIndex: 10, includeLB: true }, data),
-    { label: 'Your pay: Lecturer, point 11', figure: '€119,871', tail: 'by 2029', go: 'Change' });
+  const top = { ...D0, touched: true, gradeId: 'lect', pointIndex: 10 };
+  assert.deepEqual(mineText({ ...top, includeLB: true }, data),
+    { label: 'Your pay: Lecturer, point 11', figure: '€119,871', tail: 'by 2029, with the 2029 1%', go: 'Change' });
+  assert.equal(mineText({ ...top, includeOwed: true }, data).tail, 'by 2029, with the 2025 1%');
+  assert.deepEqual([mineText({ ...top, includeOwed: true, includeLB: true }, data).figure, mineText({ ...top, includeOwed: true, includeLB: true }, data).tail],
+    ['€121,070', 'by 2029, with both 1%s']);
   const hourly = mineText({ ...D0, touched: true, contract: 'hourly' }, data);
   assert.deepEqual([hourly.figure, hourly.tail], ['€84.34', 'an hour by 2029']);
 });
@@ -57,4 +61,24 @@ test('rail: the current chapter is the last one whose top has passed the reading
   assert.equal(currentChapter([120, 800, 1500], 250), 0);
   assert.equal(currentChapter([400, 900], 250), -1); // still above the first chapter
   assert.equal(currentChapter([-3000, -2000, -900], 250), 2);
+});
+
+test('copy: the 1% from 2025 is never stated as settled, and the 2029 assumption is named', () => {
+  const read = (p) => readFileSync(new URL(`../site/${p}`, import.meta.url), 'utf8');
+  const owed = data.SCALES.sectors.find((s) => s.id === 'tu').owed;
+  assert.doesNotMatch(owed.note, /were paid/);
+  assert.match(owed.note, /sanctioned/);
+  assert.ok(owed.status, 'a plain statement of where it stands');
+  for (const file of ['js/sections/your-pay.js', 'js/sections/back-pay.js', 'js/selection.js']) {
+    assert.doesNotMatch(read(file), /owed since|pay scales yet/, `${file} says "owed" or "yet" to readers`);
+  }
+  assert.match(read('js/sections/your-pay.js'), /After forecast inflation \(/); // the wiring test checks the full sentence
+});
+
+test('colour: the faded "from" figure is gone, and the browser bar matches the navy header', () => {
+  const demos = readCss('demos.css');
+  assert.doesNotMatch(demos.slice(demos.indexOf('.pay-big .from'), demos.indexOf('.pay-big .per')), /opacity/);
+  const navy = themes(readCss('base.css')).light['--navy'];
+  const metas = [...html.matchAll(/<meta name="theme-color" content="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(metas.length > 0 && metas.every((c) => c === navy), `theme-color ${metas}`);
 });

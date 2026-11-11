@@ -9,21 +9,23 @@ import { h } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { niceRange, createTooltip, labelSize, axisRows } from '../chart.js';
 
-export function model(base, data, { includeLB, sector = data.SCALES.sectors[0].id }) {
+export function model(base, data, { includeLB, includePrevLB = includeLB, sector = data.SCALES.sectors[0].id }) {
   const both = [data.PREVIOUS_DEAL, data.DEAL];
   const lowSalary = lowestScalePoint(data.SCALES, sector);
+  // The last deal's 1% (1 September 2025) and the draft's (1 March 2029) are separate choices.
+  const counts = (d) => (d === data.PREVIOUS_DEAL ? includePrevLB : includeLB);
   const deals = both.map((d) => {
-    const end = finalSalary(base, d.steps, { includeLB });
+    const end = finalSalary(base, d.steps, { includeLB: counts(d) });
     return {
       id: d.id, name: d.name, start: d.start, end: d.end, months: d.months, stepCount: d.steps.length,
       headline: d.headlinePct, compoundedPct: (end / base - 1) * 100, endSalary: end,
-      threshold: d.threshold, lowPct: (finalSalary(lowSalary, d.steps, { includeLB }) / lowSalary - 1) * 100,
+      threshold: d.threshold, lowPct: (finalSalary(lowSalary, d.steps, { includeLB: counts(d) }) / lowSalary - 1) * 100,
       costBn: d.costBn, reviewClause: d.reviewClause,
     };
   });
   const series = (d) => [
     { m: 0, value: 100 },
-    ...payIndexSeries(base, d.steps, { from: d.start.slice(0, 7), to: d.end.slice(0, 7), includeLB })
+    ...payIndexSeries(base, d.steps, { from: d.start.slice(0, 7), to: d.end.slice(0, 7), includeLB: counts(d) })
       .map((p, i) => ({ m: i + 1, value: p.value })),
   ];
   return { deals, lowSalary, series: { previous: series(data.PREVIOUS_DEAL), draft: series(data.DEAL) } };
@@ -150,15 +152,19 @@ export function render(root, { store, data }) {
     if (!force && Math.abs(width - lastWidth) < 2) return;
     lastWidth = width;
     const sel = store.get();
-    const base = resolvePay(sel, data.SCALES).base;
+    // Both deals start from today's scale figure. The last deal's 1% is the one from
+    // September 2025, so it follows that switch where the job has one.
+    const base = resolvePay(sel, data.SCALES).published;
     const sector = sectorOf(sel, data.SCALES);
-    m = model(base, data, { includeLB: sel.includeLB, sector: sector.id });
+    const includePrevLB = sector.owed ? sel.includeOwed : Boolean(sector.lastDealLB);
+    m = model(base, data, { includeLB: sel.includeLB, includePrevLB, sector: sector.id });
     const low = { salary: m.lowSalary, label: sector.low };
-    context.textContent = figuresFor(sel, data.SCALES);
+    context.textContent = figuresFor({ ...sel, includeOwed: false }, data.SCALES);
     cards.replaceChildren(card(m.deals[0], 'prev', low, sector.id === 'tu' ? data.PREVIOUS_DEAL.tuLbNote : null), card(m.deals[1], 'draft', low));
-    lbNote.textContent = sel.includeLB
-      ? 'Both deals include their 1% local bargaining as a rise for you.'
-      : 'Local bargaining is left out of both deals. Switch it on in section 1 to include it.';
+    const said = (on) => (on ? 'counted' : 'left out');
+    lbNote.textContent = sector.owed
+      ? `Each deal has a 1% for local bargaining, counted by its own switch in section 1: the 2024–26 deal’s, from 1 September 2025, is ${said(includePrevLB)}; the draft’s, on 1 March 2029, is ${said(sel.includeLB)}.`
+      : `The draft’s 1% local bargaining, on 1 March 2029, is ${said(sel.includeLB)}; switch it in section 1. The 2024–26 deal’s 1% is ${said(includePrevLB)}.`;
 
     chart = buildChart(m, width, labelSize(wrap));
     for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();

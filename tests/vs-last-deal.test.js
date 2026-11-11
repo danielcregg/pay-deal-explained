@@ -16,3 +16,10 @@ test('side by side for the example lecturer', () => {
   near(off.series.draft.at(-1).value, 110.1712, 1e-4);
   assert.ok(!('annualised' in off.deals[0]));
 });
+
+test('each deal counts its own local bargaining', () => {
+  const m = model(89894, data, { includeLB: false, includePrevLB: true });
+  near(m.deals[0].compoundedPct, 10.71); near(m.deals[1].compoundedPct, 10.17);
+  const n = model(89894, data, { includeLB: true, includePrevLB: false });
+  near(n.deals[0].compoundedPct, 9.62); near(n.deals[1].compoundedPct, 11.27);
+});
