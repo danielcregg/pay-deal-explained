@@ -5,7 +5,9 @@ import { SITE } from './data.js';
 
 export const STORAGE_KEY = 'pde:selection:v1';
 export const PAY_MONTHS = ['2027-01', '2027-02', '2027-03'];
+export const MIN_SALARY = 10000; // below any full-time yearly salary: catches "58" or "58.5"
 export const MAX_SALARY = 500000;
+export const MAX_HOURS = 2000;
 
 export const DEFAULT_SELECTION = Object.freeze({
   touched: false,
@@ -20,16 +22,27 @@ export const DEFAULT_SELECTION = Object.freeze({
   payMonth: '2027-01',
 });
 
-/** Lenient parsing of a typed salary: strips €, commas and spaces. */
+/**
+ * Lenient parsing of a typed salary: strips €, commas and spaces, and reads dots used as
+ * thousands separators ("58.000") as such. Errors carry a `code`: 'format', 'low' or 'high'.
+ */
 export function parseSalary(input) {
-  const cleaned = String(input ?? '').replace(/[€,\s ]/g, '');
+  let cleaned = String(input ?? '').replace(/[€,\s]/g, '');
+  if (/^\d{1,3}(\.\d{3})+$/.test(cleaned)) cleaned = cleaned.replace(/\./g, '');
   if (!/^\d+(\.\d+)?$/.test(cleaned)) {
-    return { ok: false, error: 'Enter your full-time salary in euro, for example 58000.' };
+    return { ok: false, code: 'format', error: 'Enter your full-time salary in euro, for example 58000.' };
   }
   const value = Number(cleaned);
-  if (value <= 0) return { ok: false, error: 'Enter a salary above €0.' };
-  if (value > MAX_SALARY) return { ok: false, error: 'Enter a salary of €500,000 or less.' };
+  if (value < MIN_SALARY) return { ok: false, code: 'low', error: 'Enter a full-time yearly salary of at least €10,000, for example 58000.' };
+  if (value > MAX_SALARY) return { ok: false, code: 'high', error: 'Enter a salary of €500,000 or less.' };
   return { ok: true, value };
+}
+
+/** Hours taught in a year → a whole number from 0 to 2,000. Invalid input means none. */
+export function clampHours(input) {
+  const n = Number(String(input ?? '').trim());
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.min(MAX_HOURS, Math.round(n));
 }
 
 /**
@@ -88,18 +101,22 @@ function isValid(sel, scales) {
   if (typeof sel.includeLB !== 'boolean') return false;
   if (!(typeof sel.fte === 'number' && sel.fte >= 0.01 && sel.fte <= 1)) return false;
   if (!['al-ne', 'al-pre'].includes(sel.alScale)) return false;
-  if (!(typeof sel.hoursPerYear === 'number' && sel.hoursPerYear >= 0 && sel.hoursPerYear <= 2000)) return false;
-  if (sel.gradeId === 'typed') return typeof sel.typed === 'number' && sel.typed > 0 && sel.typed <= MAX_SALARY;
+  if (!(typeof sel.hoursPerYear === 'number' && sel.hoursPerYear >= 0 && sel.hoursPerYear <= MAX_HOURS)) return false;
+  if (sel.gradeId === 'typed') return typeof sel.typed === 'number' && sel.typed >= MIN_SALARY && sel.typed <= MAX_SALARY;
   const grade = findGrade(scales, sel.gradeId);
   return Boolean(grade) && Number.isInteger(sel.pointIndex) && sel.pointIndex >= 0 && sel.pointIndex < grade.points.length;
 }
 
-/** Rebuild a saved selection, or fall back to the example. Never throws. */
+/**
+ * Rebuild a saved selection, or fall back to the example. Never throws. Only a selection
+ * saved after the reader made a choice (`touched: true`, as saveSelection writes it) counts.
+ */
 export function restoreSelection(raw, scales) {
   if (!raw) return { ...DEFAULT_SELECTION };
   let parsed;
   try { parsed = JSON.parse(raw); } catch { return { ...DEFAULT_SELECTION }; }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return { ...DEFAULT_SELECTION };
+  if (parsed.touched !== true) return { ...DEFAULT_SELECTION };
   const sel = Object.fromEntries(Object.keys(DEFAULT_SELECTION).map((k) => [k, k in parsed ? parsed[k] : DEFAULT_SELECTION[k]]));
   return isValid(sel, scales) ? { ...sel, touched: true } : { ...DEFAULT_SELECTION };
 }

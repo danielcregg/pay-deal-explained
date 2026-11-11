@@ -2,7 +2,7 @@
 // or hourly, and see what the draft deal adds. The choice then flows into every demo.
 
 import { applySteps, finalSalary, summarise, backPay } from '../pay.js';
-import { resolvePay, parseSalary, clampFte, DEFAULT_SELECTION, forgetSelection } from '../selection.js';
+import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection } from '../selection.js';
 import { eur, signedEur, pct, longDate, listSteps } from '../format.js';
 import { h } from '../dom.js';
 
@@ -217,7 +217,9 @@ export function render(root, { store, data }) {
   typedInput.addEventListener('input', () => {
     const r = parseSalary(typedInput.value);
     if (r.ok) { typedError.textContent = ''; set({ typed: r.value }); }
-    else if (typedInput.value.trim() !== '') typedError.textContent = r.error;
+    // "Too low" waits for blur: every salary is too low while its first digits are typed.
+    else if (r.code !== 'low' && typedInput.value.trim() !== '') typedError.textContent = r.error;
+    else typedError.textContent = '';
   });
   typedInput.addEventListener('blur', () => {
     const r = parseSalary(typedInput.value);
@@ -225,9 +227,10 @@ export function render(root, { store, data }) {
   });
   fteInput.addEventListener('input', () => set({ fte: clampFte(fteInput.value) }));
   fteInput.addEventListener('blur', () => { fteInput.value = String(Math.round(store.get().fte * 1000) / 10); });
-  hoursInput.addEventListener('input', () => {
-    const n = Number(hoursInput.value);
-    set({ hoursPerYear: Number.isFinite(n) && n > 0 ? Math.min(2000, Math.round(n)) : 0 });
+  hoursInput.addEventListener('input', () => set({ hoursPerYear: clampHours(hoursInput.value) }));
+  hoursInput.addEventListener('blur', () => {
+    const used = store.get().hoursPerYear;
+    hoursInput.value = used ? String(used) : '';
   });
   reset.addEventListener('click', () => {
     forgetSelection();
