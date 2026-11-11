@@ -226,6 +226,6 @@ test('the race: an increment in the month we are in is taken as paid, and the pa
 test('copy: the assumptions say how increments are counted when they are added', () => {
   const line = data.ASSUMPTIONS.find((a) => /1st of the month you choose/.test(a));
   assert.ok(line, 'an assumption about the date');
-  assert.match(line, /skipped/);
+  assert.match(line, /Skipped points are passed over/);
   assert.match(line, /long service increments and promotions/i);
 });
