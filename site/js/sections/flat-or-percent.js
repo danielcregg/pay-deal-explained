@@ -2,7 +2,7 @@
 // rule applies at each step, with the €60,000 threshold marked.
 
 import { applySteps, finalSalary } from '../pay.js';
-import { resolvePay } from '../selection.js';
+import { resolvePay, sectorOf, gradesIn } from '../selection.js';
 import { eur, signedEur, pct, longDate } from '../format.js';
 import { h } from '../dom.js';
 import { DEAL } from '../data.js';
@@ -12,6 +12,17 @@ export const SLIDER = { min: 30000, max: 140000, step: 500 };
 /** Who gets which rule, with the hourly-paid case worded as the inference it is. */
 export const LECTURER_NOTE = `Everyone on the Lecturer and Senior Lecturer scales is above ${eur(DEAL.threshold)} at every step, so all their rises are percentages. `
   + 'Assistant Lecturers on the lower points get the flat sums, and, going by how hourly rates were set in the 2026 pay circulars, so would hourly-paid staff.';
+
+/** Who gets the flat sums in the reader's job, read off its own scale points. */
+export function flatNote(sector, data) {
+  if (sector.id === 'tu') return LECTURER_NOTE;
+  const threshold = eur(data.DEAL.threshold);
+  const values = gradesIn(data.SCALES, sector.id).flatMap((g) => g.points.map((p) => p.value));
+  const below = values.filter((v) => v < data.DEAL.threshold);
+  if (below.length === 0) return `For a ${sector.short}, every scale point is above ${threshold}, so all the rises are percentages.`;
+  if (below.length === values.length) return `For a ${sector.short}, every scale point is below ${threshold} today, so each gets at least the first flat sum.`;
+  return `For a ${sector.short}, scale points up to ${eur(Math.max(...below))} are below ${threshold} today, so they get at least the first flat sum. Points above that get percentages at every step.`;
+}
 
 /** Where the slider starts for a given salary: rounded to €500 and kept in range. */
 export function sliderStart(salary) {
@@ -82,6 +93,7 @@ export function render(root, { store, data }) {
     return [...data.DEAL.publishedExamples, ...tu].sort((a, b) => b.pct - a.pct);
   })();
   const maxPct = Math.max(...exampleRows.map((r) => r.pct));
+  const who = h('p', { class: 'note fp-who' });
   const examples = h('div', { class: 'plate examples' },
     h('h3', {}, 'Rises in starting pay, highest first'),
     h('p', { class: 'note' }, 'As reported on 11 November for other grades, alongside TU starting pay worked out on this site. All include local bargaining as a 1% rise, as the reported figures do.'),
@@ -89,7 +101,7 @@ export function render(root, { store, data }) {
       h('span', { class: 'hb-label' }, r.role),
       h('span', { class: 'hb-track' }, h('span', { class: 'hb-bar', style: `width:${((r.pct / maxPct) * 100).toFixed(1)}%` })),
       h('span', { class: 'hb-value' }, pct(r.pct))))),
-    h('p', { class: 'note' }, LECTURER_NOTE));
+    who);
 
   root.append(
     h('div', { class: 'plate fp' },
@@ -119,6 +131,7 @@ export function render(root, { store, data }) {
   let lastBase = null;
   const syncToSelection = () => {
     const sel = store.get();
+    who.textContent = flatNote(sectorOf(sel, data.SCALES), data);
     const base = resolvePay(sel, data.SCALES).base;
     if (base !== lastBase) {
       lastBase = base;

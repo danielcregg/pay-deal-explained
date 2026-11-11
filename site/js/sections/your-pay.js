@@ -2,7 +2,7 @@
 // or hourly, and see what the draft deal adds. The choice then flows into every demo.
 
 import { applySteps, finalSalary, summarise, backPay, owedBackPay } from '../pay.js';
-import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradesIn, owedFor } from '../selection.js';
+import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradesIn, gradeOf, owedFor } from '../selection.js';
 import { eur, signedEur, pct, longDate, listSteps } from '../format.js';
 import { h } from '../dom.js';
 import { countTo } from '../motion.js';
@@ -43,6 +43,9 @@ export function model(sel, data) {
     : sel.contract === 'part'
       ? ['Part-time pay is assumed to be your full-time point times your share of full-time hours, so the flat minimums are pro-rated.']
       : [];
+  // Something particular to the chosen grade, such as two official versions of its scale.
+  const gradeNote = gradeOf(sel, data.SCALES)?.note;
+  if (gradeNote) notes.push(gradeNote);
   if (owedCounted) {
     notes.push(`You are counting the ${owed.pct}% local bargaining from ${longDate(owed.since)}: it is added to today’s scale figure before the new rises, and its back pay from that date is added to the back pay above. ${owed.status}`);
   }

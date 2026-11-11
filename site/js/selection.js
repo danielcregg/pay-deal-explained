@@ -73,6 +73,14 @@ export function clampFte(input) {
 }
 
 const findGrade = (scales, id) => scales.grades.find((g) => g.id === id);
+/** 'Single rate' → 'single rate' for use inside a sentence; 'LSI 1' is left alone. */
+const midSentence = (label) => (/^[A-Z][a-z]/.test(label) ? label[0].toLowerCase() + label.slice(1) : label);
+
+/** The grade the reader chose, or null for a typed salary or an hourly rate. */
+export function gradeOf(sel, scales) {
+  if (sel.contract === 'hourly' || sel.gradeId === 'typed') return null;
+  return findGrade(scales, sel.gradeId) ?? null;
+}
 
 /** The reader's occupation: its scales' source, caveats and anything particular to it. */
 export const sectorOf = (sel, scales) => scales.sectors.find((s) => s.id === sel.sector) ?? scales.sectors[0];
@@ -80,7 +88,7 @@ export const sectorOf = (sel, scales) => scales.sectors.find((s) => s.id === sel
 /** The grades of one occupation. */
 export const gradesIn = (scales, sectorId) => scales.grades.filter((g) => g.sector === sectorId);
 
-/** A rise owed to the reader's occupation but not in its scales yet (TU lecturers' 1% since 2025), or null. */
+/** A rise due to the reader's occupation but not in its pay figures (the 1% of September 2025, for lecturers and gardaí), or null. */
 export const owedFor = (sel, scales) => sectorOf(sel, scales).owed ?? null;
 
 /**
@@ -112,12 +120,20 @@ export function resolvePay(sel, scales) {
   }
   const grade = findGrade(scales, sel.gradeId);
   const point = grade.points[sel.pointIndex];
-  const label = point.label.startsWith('Point') ? `${grade.name}, point ${sel.pointIndex + 1}` : `${grade.name}, ${point.label}`;
+  const label = point.label.startsWith('Point') ? `${grade.name}, point ${sel.pointIndex + 1}` : `${grade.name}, ${midSentence(point.label)}`;
   return { base: point.value * lift, published: point.value, factor: fte, annualFactor: fte, unit: 'year', label, isExample };
 }
 
-/** The lowest point on the lecturing scales: where the flat minimums count most. */
-export const lowestScalePoint = (scales, sectorId = scales.sectors[0].id) => Math.min(...gradesIn(scales, sectorId).flatMap((g) => g.points.map((p) => p.value)));
+/**
+ * The low point of a job's scales, where the flat minimums count most: the lowest point of
+ * all, or of the grade the job names (`lowGrade`) where older scales start below the point
+ * new staff start on.
+ */
+export function lowestScalePoint(scales, sectorId = scales.sectors[0].id) {
+  const sector = scales.sectors.find((s) => s.id === sectorId);
+  const grades = gradesIn(scales, sectorId).filter((g) => !sector?.lowGrade || g.id === sector.lowGrade);
+  return Math.min(...grades.flatMap((g) => g.points.map((p) => p.value)));
+}
 
 /** The line each demo shows so readers know whose figures they are looking at. */
 export function figuresFor(sel, scales) {

@@ -160,7 +160,7 @@ export function render(root, { store, data }) {
     m = model(base, data, { includeLB: sel.includeLB, includePrevLB, sector: sector.id });
     const low = { salary: m.lowSalary, label: sector.low };
     context.textContent = figuresFor({ ...sel, includeOwed: false }, data.SCALES);
-    cards.replaceChildren(card(m.deals[0], 'prev', low, sector.id === 'tu' ? data.PREVIOUS_DEAL.tuLbNote : null), card(m.deals[1], 'draft', low));
+    cards.replaceChildren(card(m.deals[0], 'prev', low, sector.lastDealNote ?? null), card(m.deals[1], 'draft', low));
     const said = (on) => (on ? 'counted' : 'left out');
     lbNote.textContent = sector.owed
       ? `Each deal has a 1% for local bargaining, counted by its own switch in section 1: the 2024–26 deal’s, from 1 September 2025, is ${said(includePrevLB)}; the draft’s, on 1 March 2029, is ${said(sel.includeLB)}.`

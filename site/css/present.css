@@ -112,7 +112,8 @@ body.present .race { margin: 0; }
   body.present .hero.is-current { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center; }
   body.present .hero-band { padding: 1.75rem 1.5rem 1.25rem clamp(1.25rem, 4vw, 3.5rem); } /* 1366 by 768 with no scrolling */
   body.present .race-wrap { padding: 1.5rem clamp(1.25rem, 3vw, 3rem) 1.5rem 0; }
-  body.present .hero-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.5rem; }
+  body.present .hero-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1rem; }
+  body.present .hero-lede { font-size: 1.05rem; }
   body.present .hero h1 { font-size: clamp(2.2rem, 1.2rem + 2.6vw, 3.6rem); }
 }
 body.present .race { padding: 1.1rem 1.25rem 1rem; }

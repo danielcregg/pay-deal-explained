@@ -259,34 +259,46 @@ test('back pay: its checkbox for the 1% owed since 2025 and the one in section 1
 });
 
 test('your pay: choosing another job swaps the grades and hides what does not apply to it', () => {
-  const twoJobs = {
-    ...data,
-    SCALES: {
-      ...data.SCALES,
-      sectors: [...data.SCALES.sectors, { id: 'test', name: 'Test job', short: 'test job', low: 'lowest test point', effective: '2026-06-01', sourceId: 'circular-002-2026', hourly: false, caveat: 'Basic pay only.' }],
-      grades: [...data.SCALES.grades, { id: 'test-a', sector: 'test', name: 'Test grade', group: 'current', points: [{ label: 'Point 1', value: 40000 }, { label: 'Point 2', value: 45000 }] }],
-    },
-  };
   const root = document.createElement('div');
   document.body.append(root);
   const store = createStore({ ...DEFAULT_SELECTION });
-  yourPay.render(root, { store, data: twoJobs });
+  yourPay.render(root, { store, data });
   const values = (selector) => root.querySelectorAll(selector).map((o) => o.getAttribute('value'));
+  const texts = (selector) => root.querySelectorAll(selector).map((o) => o.textContent);
   const owedSwitch = root.querySelector('label.switch-owed');
-  assert.deepEqual(values('#pp-sector option'), ['tu', 'test']);
-  assert.equal(owedSwitch.hidden, false, 'lecturers are offered the 1% owed since 2025');
+  const jobs = root.querySelector('#pp-sector');
+  const choose = (id) => { jobs.value = id; jobs.dispatchEvent({ type: 'change', bubbles: true }); return store.get(); };
+  assert.deepEqual(values('#pp-sector option'), ['tu', 'primary', 'postprimary', 'nurse', 'garda']);
+  assert.equal(jobs.closest('.field').hidden, false, 'the job list shows once there is more than one job');
+  assert.equal(owedSwitch.hidden, false, 'lecturers are offered the 1% from September 2025');
   assert.equal(root.querySelector('label.pill-hourly').hidden, false);
 
-  const jobs = root.querySelector('#pp-sector');
-  jobs.value = 'test';
-  jobs.dispatchEvent({ type: 'change', bubbles: true });
-  const s = store.get();
-  assert.deepEqual([s.sector, s.gradeId, s.pointIndex, s.touched], ['test', 'test-a', 0, true]);
-  assert.deepEqual(values('#pp-grade option'), ['test-a', 'typed']);
+  let s = choose('primary');
+  assert.deepEqual([s.sector, s.gradeId, s.pointIndex, s.touched], ['primary', 'pt-new', 0, true]);
+  assert.deepEqual(values('#pp-grade option'), ['pt-new', 'pt-pre2011', 'typed']);
   assert.equal(owedSwitch.hidden, true);
   assert.equal(root.querySelector('label.pill-hourly').hidden, true);
-  assert.equal(root.querySelector('.pay-label').textContent, 'Test grade, point 1');
-  assert.match(root.querySelector('.pay-caveat').textContent, /Basic pay only\.$/);
+  assert.equal(root.querySelector('.pay-label').textContent, 'Primary teacher (started in 2011 or later), point 1');
+  assert.equal(root.querySelector('.pay-big .from').textContent, '€45,833');
+  assert.match(root.querySelector('.pay-caveat').textContent, /qualification allowances, posts of responsibility and other allowances are not included\.$/);
+  assert.equal(texts('#pp-point option')[3], 'Point 4, a skipped point (€50,280)');
+
+  s = choose('nurse');
+  assert.deepEqual([s.gradeId, s.includeOwed], ['nm-enhanced', false]);
+  assert.match(root.querySelector('.pay-notes').textContent, /Two official documents give different figures/);
+  assert.equal(texts('#pp-point option').at(-1), 'Long service increment (€60,194)');
+  const grades = root.querySelector('#pp-grade');
+  grades.value = 'nm-staff-senior';
+  grades.dispatchEvent({ type: 'change', bubbles: true });
+  assert.equal(root.querySelector('.pay-label').textContent, 'Senior Staff Nurse or Midwife, single rate');
+  assert.equal(root.querySelector('.pay-notes').hidden, true, 'the note about the Enhanced scale goes with that grade only');
+
+  s = choose('garda');
+  assert.equal(s.gradeId, 'garda-2015');
+  assert.equal(owedSwitch.hidden, false, 'gardaí are offered the 1% from September 2025 too');
+  assert.match(owedSwitch.textContent, /GRA last reported/);
+  assert.deepEqual(texts('#pp-grade optgroup').length, 3);
+  assert.match(root.querySelector('.pay-caveat').textContent, /may differ from your payslip by a euro or two\.$/);
 });
 
 // ---- with motion on: the timed animations run and land on their final state ----

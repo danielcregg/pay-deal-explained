@@ -15,7 +15,7 @@ export const SITE = {
   lastUpdated: '2026-11-11',
   includeLBDefault: false,
   // Whether the 1% owed since 1 September 2025 (see the `owed` entry of a sector in SCALES) is counted from the start.
-  // It is unconfirmed for TU lecturers, so it is off; readers can switch it on in section 1.
+  // It is unconfirmed for TU lecturers and for gardaí, so it is off; readers can switch it on in section 1.
   includeOwedDefault: false,
   repoUrl: 'https://github.com/danielcregg/pay-deal-2026',
   issuesUrl: 'https://github.com/danielcregg/pay-deal-2026/issues',
@@ -84,7 +84,6 @@ export const PREVIOUS_DEAL = {
     step('p7', '2026-06-01', 1),
   ],
   reviewClause: 'General only: pay terms were not to be revisited unless the assumptions underlying the agreement needed to be (section 5.7).',
-  tuLbNote: 'For TU academic staff, the first local bargaining instalment (1%, due 1 September 2025) was still being sought by TUI in December 2025, and it does not appear in the February or June 2026 pay scales. This comparison leaves it out unless you count local bargaining as a rise.',
   sourceIds: ['psa-2024', 'rte-analysis', 'tui-lb-dec2025', 'circular-001-2026', 'circular-002-2026'],
 };
 
@@ -92,6 +91,34 @@ const pts = (values, extras = []) => [
   ...values.map((value, i) => ({ label: `Point ${i + 1}`, value })),
   ...extras,
 ];
+
+/** Mark the points that nobody stops on: people move straight past them on their increment date. */
+const skipping = (points, numbers) => points.map((p, i) => (numbers.includes(i + 1) ? { ...p, label: `${p.label}, a skipped point`, skipped: true } : p));
+// Teachers who started in 2011 or later go from point 3 to 5, 7 to 9 and 11 to 13 (Circular 0037/2021).
+const TEACHER_SKIPS = [4, 8, 12];
+
+const ENHANCED_NOTE = 'Two official documents give different figures for the Enhanced scale from 1 June 2026: the HSE’s consolidated pay scales, and the Department of Health’s Circular 10/2026, whose figures are about 2% lower. Both are listed under Grade: pick the one that matches your payslip.';
+
+const GARDA_NOTE = 'An Garda Síochána’s pay table has three scales for garda rank: the 2015 scale, where new recruits start, and the older A and B scales. Sergeants and inspectors have A and B scales. Pick the one that matches your payslip.';
+
+const repeat = (value, times) => Array(times).fill(value);
+// An Garda Síochána, "All Garda Member Pay Rates Date effective 1 August 2025": one figure for each point.
+const GARDA_AUG_2025 = {
+  garda2015: [38694, 40453, 43730, 45502, 48107, 52051, 54758, 57285, ...repeat(59736, 5), ...repeat(61885, 6), 64303],
+  gardaA: [40769, 43730, 45502, 48107, 52051, 54758, 57285, ...repeat(59736, 5), ...repeat(61885, 6), ...repeat(64303, 4)],
+  gardaB: [39797, 42491, 44224, 46755, 50561, 53112, 55504, ...repeat(57863, 5), ...repeat(59926, 6), ...repeat(62268, 4)],
+  sergeantA: [64849, 66235, 67679, ...repeat(69257, 3), ...repeat(70857, 6), ...repeat(73460, 4)],
+  sergeantB: [62799, 64135, 65540, ...repeat(67056, 3), ...repeat(68600, 6), ...repeat(71122, 4)],
+  inspectorA: [73816, 74944, 76805, ...repeat(78914, 3), 81033],
+  inspectorB: [71466, 72555, 74360, ...repeat(76397, 3), 78443],
+};
+/** The rises since that table: 1 February 2026 (1% or €500) and 1 June 2026 (1%), each rounded to the euro. */
+const since2025 = (values) => values.map((v) => {
+  const feb = PREVIOUS_DEAL.steps.find((s) => s.id === 'p6');
+  const june = PREVIOUS_DEAL.steps.find((s) => s.id === 'p7');
+  const afterFeb = Math.round(v + Math.max((v * feb.pct) / 100, feb.min));
+  return Math.round(afterFeb * (1 + june.pct / 100));
+});
 
 export const SCALES = {
   effective: '2026-06-01',
@@ -106,8 +133,11 @@ export const SCALES = {
       low: 'lowest lecturing point',
       effective: '2026-06-01',
       sourceId: 'circular-002-2026',
+      sourceIds: ['circular-002-2026'],
       hourly: true, // hourly-paid Assistant Lecturers: point 1 of the annual scale ÷ hourlyDivisor
       caveat: null,
+      lastDealLB: false, // the 1% of September 2025 is not in these scales; the `owed` entry below lets readers count it
+      lastDealNote: 'For TU academic staff, the first local bargaining instalment (1%, due 1 September 2025) was still being sought by TUI in December 2025, and it does not appear in the February or June 2026 pay scales. This comparison leaves it out unless you count it in section 1.',
       // The 1% local bargaining due from 1 September 2025 under the 2024–2026 agreement is not
       // in these scales. While this entry exists, readers can choose to count it (sections 1 and 6)
       // and the page shows pay with and without it. Delete the entry once a circular applies
@@ -118,6 +148,71 @@ export const SCALES = {
         note: 'Local bargaining money is used as each sector negotiates, so neither 1% is certain to reach you as a rise. The 1% due from 1 September 2025 under the last agreement was not in the lecturer pay scales of 1 June 2026. TUI has claimed it for academic staff from that date, and a circular of 1 October 2026 sanctioned it, backdated, for post-primary teachers. If it is paid to lecturers, the new rises build on it, which is why some calculations come out about 1% higher.',
         status: 'It has not been agreed or paid for lecturers, and it is not in the pay scales.',
         sourceIds: ['tui-lb-dec2025', 'tui-senior-cycle-1pc'],
+      },
+    },
+    {
+      id: 'primary',
+      name: 'Primary school teacher',
+      short: 'primary teacher',
+      low: 'starting point for new primary teachers',
+      lowGrade: 'pt-new',
+      effective: '2026-06-01',
+      sourceId: 'circular-0055-2026',
+      sourceIds: ['circular-0055-2026', 'circular-0054-2026'],
+      hourly: false,
+      caveat: 'Basic scale only: qualification allowances, posts of responsibility and other allowances are not included.',
+      lastDealLB: false,
+      lastDealNote: 'For primary teachers, the first local bargaining instalment (from 1 September 2025) was paid as allowances for certain posts and a higher principal’s allowance, under Circular 0054/2026. The salary scale did not change, so this comparison leaves it out.',
+    },
+    {
+      id: 'postprimary',
+      name: 'Post-primary (secondary) school teacher',
+      short: 'post-primary teacher',
+      low: 'starting point for new post-primary teachers',
+      lowGrade: 'ppt-new',
+      effective: '2026-06-01',
+      sourceId: 'circular-0074-2026',
+      sourceIds: ['circular-0074-2026'],
+      hourly: false,
+      caveat: 'Basic scale only: qualification allowances, posts of responsibility and other allowances are not included. These are the scales in Circular 0074/2026 of 1 October 2026, which include the 1% local bargaining from 1 September 2025. The circular says the payroll changes and back pay will take time, so your payslip may not show these rates yet.',
+      lastDealLB: true,
+      lastDealNote: 'For post-primary teachers, the first local bargaining instalment was a 1% rise in the salary scale from 1 September 2025, under Circular 0074/2026, so this comparison counts it.',
+    },
+    {
+      id: 'nurse',
+      name: 'Nurse or midwife',
+      short: 'nurse or midwife',
+      low: 'lowest staff nurse and midwife point',
+      effective: '2026-06-01',
+      sourceId: 'hse-scales-june-2026',
+      sourceIds: ['hse-scales-june-2026', 'doh-circular-9-2026', 'doh-circular-10-2026'],
+      hourly: false,
+      caveat: 'Basic scale only: location and qualification allowances, premium pay for nights, weekends and public holidays, and overtime are not included. These are the general scales; mental health nurses have some scales of their own.',
+      lastDealLB: false,
+      lastDealNote: 'For nurses and midwives, the first local bargaining instalment was used for particular changes from 1 September 2025, such as a new Enhanced entry scale and a long service increment for Clinical Nurse Managers 1 (Department of Health Circulars 9/2026 and 10/2026). It was not a 1% rise on every scale, so this comparison leaves it out.',
+    },
+    {
+      id: 'garda',
+      name: 'Garda, sergeant or inspector',
+      short: 'garda',
+      low: 'starting point for new gardaí',
+      lowGrade: 'garda-2015',
+      effective: '2026-06-01',
+      sourceId: 'garda-scales-aug-2025',
+      sourceIds: ['garda-scales-aug-2025', 'garda-why-join-2026', 'gra-update-sep2026'],
+      hourly: false,
+      // No Garda table dated 1 June 2026 could be found. GARDA_AUG_2025 below is the official
+      // table of 1 August 2025; `since2025` applies the two rises since. Replace both with the
+      // official figures when a newer table is published.
+      caveat: 'Basic pay only: allowances, unsocial hours payments and overtime are not included. We could not find a Garda pay table for 1 June 2026, so these figures are An Garda Síochána’s table of 1 August 2025 with the rises of 1 February 2026 (1% or €500) and 1 June 2026 (1%) applied. They may differ from your payslip by a euro or two.',
+      lastDealLB: false,
+      lastDealNote: 'For gardaí, the first local bargaining instalment (1%, due 1 September 2025) had not been agreed when the GRA last reported on it, on 29 September 2026. This comparison leaves it out unless you count it in section 1.',
+      owed: {
+        pct: 1,
+        since: '2025-09-01',
+        note: 'Local bargaining money is used as each sector negotiates, so neither 1% is certain to reach you as a rise. The GRA said on 29 September 2026 that its claims for the 1% due from 1 September 2025 had not been agreed, and that it had been told the 1% could instead be used as a general rise for all members. If it is paid that way, the new rises build on it.',
+        status: 'It had not been agreed or paid when the GRA last reported on it, on 29 September 2026.',
+        sourceIds: ['gra-update-sep2026', 'gra-adc-2026'],
       },
     },
   ],
@@ -158,8 +253,78 @@ export const SCALES = {
       // TUI: "Long Service Increments (Lecturer 2 scale only - appointees before September 1998)".
       id: 'ls2', sector: 'tu', name: 'Lecturer 2 (appointed before September 1998, with long service increments)', group: 'legacy',
       points: pts([69625, 72831, 84009, 86936, 89894, 92865, 95852, 98817, 101780, 104757, 107727],
-        [{ label: 'LSI 1', value: 110594 }, { label: 'LSI 2', value: 113460 }]),
+        [{ label: 'LSI 1', value: 110594, lsi: true }, { label: 'LSI 2', value: 113460, lsi: true }]),
     },
+    // Primary teachers: Circular 0055/2026, Appendix 1 (a) and (b), from 1 June 2026.
+    {
+      id: 'pt-new', sector: 'primary', name: 'Primary teacher (started in 2011 or later)', group: 'current',
+      points: skipping(pts([45833, 47503, 49409, 50280, 51510, 53015, 54742, 56534, 58051, 60785, 62495, 64537, 66567, 68618,
+        70329, 72596, 72596, 72596, 75721, 75721, 75721, 75721, 79854, 79854, 79854, 79854, 84412]), TEACHER_SKIPS),
+    },
+    {
+      id: 'pt-pre2011', sector: 'primary', name: 'Primary teacher (started before 2011)', group: 'current',
+      points: pts([43774, 44644, 45868, 47097, 49002, 50237, 51476, 54669, 56327, 58341, 60362, 62407, 64118, 66386,
+        66386, 66386, 69511, 69511, 69511, 69511, 73644, 73644, 73644, 73644, 78205]),
+    },
+    // Post-primary teachers: Circular 0074/2026, Appendix 1 (a) and (b), the column "Rate from 01/06/2026".
+    {
+      id: 'ppt-new', sector: 'postprimary', name: 'Post-primary teacher (started in 2011 or later)', group: 'current',
+      points: skipping(pts([47886, 49578, 51515, 52407, 53668, 55226, 57023, 58862, 60406, 63177, 64907, 66980, 69040, 71114,
+        72850, 75149, 75149, 75149, 78316, 78316, 78316, 78316, 82501, 82501, 82501, 82501, 87128]), TEACHER_SKIPS),
+    },
+    {
+      id: 'ppt-pre2011', sector: 'postprimary', name: 'Post-primary teacher (started before 2011)', group: 'current',
+      points: pts([44359, 45240, 46480, 47727, 49658, 50908, 52169, 55407, 57087, 59128, 61177, 63249, 64983, 67283,
+        67283, 67283, 70451, 70451, 70451, 70451, 74638, 74638, 74638, 74638, 79261]),
+    },
+    // Nurses and midwives: HSE consolidated salary scales, 1 June 2026 (version 4, September 2026).
+    {
+      // Two official documents disagree on this scale. The HSE's table (used here) takes the
+      // figures in Circular 10/2026 as the rates from 1 September 2025 and adds the rises of
+      // February and June 2026; the circular labels the same figures "01/06/2026". The 13.3%
+      // reported for an Enhanced nurse on 11 November matches the HSE's starting figure.
+      id: 'nm-enhanced', sector: 'nurse', name: 'Enhanced Nurse or Midwife (HSE pay scales)', group: 'current',
+      note: ENHANCED_NOTE,
+      points: pts([44832, 46217, 48775, 50141, 51194, 52364, 53944, 55522, 57903], [{ label: 'Long service increment', value: 60194, lsi: true }]),
+    },
+    {
+      id: 'nm-enhanced-c10', sector: 'nurse', name: 'Enhanced Nurse or Midwife (Circular 10/2026 figures)', group: 'current',
+      note: ENHANCED_NOTE,
+      points: pts([43888, 45259, 47792, 49145, 50185, 51333, 52881, 54428, 56762], [{ label: 'Long service increment', value: 59008, lsi: true }]),
+    },
+    {
+      id: 'nm-enhanced-senior', sector: 'nurse', name: 'Senior Enhanced Nurse or Midwife', group: 'current',
+      points: [{ label: 'Single rate', value: 62047 }],
+    },
+    {
+      id: 'nm-staff', sector: 'nurse', name: 'Staff Nurse or Midwife', group: 'current',
+      points: pts([38166, 40158, 41175, 42519, 44213, 45907, 47591, 49049, 50509, 51973, 53466, 54956], [{ label: 'Long service increment', value: 56592, lsi: true }]),
+    },
+    {
+      id: 'nm-staff-senior', sector: 'nurse', name: 'Senior Staff Nurse or Midwife', group: 'current',
+      points: [{ label: 'Single rate', value: 59278 }],
+    },
+    {
+      // Point 1 is skipped from 1 September 2025 on both manager scales (Circular 9/2026).
+      id: 'cnm1', sector: 'nurse', name: 'Clinical Nurse or Midwife Manager 1', group: 'current',
+      points: skipping(pts([57780, 58828, 60306, 61810, 63305, 64809, 66484, 68046], [{ label: 'Long service increment', value: 70087, lsi: true }]), [1]),
+    },
+    {
+      id: 'cnm2', sector: 'nurse', name: 'Clinical Nurse or Midwife Manager 2', group: 'current',
+      points: skipping(pts([62699, 63737, 64615, 66048, 67633, 69189, 70745, 72497, 74123, 76921], [{ label: 'Long service increment', value: 79227, lsi: true }]), [1]),
+    },
+    {
+      id: 'cnm3', sector: 'nurse', name: 'Clinical Nurse or Midwife Manager 3', group: 'current',
+      points: pts([72146, 73573, 77183, 78603, 80031, 81478]),
+    },
+    // Gardaí: "All Garda Member Pay Rates Date effective 1 August 2025", moved on by the two rises since.
+    { id: 'garda-2015', sector: 'garda', name: 'Garda (the 2015 scale, where new recruits start)', group: 'current', note: GARDA_NOTE, points: pts(since2025(GARDA_AUG_2025.garda2015)) },
+    { id: 'garda-a', sector: 'garda', name: 'Garda (scale A)', group: 'current', note: GARDA_NOTE, points: pts(since2025(GARDA_AUG_2025.gardaA)) },
+    { id: 'sergeant-a', sector: 'garda', name: 'Sergeant (scale A)', group: 'current', note: GARDA_NOTE, points: pts(since2025(GARDA_AUG_2025.sergeantA)) },
+    { id: 'inspector-a', sector: 'garda', name: 'Inspector (scale A)', group: 'current', note: GARDA_NOTE, points: pts(since2025(GARDA_AUG_2025.inspectorA)) },
+    { id: 'garda-b', sector: 'garda', name: 'Garda (scale B)', group: 'legacy', note: GARDA_NOTE, points: pts(since2025(GARDA_AUG_2025.gardaB)) },
+    { id: 'sergeant-b', sector: 'garda', name: 'Sergeant (scale B)', group: 'legacy', note: GARDA_NOTE, points: pts(since2025(GARDA_AUG_2025.sergeantB)) },
+    { id: 'inspector-b', sector: 'garda', name: 'Inspector (scale B)', group: 'legacy', note: GARDA_NOTE, points: pts(since2025(GARDA_AUG_2025.inspectorB)) },
   ],
 };
 
@@ -222,7 +387,7 @@ export const BEYOND_PAY = [
   },
   {
     id: 'education', title: 'Education measures', status: 'reported',
-    text: 'Measures on recruitment and retention, workload and class sizes in schools were mentioned when the deal was agreed. Whether any apply to technological universities is not yet known.',
+    text: 'Measures on recruitment and retention, workload and class sizes in schools were mentioned when the deal was agreed. Which of them apply to which sector is not yet known.',
     sourceIds: ['rte-deal'],
   },
   {
@@ -237,7 +402,9 @@ export const ASSUMPTIONS = [
   'Figures are gross pay, before tax, USC, PRSI and pension deductions.',
   'Annual increments are not included: the figures show only what the deal adds to your current scale point.',
   'Local bargaining (1% on 1 March 2029) is left out of totals unless you switch it on. It is 1% of a bargaining unit’s pay bill, used as negotiated, so it may not reach you as a 1% rise.',
-  'The 1% local bargaining due from 1 September 2025 under the last agreement is not in the lecturer pay scales of 1 June 2026, so it is left out unless you switch it on in section 1. Counting it adds 1% to your current point before the new rises, and adds its back pay: 1% of the pay scale in force in each month since then, assuming it is backdated in full.',
+  'Lecturer, teacher and nurse figures are the pay scales in force from 1 June 2026. Garda figures are the official table of 1 August 2025 with the two rises since applied, because no later table could be found.',
+  'For teachers, nurses, midwives and gardaí the figures are basic pay only: allowances, premium pay and overtime are not included.',
+  'The 1% local bargaining due from 1 September 2025 under the last agreement is in the post-primary teachers’ scale. For primary teachers, nurses and midwives it was used for allowances and changes to particular grades. It is not in the lecturer or Garda figures, so for those jobs it is left out unless you switch it on in section 1. Counting it adds 1% to your current point before the new rises, and adds its back pay: 1% of the pay scale in force in each month since then, assuming it is backdated in full.',
   'Amounts are worked out to the cent and shown in whole euros. Official pay scales may differ by about €1 because of rounding.',
   'Part-time pay is your full-time scale point times your FTE, so the flat minimums are pro-rated.',
   'Hourly rates for Assistant Lecturers are point 1 of the annual scale divided by 630 hours, which matches the 2026 pay circulars exactly.',
@@ -261,10 +428,25 @@ export const SOURCES = [
   { id: 'circular-001-2026', publisher: 'Department of Further and Higher Education', title: 'TU-IOT Circular 001/2026: revision of pay from 1 February 2026 (copy hosted by TUI)', date: '2026', url: 'https://www.tui.ie/_fileupload/tu-iot-circular-001-2026-revision-of-pay-for-the-higher-education-sector-with-effect-from-1st-february-2026.pdf' },
   { id: 'tui-scales', publisher: 'TUI', title: 'Third level salary scales', date: '2026', url: 'https://www.tui.ie/third-level-pay-pensions/third-level-salary-scales-.2167.html' },
   { id: 'tui-senior-cycle-1pc', publisher: 'TUI', title: 'Department issues circular for payment of overdue 1% after over 98% of TUI members vote for industrial action', date: '2026-10', url: 'https://www.tui.ie/news/department-issues-circular-for-payment-of-overdue-1-after-over-98-of-tui-members-vote-for-industrial-action.15569.html' },
+  { id: 'circular-0055-2026', publisher: 'Department of Education and Youth', title: 'Circular 0055/2026: revision of salaries for primary teachers from 1 June 2026 (copy hosted by INTO)', date: '2026-05-27', url: 'https://www.into.ie/app/uploads/2026/05/Circular_0055-2026_Primary_Teacher_Salaries_effective_from_1st_June_2026.pdf' },
+  { id: 'circular-0054-2026', publisher: 'Department of Education and Youth', title: 'Circular 0054/2026: implementation of local bargaining for primary teachers from 1 September 2025 (copy hosted by INTO)', date: '2026-05-21', url: 'https://www.into.ie/app/uploads/2026/05/circular-54-2026.pdf' },
+  { id: 'circular-0074-2026', publisher: 'Department of Education and Youth', title: 'Circular 0074/2026: implementation of local bargaining for post-primary teachers from 1 September 2025, with revised salary scales (copy hosted by TUI)', date: '2026-10-01', url: 'https://www.tui.ie/_fileupload/circular74-2026.pdf' },
+  { id: 'hse-scales-june-2026', publisher: 'HSE', title: 'Health sector consolidated salary scales, 1 June 2026 (version 4)', date: '2026-09', url: 'https://assets.hse.ie/media/documents/1_June_2026_pay_scales_yVg87LQ.pdf' },
+  { id: 'doh-circular-9-2026', publisher: 'Department of Health', title: 'Circular 9/2026: amendments to nurse and midwife grades under the local bargaining clause', date: '2026-09-16', url: 'https://assets.hse.ie/media/documents/Department_of_Health_circular_009_2026_Amendments_to_Nurse_and_Midwife_Grades.pdf' },
+  { id: 'doh-circular-10-2026', publisher: 'Department of Health', title: 'Circular 10/2026: amendments to entry grade for nursing staff under the local bargaining clause', date: '2026-09-16', url: 'https://assets.hse.ie/media/documents/Department_of_Health_circular_010_2026_Amendments_to_entry_grade_for_nursing_staff.pdf' },
+  { id: 'garda-scales-aug-2025', publisher: 'An Garda Síochána', title: 'All Garda member pay rates, effective 1 August 2025 (archived copy)', date: '2025-08-01', url: 'https://web.archive.org/web/20260318190946/https://www.garda.ie/en/careers/career-opportunities-for-an-garda-siochana/garda-pay-scales-august-2025.pdf' },
+  { id: 'garda-why-join-2026', publisher: 'An Garda Síochána', title: 'Why join An Garda Síochána? Pay as of 1 February 2026', date: '2026-05', url: 'https://www.garda.ie/en/careers/garda-trainee-recruitment-it-s-a-job-worth-doing-campaign/why-join-an-garda-siochana-may-2026.pdf' },
+  { id: 'gra-update-sep2026', publisher: 'Garda Representative Association', title: 'GRA update, 29 September', date: '2026-09-29', url: 'https://www.gra.ie/latest-news/gra-update-29th-september' },
+  { id: 'gra-adc-2026', publisher: 'Garda Representative Association', title: 'Annual Delegate Conference 2026', date: '2026-04-28', url: 'https://www.gra.ie/latest-news/annual-delegate-conference-2026' },
   { id: 'tui-lb-dec2025', publisher: 'TUI', title: 'Consultation, parity of esteem and application of pay agreement increase required for professorships', date: '2025-12-16', url: 'https://www.tui.ie/press-releases/consultation-parity-of-esteem-and-application-of-pay-agreement-increase-required-for-professorships%E2%80%99.15414.html' },
 ];
 
 export const UNION_LINKS = [
-  { name: 'TUI', url: 'https://www.tui.ie/', note: 'The Teachers’ Union of Ireland represents academic staff in the technological universities.' },
+  { name: 'TUI', url: 'https://www.tui.ie/', note: 'The Teachers’ Union of Ireland represents academic staff in the technological universities, and teachers in post-primary schools and further education.' },
+  { name: 'INTO', url: 'https://www.into.ie/', note: 'The Irish National Teachers’ Organisation represents primary teachers.' },
+  { name: 'ASTI', url: 'https://www.asti.ie/', note: 'The Association of Secondary Teachers, Ireland represents post-primary teachers.' },
+  { name: 'INMO', url: 'https://inmo.ie/', note: 'The Irish Nurses and Midwives Organisation represents nurses and midwives.' },
+  { name: 'GRA', url: 'https://www.gra.ie/', note: 'The Garda Representative Association represents members of garda rank.' },
+  { name: 'AGSI', url: 'https://www.agsi.ie/', note: 'The Association of Garda Sergeants and Inspectors represents sergeants and inspectors.' },
   { name: 'ICTU Public Services Committee', url: 'https://www.ictu.ie/', note: 'The Irish Congress of Trade Unions brings together the public service unions.' },
 ];

@@ -1,8 +1,9 @@
 # Pay Deal Explained
 
 An unofficial, neutral explainer of the November 2026 draft Irish public service pay
-deal, written for lecturers in the technological universities. It uses animated and
-interactive demos so you can see what the draft does to your own pay.
+deal. It was written first for lecturers in the technological universities and now also
+has the pay scales of primary and post-primary teachers, nurses and midwives, and gardaí.
+It uses animated and interactive demos so you can see what the draft does to your own pay.
 
 **Live site:** https://publicpaydeal2026.tech/ (the GitHub Pages addresses,
 danielcregg.github.io/pay-deal-2026 and danielcregg.is-a.dev/pay-deal-2026, redirect there)
@@ -16,7 +17,7 @@ repository's Pages settings, not by a `CNAME` file.
   no cookies.
 - Your salary never leaves your browser. Your choices are kept in local storage on your
   own device.
-- Not affiliated with any union, university or Government body. Not financial advice.
+- Not affiliated with any union, employer or Government body. Not financial advice.
 
 ## Run it locally
 
@@ -37,7 +38,7 @@ npm test
 The tests check:
 - every reference figure the site shows, such as €89,894 → €99,037 for a Lecturer on
   point 5
-- the TU pay scales
+- the pay scales of every job, figure by figure, and how the Garda figures are derived
 - the hourly rates
 - the data file's internal consistency
 - that the figures written into `index.html` match the data: the `<noscript>` facts,
@@ -76,23 +77,44 @@ Every fact lives in [`site/js/data.js`](site/js/data.js).
    `tests/static-figures.test.js` and `tests/noscript.test.js` point to anything you
    miss. Also update the reference values in `tests/pay.test.js`.
 
-### If local bargaining turns out to reach TU staff as a pay rise
+### Jobs and their pay scales
 
-Set `SITE.includeLBDefault` to `true` and update `PREVIOUS_DEAL.tuLbNote`.
+Each job is an entry in `SCALES.sectors` and its grades are the entries of
+`SCALES.grades` with that `sector`. A sector says where its figures come from
+(`sourceId`), what they leave out (`caveat`), whether the 1% local bargaining of
+1 September 2025 is already in its scale (`lastDealLB`, explained to readers by
+`lastDealNote`), and which grade's first point is the "low point" used in the opening
+chart and chapter 7 (`lowGrade`).
 
-### If the 1% owed since 1 September 2025 is paid to TU lecturers
+- **Lecturers, teachers, nurses and midwives** use the scales in force from 1 June 2026.
+- **Nurses:** two official documents disagree on the Enhanced scale, so both versions are
+  listed and a note says so. Remove one when the difference is settled.
+- **Gardaí:** no table for 1 June 2026 could be found, so `GARDA_AUG_2025` holds the
+  official table of 1 August 2025 and `since2025` applies the rises of February and June
+  2026. When a newer table is published, replace the figures and drop `since2025` and the
+  sentence about it in the sector's `caveat`.
 
-That 1% (local bargaining under the 2024–2026 agreement) was not in the lecturer scales
-of 1 June 2026. While `SCALES.owed` exists, section 1 has a switch to count it and shows
-pay with and without it.
+To add a job: add the sector and its grades, add its sources to `SOURCES`, and add a
+test with the scale figures to `tests/sectors.test.js`.
+
+### If local bargaining turns out to reach staff as a pay rise
+
+Set `SITE.includeLBDefault` to `true` and update the sector's `lastDealNote`.
+
+### If the 1% from 1 September 2025 is paid to lecturers or gardaí
+
+That 1% (local bargaining under the 2024–2026 agreement) is not in the lecturer scales
+of 1 June 2026 or in the Garda figures. While a sector has an `owed` entry, section 1
+has a switch to count it and shows pay with and without it.
 
 - **To count it for everyone by default** (still labelled, and readers can switch it
   off): set `SITE.includeOwedDefault` to `true`, and update the reference values in the
   tests that use the default selection.
 - **When a circular applies it:**
-  1. Replace the figures in `SCALES` with the new circular's, and update
-     `SCALES.effective` and its source.
-  2. Delete `SCALES.owed`. The switch and the extra column disappear.
+  1. Replace that sector's figures in `SCALES` with the new circular's, and update
+     the sector's `effective` date and source.
+  2. Delete the sector's `owed` entry and set its `lastDealLB` to `true`. The switch
+     and the extra column disappear for that job.
   3. Update `PREVIOUS_DEAL.tuLbNote`, and the matching sentence in `ASSUMPTIONS`.
   4. Update the reference values in the tests, then run `npm test`.
 

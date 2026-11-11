@@ -17,7 +17,7 @@ export function render(root, { data }) {
       h('h3', {}, 'Assumptions'),
       h('ul', { class: 'assumption-list' }, ASSUMPTIONS.map((a) => h('li', {}, a))),
       h('h3', {}, 'About this site'),
-      h('p', {}, 'An unofficial and independent explainer: not affiliated with any union, university or Government body. Not financial advice. Check your own figures with your payroll office or union.'),
+      h('p', {}, 'An unofficial and independent explainer: not affiliated with any union, employer or Government body. Not financial advice. Check your own figures with your payroll office or union.'),
       h('p', {}, `Last updated ${longDate(SITE.lastUpdated)}. `,
         'Spotted a mistake? ', h('a', { href: SITE.issuesUrl, rel: 'noopener' }, 'Report it on GitHub'), '.')));
 }

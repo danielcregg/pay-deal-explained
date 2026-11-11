@@ -49,7 +49,7 @@ test('TU scales from Circular 002/2026 (1 June 2026)', () => {
   assert.deepEqual(vals('ls2'), [69625, 72831, 84009, 86936, 89894, 92865, 95852, 98817, 101780, 104757, 107727, 110594, 113460]);
   assert.deepEqual(g('ls2').points.slice(-2).map((p) => p.label), ['LSI 1', 'LSI 2']);
   assert.equal(g('lect').points[4].label, 'Point 5');
-  for (const gr of D.SCALES.grades) gr.points.forEach((p, i, a) => i && assert.ok(p.value > a[i - 1].value, gr.id));
+  for (const gr of D.SCALES.grades.filter((x) => x.sector === 'tu')) gr.points.forEach((p, i, a) => i && assert.ok(p.value > a[i - 1].value, gr.id));
 });
 
 test('hourly rates equal point 1 ÷ 630 to the cent', () => {
@@ -62,7 +62,8 @@ test('inflation inputs, settings and union links', () => {
   assert.deepEqual(D.INFLATION.rates, { 2026: 3.4, 2027: 3.1, 2028: 2, 2029: 2 });
   assert.deepEqual([D.INFLATION.from, D.INFLATION.to, D.INFLATION.assumedYears], ['2026-07', '2029-03', [2029]]);
   assert.equal(D.SITE.includeLBDefault, false);
-  assert.deepEqual(D.UNION_LINKS.map((u) => u.name), ['TUI', 'ICTU Public Services Committee']);
+  assert.deepEqual(D.UNION_LINKS.map((u) => u.name), ['TUI', 'INTO', 'ASTI', 'INMO', 'GRA', 'AGSI', 'ICTU Public Services Committee']);
+  for (const u of D.UNION_LINKS) assert.ok(u.url.startsWith('https://') && u.note.length > 20, u.name);
 });
 
 test('glossary, timeline and beyond-pay content is complete', () => {
@@ -79,6 +80,7 @@ test('every referenced source exists', () => {
   const ids = new Set(D.SOURCES.map((s) => s.id));
   assert.equal(ids.size, D.SOURCES.length);
   const used = [...D.DEAL.sourceIds, ...D.PREVIOUS_DEAL.sourceIds, D.SCALES.sourceId, D.INFLATION.sourceId,
+    ...D.SCALES.sectors.flatMap((s) => [s.sourceId, ...(s.sourceIds ?? []), ...(s.owed?.sourceIds ?? [])]),
     ...D.TIMELINE.map((e) => e.sourceId), ...D.BEYOND_PAY.flatMap((b) => b.sourceIds)];
   for (const id of used) assert.ok(ids.has(id), id);
   for (const s of D.SOURCES) assert.ok(s.url === null || s.url.startsWith('https://'), s.id);
