@@ -68,7 +68,11 @@ Every fact lives in [`site/js/data.js`](site/js/data.js).
    - the footer's `data-bind="last-updated"` date (for example `11 November 2026`)
 
    `npm test` fails until the `<noscript>` sentence and both dates match.
-5. Run `npm test`, then commit and push to `main`. The site redeploys in a minute or two.
+5. If the deal is accepted, the items in chapter 8 that come from the agreement's text are no
+   longer proposals: in `site/js/sections/beyond-pay.js`, change the `known` badge from
+   "In the proposed text" to "In the agreement", and reword "the proposed agreement says"
+   and "the proposed text" in `BEYOND_PAY`, `TIMELINE` and the sectors' notes in `data.js`.
+6. Run `npm test`, then commit and push to `main`. The site redeploys in a minute or two.
 
 ### If the agreement's text changes
 
@@ -108,6 +112,9 @@ test with the scale figures to `tests/sectors.test.js`.
 The charts and the pay panel use one of three inflation paths, chosen with the buttons
 under either chart. They are in `INFLATION.scenarios` in `data.js`.
 
+Each path has a `kind`, `forecast` or `illustration`, which the opening chart shows under
+the price figure and uses in its key ("are ahead" or "would be ahead").
+
 - **Central Bank** is the default: the Central Bank of Ireland's forecasts, with 2029
   assumed. When a new Quarterly Bulletin comes out, update `CENTRAL_RATES`, the
   scenario's `note`, the `cbi-qb3-2026` source and the reference values in the tests.
@@ -132,7 +139,9 @@ every rise is a percentage). That state is `DEFAULT_SELECTION` in
 - Chapter 1 has the same choices in full, with part-time and hourly-paid contracts and a
   box for typing a salary.
 - Choices are kept between visits only for a reader who ticks "Remember my choices on
-  this device" (`remember` in the selection; `persistSelection` saves or removes them).
+  this device" (`remember` in the selection). `rememberChoices` keeps the browser's storage in step: a
+  tab that is not remembering leaves storage alone, and unticking the box in one tab
+  unticks it in the others.
   `tests/generic.test.js` and `tests/remember.test.js` cover both.
 
 ### Increments in the opening chart
@@ -173,6 +182,16 @@ has a switch to count it and shows pay with and without it.
      and the extra column disappear for that job.
   3. Update the sector’s `lastDealNote`, and the matching sentence in `ASSUMPTIONS`.
   4. Update the reference values in the tests, then run `npm test`.
+
+### Present mode
+
+The opening has to fit one screen, at any projector size. Three things do that, in this
+order: rules in `site/css/present.css` that hide the tick boxes below 1060 lines and trim
+the card on narrow or 720-line screens; `chartHeight` in `site/js/sections/hero.js`, which
+starts the chart shorter on a short screen; and `fittedHeight`, which takes whatever the
+page still runs over by off the chart, down to 120px. After a change to the opening,
+check Present mode at 1024 by 768, 1280 by 720, 1366 by 768 and 1920 by 1080, with an
+increment month chosen.
 
 ## How it is organised
 
