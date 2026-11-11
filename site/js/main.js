@@ -35,9 +35,6 @@ const SECTIONS = [
   ['sources', sources],
 ];
 
-// The modules loaded: tell the fallback script in index.html not to step in.
-document.documentElement.setAttribute('data-started', '');
-
 const store = createStore(restoreSelection(loadSaved(), data.SCALES));
 store.subscribe((sel) => { if (sel.touched) saveSelection(sel); });
 const ctx = { store, data };

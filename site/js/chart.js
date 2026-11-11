@@ -45,6 +45,23 @@ export function axisMoney(v, axisMax) {
   return Number.isInteger(v) ? eur(v) : eur(v, { cents: true });
 }
 
+/** The axis label size in px, from the --chart-text token (12px; larger in Present mode). */
+export function labelSize(el) {
+  if (typeof getComputedStyle !== 'function') return 12;
+  return parseFloat(getComputedStyle(el).getPropertyValue('--chart-text')) || 12;
+}
+
+/**
+ * Baselines for rows of axis text under a plot, scaled to the label size so that larger
+ * text never collides: the first row sits 1.5 × the size below the plot, each further row
+ * `gaps[i]` × the size lower, with `tail` × the size of room beneath the last.
+ */
+export function axisRows(size, gaps, tail) {
+  const rows = [Math.round(size * 1.5)];
+  for (const gap of gaps) rows.push(rows[rows.length - 1] + Math.round(size * gap));
+  return { rows, margin: rows[rows.length - 1] + Math.round(size * tail) };
+}
+
 /** A visual-only tooltip inside a position:relative wrapper (values also live in the table view). */
 export function createTooltip(wrap) {
   const tip = h('div', { class: 'tip', 'aria-hidden': 'true', hidden: true });

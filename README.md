@@ -75,6 +75,18 @@ Every fact lives in [`site/js/data.js`](site/js/data.js).
 
 Set `SITE.includeLBDefault` to `true` and update `PREVIOUS_DEAL.tuLbNote`.
 
+### If the 1% owed since 1 September 2025 is paid to TU lecturers
+
+That 1% (local bargaining under the 2024–2026 agreement) was not in the lecturer scales
+of 1 June 2026, so section 1 shows an extra line: pay "if it is paid too". When a
+circular applies it:
+
+1. Replace the figures in `SCALES` with the new circular's, and update `SCALES.effective`
+   and its source.
+2. Set `PREVIOUS_DEAL.lbOutstanding` to `false`. The extra line disappears.
+3. Update `PREVIOUS_DEAL.tuLbNote`, and the matching sentence in `ASSUMPTIONS`.
+4. Update the reference values in the tests, then run `npm test`.
+
 ## How it is organised
 
 | Path | What it holds |
@@ -85,7 +97,7 @@ Set `SITE.includeLBDefault` to `true` and update `PREVIOUS_DEAL.tuLbNote`.
 | `site/js/selection.js` | The reader's grade, point and contract, saved on their device |
 | `site/js/sections/` | One module per section, each with a testable `model()` and a `render()` |
 | `site/js/present.js` | Present mode for projectors |
-| `tests/` | Node's built-in test runner |
+| `tests/` | Node's built-in test runner; `tests/helpers/` has a CSS reader and a small stand-in DOM, so tests can run the real render code |
 | `docs/superpowers/` | The design and the implementation plan |
 
 ## Sources

@@ -24,6 +24,8 @@ function matchesData(b) {
 
 test('noscript facts match data.js', () => {
   assert.deepEqual(tableRows(block), expectedRows);
+  // Every row in the table was read: the header row plus one per rise, however it is written.
+  assert.equal((block.match(/<tr[\s>]/g) ?? []).length, expectedRows.length + 1);
   assert.ok(matchesData(block));
 });
 

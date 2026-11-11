@@ -82,6 +82,10 @@ export const PREVIOUS_DEAL = {
   ],
   reviewClause: 'General only: pay terms were not to be revisited unless the assumptions underlying the agreement needed to be (section 5.7).',
   tuLbNote: 'For TU academic staff, the first local bargaining instalment (1%, due 1 September 2025) was still being sought by TUI in December 2025, and it does not appear in the February or June 2026 pay scales. This comparison leaves it out unless you count local bargaining as a rise.',
+  // True while that 1% is still missing from the lecturer scales. Section 1 then shows
+  // what pay comes to if it is paid as well. Set to false once SCALES includes it.
+  lbOutstanding: true,
+  lbOutstandingNote: 'Local bargaining money is used as each sector negotiates, so neither 1% is certain to reach you as a rise. The 1% due from 1 September 2025 under the last agreement was not in the lecturer pay scales of 1 June 2026, and TUI has been seeking it from that date. If it is paid and backdated, the new rises build on it, which is why some calculations come out about 1% higher.',
   sourceIds: ['psa-2024', 'rte-analysis', 'tui-lb-dec2025', 'circular-001-2026', 'circular-002-2026'],
 };
 
@@ -128,7 +132,8 @@ export const SCALES = {
       points: pts([61991, 64939, 67351, 69796, 72859, 82064, 83471, 86138, 88849, 91566, 94290]),
     },
     {
-      id: 'ls2', name: 'Lecturer Scale II (L2 grade)', group: 'legacy',
+      // TUI: "Long Service Increments (Lecturer 2 scale only - appointees before September 1998)".
+      id: 'ls2', name: 'Lecturer 2 (appointed before September 1998, with long service increments)', group: 'legacy',
       points: pts([69625, 72831, 84009, 86936, 89894, 92865, 95852, 98817, 101780, 104757, 107727],
         [{ label: 'LSI 1', value: 110594 }, { label: 'LSI 2', value: 113460 }]),
     },
@@ -209,6 +214,7 @@ export const ASSUMPTIONS = [
   'Figures are gross pay, before tax, USC, PRSI and pension deductions.',
   'Annual increments are not included: the figures show only what the deal adds to your current scale point.',
   'Local bargaining (1% on 1 March 2029) is left out of totals unless you switch it on. It is 1% of a bargaining unit’s pay bill, used as negotiated, so it may not reach you as a 1% rise.',
+  'The 1% local bargaining due from 1 September 2025 under the last agreement is not in the lecturer pay scales of 1 June 2026, so it is left out. Section 1 shows one extra line with it included: 1% added to your current point, then the new rises on top.',
   'Amounts are worked out to the cent and shown in whole euros. Official pay scales may differ by about €1 because of rounding.',
   'Part-time pay is your full-time scale point times your FTE, so the flat minimums are pro-rated.',
   'Hourly rates for Assistant Lecturers are point 1 of the annual scale divided by 630 hours, which matches the 2026 pay circulars exactly.',

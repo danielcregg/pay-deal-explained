@@ -23,12 +23,24 @@ export const DEFAULT_SELECTION = Object.freeze({
 });
 
 /**
- * Lenient parsing of a typed salary: strips €, commas and spaces, and reads dots used as
- * thousands separators ("58.000") as such. Errors carry a `code`: 'format', 'low' or 'high'.
+ * Lenient parsing of a typed salary. Strips € and spaces, and reads both ways of writing
+ * numbers: 58,000.50 and 58.000,50. A separator still being typed at the end is ignored.
+ * Errors carry a `code`: 'format', 'low' or 'high'.
  */
 export function parseSalary(input) {
-  let cleaned = String(input ?? '').replace(/[€,\s]/g, '');
-  if (/^\d{1,3}(\.\d{3})+$/.test(cleaned)) cleaned = cleaned.replace(/\./g, '');
+  let cleaned = String(input ?? '').replace(/[€\s]/g, '').replace(/[.,]$/, '');
+  const lastDot = cleaned.lastIndexOf('.');
+  const lastComma = cleaned.lastIndexOf(',');
+  if (lastDot >= 0 && lastComma >= 0) {
+    // Both are used: the later one is the decimal mark and the other groups thousands.
+    const [group, decimal] = lastComma > lastDot ? ['.', ','] : [',', '.'];
+    cleaned = cleaned.split(group).join('').replace(decimal, '.');
+  } else if (lastComma >= 0) {
+    if (/^\d{1,3}(,\d{3})+$/.test(cleaned)) cleaned = cleaned.replace(/,/g, ''); // 58,000
+    else if (/^\d+,\d{1,2}$/.test(cleaned)) cleaned = cleaned.replace(',', '.'); // 58000,50
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(cleaned)) {
+    cleaned = cleaned.replace(/\./g, ''); // 58.000
+  }
   if (!/^\d+(\.\d+)?$/.test(cleaned)) {
     return { ok: false, code: 'format', error: 'Enter your full-time salary in euro, for example 58000.' };
   }

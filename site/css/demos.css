@@ -89,7 +89,24 @@ input[type="number"] {
 .pay-big .per { font-family: var(--sans); font-size: 1rem; font-weight: 600; color: var(--muted); }
 
 .pay-gain { font-size: 1.05rem; }
-.pay-alt { color: var(--muted); font-size: 0.95rem; }
+.pay-alt { margin-top: 1rem; }
+.pay-ways-title { font-family: var(--sans); font-size: 0.95rem; font-weight: 650; margin: 0 0 0.35rem; }
+.pay-ways { margin: 0; display: grid; gap: 0.25rem; }
+.pay-ways div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+.pay-ways div.on { background: var(--teal-soft); color: var(--teal-ink); font-weight: 650; }
+.pay-ways dd { margin: 0; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pay-ways-pct { color: var(--muted); font-size: 0.88rem; }
+.pay-ways div.on .pay-ways-pct { color: inherit; }
+.pay-ways-note { color: var(--muted); font-size: 0.9rem; margin: 0.5rem 0 0; }
+.pay-ways-note[hidden] { display: none; }
 
 .pay-facts {
   display: grid;
@@ -139,7 +156,7 @@ input[type="number"] {
 .chart-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .chart-svg .grid { stroke: var(--grid); stroke-width: 1; }
 .chart-svg .baseline { stroke: var(--muted); stroke-width: 1; }
-.chart-svg .axis-label { fill: var(--muted); font: 12px var(--sans); font-variant-numeric: tabular-nums; }
+.chart-svg .axis-label { fill: var(--muted); font: var(--chart-text) var(--sans); font-variant-numeric: tabular-nums; }
 .chart-svg .value-label { fill: var(--ink); font: 650 13px var(--sans); }
 
 .bar-pct { fill: var(--mark-pct); }

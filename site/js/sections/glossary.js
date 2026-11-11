@@ -5,7 +5,7 @@ import { h } from '../dom.js';
 
 export const termHref = (id) => `#term-${id}`;
 
-function enhanceTerms(doc, glossary) {
+export function enhanceTerms(doc, glossary) {
   const byId = new Map(glossary.map((g) => [g.id, g]));
   // One shared explanation, moved next to whichever term is open so it follows the term
   // in reading order (screen readers reach it next; its link is the next tab stop).
@@ -52,8 +52,13 @@ function enhanceTerms(doc, glossary) {
 
   doc.addEventListener('click', (e) => { if (openFor && !pop.contains(e.target)) close(); });
   doc.addEventListener('keydown', (e) => {
-    // Marked as handled, so the same Esc does not also leave Present mode.
-    if (e.key === 'Escape' && openFor) { e.preventDefault(); const btn = openFor; close(); btn.focus(); }
+    if (e.key !== 'Escape' || !openFor) return;
+    // A pop-up left open in a chapter that Present mode has since hidden closes quietly.
+    // A visible one uses up the Esc, so the same press does not also leave Present mode.
+    const visible = pop.getClientRects().length > 0;
+    const btn = openFor;
+    close();
+    if (visible) { e.preventDefault(); btn.focus(); }
   });
   window.addEventListener('resize', close);
 }

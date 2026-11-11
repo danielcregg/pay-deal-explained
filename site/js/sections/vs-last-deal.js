@@ -2,22 +2,15 @@
 // side by side, with how pay builds up month by month from each deal's start.
 // Deliberately no single "pace" figure and no verdict (spec §4, rule 9).
 
-import { applySteps, finalSalary, payIndexSeries } from '../pay.js';
+import { finalSalary, payIndexSeries } from '../pay.js';
 import { resolvePay, figuresFor } from '../selection.js';
 import { eur, pct, longDate } from '../format.js';
 import { h } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
-import { niceRange, createTooltip } from '../chart.js';
+import { niceRange, createTooltip, labelSize, axisRows } from '../chart.js';
 
 /** The lowest point on the lecturing scales: where the flat minimums count most. */
 export const lowestScalePoint = (scales) => Math.min(...scales.grades.flatMap((g) => g.points.map((p) => p.value)));
-
-/** A deal's largest single rise at a given salary, as a share of pay just before it. */
-function largestRise(salary, steps, includeLB) {
-  const rows = applySteps(salary, steps, { includeLB }).filter((r) => r.included);
-  const top = rows.reduce((best, r) => (r.rise / r.before > best.rise / best.before ? r : best));
-  return { pct: (top.rise / top.before) * 100, amount: top.rise, flat: top.flat, date: top.step.date };
-}
 
 export function model(base, data, { includeLB }) {
   const both = [data.PREVIOUS_DEAL, data.DEAL];
@@ -27,7 +20,7 @@ export function model(base, data, { includeLB }) {
     return {
       id: d.id, name: d.name, start: d.start, end: d.end, months: d.months, stepCount: d.steps.length,
       headline: d.headlinePct, compoundedPct: (end / base - 1) * 100, endSalary: end,
-      threshold: d.threshold, largestLow: largestRise(lowSalary, d.steps, includeLB),
+      threshold: d.threshold, lowPct: (finalSalary(lowSalary, d.steps, { includeLB }) / lowSalary - 1) * 100,
       costBn: d.costBn, reviewClause: d.reviewClause,
     };
   });
@@ -47,10 +40,12 @@ function stepPath(points, x, y) {
   return d;
 }
 
-function buildChart(m, width) {
+function buildChart(m, width, text = 12) {
   const W = Math.max(280, width);
-  const H = 280;
-  const margin = { top: 14, right: 64, bottom: 44, left: 40 };
+  const axis = axisRows(text, [1.65], 0.5); // the month numbers, with the axis title under them
+  const H = 236 + axis.margin;
+  const k = text / 12;
+  const margin = { top: 14, right: Math.round(64 * k), bottom: axis.margin, left: Math.round(40 * k) };
   const maxM = Math.max(m.series.previous.length, m.series.draft.length) - 1;
   const values = [...m.series.previous, ...m.series.draft].map((p) => p.value);
   const { ticks } = niceRange(100, Math.max(...values));
@@ -67,9 +62,9 @@ function buildChart(m, width) {
       svgEl('text', { class: 'axis-label', x: margin.left - 6, y: y(t) + 4, 'text-anchor': 'end' }, String(Math.round(t * 10) / 10)));
   }
   for (const month of [0, 6, 12, 18, 24, 30]) {
-    svg.append(svgEl('text', { class: 'axis-label', x: x(month), y: H - margin.bottom + 18, 'text-anchor': 'middle' }, String(month)));
+    svg.append(svgEl('text', { class: 'axis-label', x: x(month), y: H - margin.bottom + axis.rows[0], 'text-anchor': 'middle' }, String(month)));
   }
-  svg.append(svgEl('text', { class: 'axis-label', x: (margin.left + W - margin.right) / 2, y: H - 6, 'text-anchor': 'middle' }, 'Months since the deal began'));
+  svg.append(svgEl('text', { class: 'axis-label', x: (margin.left + W - margin.right) / 2, y: H - margin.bottom + axis.rows[1], 'text-anchor': 'middle' }, 'Months since the deal began'));
 
   const prev = m.series.previous;
   const draft = m.series.draft;
@@ -105,7 +100,6 @@ function buildChart(m, width) {
 }
 
 function card(deal, accent, lowSalary, note) {
-  const low = deal.largestLow;
   return h('article', { class: `vs-card ${accent}` },
     h('h3', {}, deal.name),
     h('p', { class: 'vs-period' }, `${longDate(deal.start)} to ${longDate(deal.end)}`),
@@ -115,8 +109,7 @@ function card(deal, accent, lowSalary, note) {
       h('div', {}, h('dt', {}, 'Headline'), h('dd', {}, `${deal.headline}%`)),
       h('div', { class: 'vs-yours' }, h('dt', {}, 'For your salary'), h('dd', {}, `+${pct(deal.compoundedPct)}`)),
       h('div', {}, h('dt', {}, 'Minimum payments apply below'), h('dd', {}, eur(deal.threshold))),
-      h('div', {}, h('dt', {}, `Largest single rise at ${eur(lowSalary)}, the lowest lecturing point`),
-        h('dd', {}, `${pct(low.pct)}${low.flat ? ` (the ${eur(low.amount)} minimum)` : ''}, ${longDate(low.date)}`)),
+      h('div', {}, h('dt', {}, `For a ${eur(lowSalary)} salary, today’s lowest lecturing point`), h('dd', {}, `+${pct(deal.lowPct)}`)),
       h('div', {}, h('dt', {}, 'Cost'), h('dd', {}, `€${deal.costBn}bn`)),
       h('div', {}, h('dt', {}, 'Review clause'), h('dd', {}, deal.reviewClause))),
     note ? h('p', { class: 'note' }, note) : null);
@@ -168,7 +161,7 @@ export function render(root, { store, data }) {
       ? 'Both deals include their 1% local bargaining as a rise for you.'
       : 'Local bargaining is left out of both deals. Switch it on in section 1 to include it.';
 
-    chart = buildChart(m, width);
+    chart = buildChart(m, width, labelSize(wrap));
     for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();
     wrap.prepend(chart.svg);
     tip.hide();
@@ -193,6 +186,7 @@ export function render(root, { store, data }) {
   };
 
   store.subscribe(() => draw(true));
+  document.addEventListener('presentchange', () => draw(true)); // the label size changes
   draw(true);
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => draw()).observe(wrap);
 }

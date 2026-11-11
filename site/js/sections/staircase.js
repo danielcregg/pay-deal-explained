@@ -9,7 +9,7 @@ import { resolvePay, figuresFor } from '../selection.js';
 import { eur, signedEur, pct, longDate, monthLabel, roundedGain } from '../format.js';
 import { h } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
-import { niceTicks, roundedTopPath, axisMoney, createTooltip } from '../chart.js';
+import { niceTicks, roundedTopPath, axisMoney, createTooltip, labelSize, axisRows } from '../chart.js';
 import { prefersReducedMotion, onFirstView, replayTransition } from '../motion.js';
 import { ruleText } from './flat-or-percent.js';
 
@@ -73,10 +73,11 @@ export function nextBar(current, key, count) {
 
 const GAP = 2;
 
-function buildChart(m, { width, factor, unit, active }) {
+function buildChart(m, { width, factor, unit, active, text = 12 }) {
   const W = Math.max(280, width);
-  const H = 290;
-  const margin = { top: 30, right: 10, bottom: 46, left: unit === 'hour' ? 46 : 52 };
+  const axis = axisRows(text, [1.35], 1.1); // the month, with the year a full line below
+  const H = 244 + axis.margin;
+  const margin = { top: 30, right: 10, bottom: axis.margin, left: Math.round((unit === 'hour' ? 46 : 52) * (text / 12)) };
   const plotW = W - margin.left - margin.right;
   const plotBottom = H - margin.bottom;
   const tops = m.bars.map((b) => (b.cumulative + (b.kind === 'lb-possible' ? b.potential : 0)) * factor);
@@ -88,7 +89,7 @@ function buildChart(m, { width, factor, unit, active }) {
   const money = (n) => eur(n, { cents: unit === 'hour' });
 
   const svg = svgEl('svg', {
-    class: 'chart-svg', viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'group', 'data-arrow-keys': '',
+    class: 'chart-svg', viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'group',
     'aria-label': 'Your total gain after each rise. Use the left and right arrow keys to move between the rises.',
   }, [
     svgEl('defs', {}, [
@@ -126,8 +127,8 @@ function buildChart(m, { width, factor, unit, active }) {
     const g = svgEl('g', { class: 'bar', tabindex: i === active ? 0 : -1, role: 'img', 'aria-label': words }, [hit, grow]);
     const [month, year] = monthLabel(b.month).split(' ');
     svg.append(g,
-      svgEl('text', { class: 'axis-label', x: cx, y: plotBottom + 18, 'text-anchor': 'middle' }, month),
-      svgEl('text', { class: 'axis-label', x: cx, y: plotBottom + 33, 'text-anchor': 'middle' }, `’${year.slice(2)}`));
+      svgEl('text', { class: 'axis-label', x: cx, y: plotBottom + axis.rows[0], 'text-anchor': 'middle' }, month),
+      svgEl('text', { class: 'axis-label', x: cx, y: plotBottom + axis.rows[1], 'text-anchor': 'middle' }, `’${year.slice(2)}`));
     return { g, cx, top: Math.min(y(top), capTop), b, before, words };
   });
 
@@ -172,32 +173,35 @@ export function render(root, { store, data }) {
     const m = model(pay.base, steps, { includeLB: sel.includeLB });
     legend.replaceChildren(...legendItems(sel.includeLB).map((item) =>
       h('li', {}, h('span', { class: `swatch ${item.kind}` }), item.text)));
-    const { svg, bars } = buildChart(m, { width, factor: pay.factor, unit: pay.unit, active });
+    const { svg, bars } = buildChart(m, { width, factor: pay.factor, unit: pay.unit, active, text: labelSize(wrap) });
     if (!revealed) svg.classList.add('pre');
     const hadFocus = wrap.contains(document.activeElement);
     for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();
     wrap.prepend(svg);
     tip.hide();
-    if (hadFocus) bars[active].g.focus();
 
+    // The arrow keys the chart uses are marked handled; any other key is left alone.
     svg.addEventListener('keydown', (e) => {
       const from = bars.findIndex((bar) => bar.g === e.target);
       const to = from < 0 ? null : nextBar(from, e.key, bars.length);
       if (to === null) return;
       e.preventDefault();
-      bars[from].g.setAttribute('tabindex', '-1');
-      bars[to].g.setAttribute('tabindex', '0');
       bars[to].g.focus();
-      active = to;
     });
 
-    for (const { g, cx, top, words } of bars) {
+    bars.forEach(({ g, cx, top, words }, i) => {
       const show = () => tip.show(words.split('. ').filter(Boolean), cx, top);
+      // Whichever bar has focus (by key or by click) becomes the chart's one tab stop.
+      g.addEventListener('focus', () => {
+        active = i;
+        bars.forEach((bar, n) => bar.g.setAttribute('tabindex', n === i ? '0' : '-1'));
+      });
       g.addEventListener('pointerenter', show);
       g.addEventListener('focus', show);
       g.addEventListener('pointerleave', () => tip.hide());
       g.addEventListener('blur', () => tip.hide());
-    }
+    });
+    if (hadFocus) bars[active].g.focus(); // a redraw keeps the reader's place
 
     const u = pay.unit;
     const money = (n) => eur(n, { cents: u === 'hour' });
@@ -226,5 +230,6 @@ export function render(root, { store, data }) {
   replay.hidden = !motion;
   replay.addEventListener('click', play);
   store.subscribe(() => draw(true));
+  document.addEventListener('presentchange', () => draw(true)); // the label size changes
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => draw()).observe(wrap);
 }

@@ -17,7 +17,22 @@ export function model(sel, data) {
   const { flatSteps } = summarise(base, steps, { includeLB: sel.includeLB });
   const arrears = backPay(base, steps, { payMonth: sel.payMonth, includeLB: sel.includeLB }).total;
   const threshold = eur(data.DEAL.threshold);
+  // Three ways to count it. The last adds the 1% local bargaining still owed from the
+  // previous agreement to today's pay first, so the new rises build on it.
+  const lbStep = steps.find((s) => s.kind === 'lb');
+  const owed = data.PREVIOUS_DEAL.lbOutstanding ? data.PREVIOUS_DEAL.steps.find((s) => s.kind === 'lb') : null;
+  const scenario = (id, label, end) => ({ id, label, end: end * factor, pct: (end / base - 1) * 100 });
+  const scenarios = [
+    scenario('general', 'The general rises only', endGeneral),
+    scenario('lb', `Plus the ${lbStep.pct}% local bargaining due on ${longDate(lbStep.date)}`, endWithLB),
+  ];
+  if (owed) {
+    scenarios.push(scenario('owed', `Plus the ${owed.pct}% local bargaining owed since ${longDate(owed.date)}, if it is paid too`,
+      finalSalary(base * (1 + owed.pct / 100), steps, { includeLB: true })));
+  }
   return {
+    scenarios,
+    scenarioNote: owed ? data.PREVIOUS_DEAL.lbOutstandingNote : null,
     unit: pay.unit,
     label: pay.label,
     isExample: pay.isExample,
@@ -110,7 +125,10 @@ export function render(root, { store, data }) {
   const big = h('p', { class: 'pay-big' }, from, h('span', { class: 'arrow', 'aria-hidden': 'true' }, ' → '),
     h('span', { class: 'visually-hidden' }, ' rising to '), to, per);
   const gain = h('p', { class: 'pay-gain', 'aria-live': 'polite' });
-  const alt = h('p', { class: 'pay-alt' });
+  const waysTitle = h('h3', { class: 'pay-ways-title' });
+  const ways = h('dl', { class: 'pay-ways' });
+  const waysNote = h('p', { class: 'pay-ways-note' });
+  const alt = h('div', { class: 'pay-alt' }, waysTitle, ways, waysNote);
   const caveat = h('p', { class: 'pay-caveat' });
   const notes = h('ul', { class: 'pay-notes' });
   const firstDd = h('dd');
@@ -172,9 +190,14 @@ export function render(root, { store, data }) {
     to.textContent = money(endR, u);
     per.textContent = u === 'hour' ? ' an hour' : '';
     gain.textContent = `${signedEur(endR - nowR, opts)}${perText} (+${pct(endPct)}) by March 2029, ${sel.includeLB ? 'counting local bargaining as a 1% rise' : 'from the general rises'}.`;
-    alt.textContent = sel.includeLB
-      ? `Without local bargaining: ${money(genR, u)} (+${pct(m.pctGeneral)}).`
-      : `${signedEur(lbR - genR, opts)} more (${money(lbR, u)}, +${pct(m.pctWithLB)}) if local bargaining reaches you as a 1% rise.`;
+    // Every way of counting, side by side; the one the big figure uses is marked.
+    const chosen = sel.includeLB ? 'lb' : 'general';
+    waysTitle.textContent = `${m.scenarios.length === 3 ? 'Three' : 'Two'} ways to count it, by March 2029`;
+    ways.replaceChildren(...m.scenarios.map((s) => h('div', { class: s.id === chosen ? 'on' : '' },
+      h('dt', {}, s.label, s.id === chosen ? h('span', { class: 'visually-hidden' }, ' (the figure shown above)') : null),
+      h('dd', {}, `${money(roundFor(s.end, u), u)} `, h('span', { class: 'pay-ways-pct' }, `+${pct(s.pct)}`)))));
+    waysNote.hidden = !m.scenarioNote;
+    waysNote.textContent = m.scenarioNote ?? '';
     firstDd.textContent = `${signedEur(roundFor(m.firstRise.amount, u), opts)}${perText} from ${longDate(m.firstRise.date)}, backdated.`;
     backDd.replaceChildren(...(m.backPay === null
       ? ['Add the hours you teach in a year to estimate it.']

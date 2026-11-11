@@ -176,29 +176,29 @@
   </footer>
 
   <script>
-    // If the page's modules did not run (a dropped connection or an old browser), say so
-    // and show the key facts from the <noscript> block instead of leaving the demos blank.
-    // Module scripts run before DOMContentLoaded, and main.js marks the page first thing.
+    // Module scripts run before DOMContentLoaded, so any section still empty by then
+    // did not render (a dropped connection, an old browser, or an error in that section).
+    // Say so there. If nothing rendered at all, also show the key facts from <noscript>.
     document.addEventListener('DOMContentLoaded', function () {
-      if (document.documentElement.hasAttribute('data-started')) return;
-      var facts = document.querySelector('noscript');
-      var box = document.createElement('div');
-      box.className = 'noscript load-failed';
-      box.innerHTML = facts ? facts.textContent : '';
-      var message = document.createElement('p');
-      message.setAttribute('role', 'alert');
-      message.textContent = 'The calculator and demos did not load. Reload the page to try again, or open it in an up-to-date browser.';
-      var hint = box.querySelector('p:last-child');
-      if (hint) hint.remove();
-      box.insertBefore(message, box.firstChild);
-      document.querySelector('main').insertBefore(box, document.getElementById('your-pay'));
       var mounts = document.querySelectorAll('.chapter-body[data-mount]');
-      for (var i = 0; i < mounts.length; i++) {
-        if (mounts[i].firstChild) continue;
+      var empty = [];
+      for (var i = 0; i < mounts.length; i++) if (!mounts[i].firstChild) empty.push(mounts[i]);
+      if (!empty.length) return;
+      if (empty.length === mounts.length) {
+        var facts = document.querySelector('noscript');
+        var source = facts ? facts.textContent : '';
+        var box = document.createElement('div');
+        box.className = 'load-failed';
+        // The facts, minus the closing "Turn on JavaScript" line, which does not apply here.
+        box.innerHTML = '<p role="alert">The calculator and demos did not load. Reload the page to try again, or open it in an up-to-date browser.</p>'
+          + source.slice(0, source.lastIndexOf('<p>'));
+        document.querySelector('main').insertBefore(box, document.getElementById('your-pay'));
+      }
+      for (var j = 0; j < empty.length; j++) {
         var note = document.createElement('p');
         note.className = 'note';
         note.textContent = 'This part of the page did not load. Reload the page to try again.';
-        mounts[i].appendChild(note);
+        empty[j].appendChild(note);
       }
     });
   </script>

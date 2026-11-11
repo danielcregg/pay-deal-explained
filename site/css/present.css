@@ -9,6 +9,8 @@ body.present {
   --field-border: #5f6878;
   --mark-earlier: #b3bac5;
   --mark-earlier-edge: #5f6878;
+  --nav-dim: #9aa0aa;   /* borders and dots on the nav bar, 3:1 or more on its ink */
+  --chart-text: 16px;   /* axis labels; the charts read this to space their rows */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,11 +21,11 @@ body.present {
     --field-border: #8d96aa;
     --mark-earlier: #48526a;
     --mark-earlier-edge: #8d96aa;
+    --nav-dim: #5d636e;
   }
 }
 
 /* Chart text sized for the back of a room. */
-body.present .chart-svg .axis-label,
 body.present .ruler-year { font-size: 16px; }
 body.present .chart-svg .value-label,
 body.present .chart-svg .end-label,
@@ -81,7 +83,7 @@ body.present h1:focus, body.present h2:focus { outline: none; }
   font-weight: 650;
   padding: 0.4rem 0.95rem;
   border-radius: 6px;
-  border: 1px solid var(--muted);
+  border: 1px solid var(--nav-dim);
   background: transparent;
   color: var(--paper);
   cursor: pointer;
@@ -93,7 +95,7 @@ body.present h1:focus, body.present h2:focus { outline: none; }
 .present-nav .label { font-size: 0.95rem; white-space: nowrap; }
 
 .present-dots { display: flex; gap: 5px; margin: 0 auto; }
-.present-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.present-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--nav-dim); }
 .present-dots span.on { width: 18px; border-radius: 4px; background: var(--mark-pct); }
 
 @media (max-width: 560px) {

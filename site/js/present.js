@@ -28,11 +28,14 @@ export function presentKeyAction(e, current, count, owned) {
   return to === current ? null : { to };
 }
 
-/** Does the focused element own this key? Inputs and interactive charts own the arrows; buttons own Space. */
+/**
+ * Does the focused element own this key? Form fields own every key; buttons own Space.
+ * Charts need no entry here: they mark the arrow keys they use as handled, and every
+ * other key (Page Down or Space from a clicker) still changes chapter.
+ */
 function ownsKey(el, key) {
   if (!el || el === document.body) return false;
-  if (el.matches('input, select, textarea, [contenteditable], svg[tabindex]')) return true;
-  if (el.closest('[data-arrow-keys]')) return true; // a chart that moves between its bars
+  if (el.matches('input, select, textarea, [contenteditable]')) return true;
   return key === ' ' && el.matches('button, a[href], summary');
 }
 
@@ -70,6 +73,7 @@ export function exitPresent() {
   state.sections.forEach((s) => s.classList.remove('is-current'));
   document.body.classList.remove('present');
   state = null;
+  document.dispatchEvent(new Event('presentchange'));
   syncHeaderHeight(); // the header is back: measure it now, before scrolling under it
   current.scrollIntoView({ behavior: 'instant', block: 'start' });
   document.querySelector('[data-action="present"]')?.focus({ preventScroll: true });
@@ -98,6 +102,7 @@ export function enterPresent(start = 0) {
   document.addEventListener('keydown', onKey);
   document.body.append(nav);
   document.body.classList.add('present');
+  document.dispatchEvent(new Event('presentchange')); // charts redraw for the larger text
   goTo(start);
 }
 
