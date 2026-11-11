@@ -1,13 +1,14 @@
 /* Present mode: one chapter per screen, larger type, a fixed nav bar. */
 
 /* High contrast for projectors, which wash out pale greys: muted text at 7:1 or more,
-   darker rules and grid, and the "rises so far" grey well above 3:1. */
+   darker rules and grid, and a stronger "rises so far" grey with a 4.5:1 edge. */
 body.present {
   --muted: #3d4555;
   --line: #c9c4b8;
   --grid: #d6d1c5;
   --field-border: #5f6878;
-  --mark-earlier: #7d8696;
+  --mark-earlier: #b3bac5;
+  --mark-earlier-edge: #5f6878;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -16,7 +17,8 @@ body.present {
     --line: #3d465a;
     --grid: #343d50;
     --field-border: #8d96aa;
-    --mark-earlier: #6e7890;
+    --mark-earlier: #48526a;
+    --mark-earlier-edge: #8d96aa;
   }
 }
 

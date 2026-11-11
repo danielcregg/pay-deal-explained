@@ -1,6 +1,8 @@
 // Section 2: The nine pay rises. An animated staircase of the reader's total gain:
 // each bar is the gain so far, its cap the new rise (teal = percentage, amber = the
-// flat minimum, hatched = local bargaining that may not reach you).
+// flat minimum, hatched = local bargaining that may not reach you, striped teal =
+// local bargaining counted as a rise). The chart is one tab stop; the arrow keys
+// move between its bars.
 
 import { applySteps, finalSalary } from '../pay.js';
 import { resolvePay, figuresFor } from '../selection.js';
@@ -41,9 +43,37 @@ export function summaryNumbers(pay, m) {
   };
 }
 
+const CAP_CLASS = { pct: 'bar-pct', flat: 'bar-flat', lb: 'bar-lb', 'lb-possible': 'bar-possible' };
+
+/** The CSS class for a bar's cap, by kind. */
+export const barClass = (kind) => CAP_CLASS[kind];
+
+/** Legend entries: local bargaining shows as counted or as possible, following the switch. */
+export function legendItems(includeLB) {
+  return [
+    { kind: 'pct', text: 'Percentage rise' },
+    { kind: 'flat', text: 'Flat minimum (when bigger)' },
+    includeLB
+      ? { kind: 'lb', text: 'Local bargaining, counted as a rise' }
+      : { kind: 'possible', text: 'Local bargaining, if it reaches you' },
+    { kind: 'earlier', text: 'Rises so far' },
+  ];
+}
+
+/** Which bar a key moves focus to, or null when the key is not the chart's. */
+export function nextBar(current, key, count) {
+  switch (key) {
+    case 'ArrowRight': return Math.min(count - 1, current + 1);
+    case 'ArrowLeft': return Math.max(0, current - 1);
+    case 'Home': return 0;
+    case 'End': return count - 1;
+    default: return null;
+  }
+}
+
 const GAP = 2;
 
-function buildChart(m, { width, factor, unit }) {
+function buildChart(m, { width, factor, unit, active }) {
   const W = Math.max(280, width);
   const H = 290;
   const margin = { top: 30, right: 10, bottom: 46, left: unit === 'hour' ? 46 : 52 };
@@ -57,9 +87,18 @@ function buildChart(m, { width, factor, unit }) {
   const barW = Math.min(24, band * 0.62);
   const money = (n) => eur(n, { cents: unit === 'hour' });
 
-  const svg = svgEl('svg', { class: 'chart-svg', viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'group', 'aria-label': 'Your total gain after each rise' }, [
-    svgEl('defs', {}, svgEl('pattern', { id: 'hatch-stairs', width: 5, height: 5, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' },
-      svgEl('line', { class: 'hatch-line', x1: 0, y1: 0, x2: 0, y2: 5 }))),
+  const svg = svgEl('svg', {
+    class: 'chart-svg', viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'group', 'data-arrow-keys': '',
+    'aria-label': 'Your total gain after each rise. Use the left and right arrow keys to move between the rises.',
+  }, [
+    svgEl('defs', {}, [
+      svgEl('pattern', { id: 'hatch-stairs', width: 5, height: 5, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' },
+        svgEl('line', { class: 'hatch-line', x1: 0, y1: 0, x2: 0, y2: 5 })),
+      svgEl('pattern', { id: 'lb-stairs', width: 5, height: 5, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, [
+        svgEl('rect', { class: 'lb-ground', width: 5, height: 5 }),
+        svgEl('line', { class: 'lb-stripe', x1: 0, y1: 0, x2: 0, y2: 5 }),
+      ]),
+    ]),
   ]);
 
   for (const t of ticks) {
@@ -75,24 +114,21 @@ function buildChart(m, { width, factor, unit }) {
     const top = b.cumulative * factor;
     const capFloor = before > 0 ? y(before) - GAP : plotBottom;
     const parts = [];
-    if (before > 0) parts.push(svgEl('rect', { class: 'bar-earlier', x, y: y(before), width: barW, height: plotBottom - y(before) }));
-    if (b.kind === 'lb-possible') {
-      const capTop = y(before + b.potential * factor);
-      parts.push(svgEl('path', { class: 'bar-possible', d: roundedTopPath(x, capTop, barW, capFloor - capTop) }));
-    } else {
-      parts.push(svgEl('path', { class: `bar-${b.kind === 'lb' ? 'pct' : b.kind}`, d: roundedTopPath(x, y(top), barW, capFloor - y(top)) }));
-    }
+    // Inset by half the 1px edge so the stroke stays inside the bar.
+    if (before > 0) parts.push(svgEl('rect', { class: 'bar-earlier', x: x + 0.5, y: y(before) + 0.5, width: barW - 1, height: Math.max(0, plotBottom - y(before) - 1) }));
+    const capTop = b.kind === 'lb-possible' ? y(before + b.potential * factor) : y(top);
+    parts.push(svgEl('path', { class: barClass(b.kind), d: roundedTopPath(x, capTop, barW, capFloor - capTop) }));
     const words = b.kind === 'lb-possible'
       ? `${longDate(b.step.date)}: local bargaining, worth ${signedEur(b.potential * factor, { cents: unit === 'hour' })} if it reaches you as a rise. Not counted.`
       : `${longDate(b.step.date)}: ${ruleText(b.step)}${b.kind === 'flat' ? ', the minimum applies' : ''}. ${signedEur(b.rise * factor, { cents: unit === 'hour' })}; total gain ${money(top)}.`;
     const grow = svgEl('g', { class: 'bar-grow', style: `transition-delay:${(i * 0.2).toFixed(1)}s` }, parts);
     const hit = svgEl('rect', { class: 'hit', x: cx - band / 2, y: margin.top, width: band, height: plotBottom - margin.top });
-    const g = svgEl('g', { class: 'bar', tabindex: 0, role: 'img', 'aria-label': words }, [hit, grow]);
+    const g = svgEl('g', { class: 'bar', tabindex: i === active ? 0 : -1, role: 'img', 'aria-label': words }, [hit, grow]);
     const [month, year] = monthLabel(b.month).split(' ');
     svg.append(g,
       svgEl('text', { class: 'axis-label', x: cx, y: plotBottom + 18, 'text-anchor': 'middle' }, month),
       svgEl('text', { class: 'axis-label', x: cx, y: plotBottom + 33, 'text-anchor': 'middle' }, `’${year.slice(2)}`));
-    return { g, cx, top: Math.min(y(top), b.kind === 'lb-possible' ? y(before + b.potential * factor) : y(top)), b, before, words };
+    return { g, cx, top: Math.min(y(top), capTop), b, before, words };
   });
 
   svg.append(svgEl('line', { class: 'baseline', x1: margin.left, x2: W - margin.right, y1: plotBottom, y2: plotBottom }));
@@ -107,11 +143,7 @@ function buildChart(m, { width, factor, unit }) {
 
 export function render(root, { store, data }) {
   const steps = data.DEAL.steps;
-  const legend = h('ul', { class: 'legend' },
-    h('li', {}, h('span', { class: 'swatch pct' }), 'Percentage rise'),
-    h('li', {}, h('span', { class: 'swatch flat' }), 'Flat minimum (when bigger)'),
-    h('li', {}, h('span', { class: 'swatch possible' }), 'Local bargaining, if it reaches you'),
-    h('li', {}, h('span', { class: 'swatch earlier' }), 'Rises so far'));
+  const legend = h('ul', { class: 'legend' });
   const wrap = h('div', { class: 'chart-wrap' });
   const result = h('p', { class: 'chart-result' });
   const replay = h('button', { type: 'button', class: 'button-quiet' }, 'Replay');
@@ -129,6 +161,7 @@ export function render(root, { store, data }) {
   const motion = !prefersReducedMotion();
   let revealed = !motion;
   let lastWidth = -1;
+  let active = 0; // the bar that takes the chart's single tab stop
 
   const draw = (force = false) => {
     const width = Math.round(wrap.clientWidth || 640);
@@ -137,11 +170,26 @@ export function render(root, { store, data }) {
     const sel = store.get();
     const pay = resolvePay(sel, data.SCALES);
     const m = model(pay.base, steps, { includeLB: sel.includeLB });
-    const { svg, bars } = buildChart(m, { width, factor: pay.factor, unit: pay.unit });
+    legend.replaceChildren(...legendItems(sel.includeLB).map((item) =>
+      h('li', {}, h('span', { class: `swatch ${item.kind}` }), item.text)));
+    const { svg, bars } = buildChart(m, { width, factor: pay.factor, unit: pay.unit, active });
     if (!revealed) svg.classList.add('pre');
+    const hadFocus = wrap.contains(document.activeElement);
     for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();
     wrap.prepend(svg);
     tip.hide();
+    if (hadFocus) bars[active].g.focus();
+
+    svg.addEventListener('keydown', (e) => {
+      const from = bars.findIndex((bar) => bar.g === e.target);
+      const to = from < 0 ? null : nextBar(from, e.key, bars.length);
+      if (to === null) return;
+      e.preventDefault();
+      bars[from].g.setAttribute('tabindex', '-1');
+      bars[to].g.setAttribute('tabindex', '0');
+      bars[to].g.focus();
+      active = to;
+    });
 
     for (const { g, cx, top, words } of bars) {
       const show = () => tip.show(words.split('. ').filter(Boolean), cx, top);

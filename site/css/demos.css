@@ -127,7 +127,8 @@ input[type="number"] {
 .swatch.pct { background: var(--mark-pct); }
 .swatch.flat { background: var(--mark-flat); }
 .swatch.price { background: var(--mark-price); }
-.swatch.earlier { background: var(--mark-earlier); }
+.swatch.earlier { background: var(--mark-earlier); box-shadow: inset 0 0 0 1px var(--mark-earlier-edge); }
+.swatch.lb { background: repeating-linear-gradient(45deg, var(--mark-pct) 0 3px, color-mix(in srgb, var(--mark-pct) 40%, var(--card)) 3px 5px); }
 .swatch.prev { background: var(--mark-prev); }
 .swatch.possible {
   background: repeating-linear-gradient(45deg, var(--mark-pct) 0 2px, transparent 2px 5px);
@@ -143,8 +144,11 @@ input[type="number"] {
 
 .bar-pct { fill: var(--mark-pct); }
 .bar-flat { fill: var(--mark-flat); }
-.bar-earlier { fill: var(--mark-earlier); }
+.bar-earlier { fill: var(--mark-earlier); stroke: var(--mark-earlier-edge); stroke-width: 1; }
 .bar-possible { fill: url(#hatch-stairs); }
+.bar-lb { fill: url(#lb-stairs); }
+.lb-ground { fill: var(--mark-pct); }
+.lb-stripe { stroke: color-mix(in srgb, var(--mark-pct) 40%, var(--card)); stroke-width: 2; }
 .bar .hit { fill: transparent; }
 .bar { outline: none; }
 .bar:focus-visible .hit { fill: var(--teal-soft); stroke: var(--teal); stroke-width: 2; }
@@ -246,8 +250,8 @@ tr.muted td { color: var(--muted); }
   font-size: 0.92rem;
 }
 .hb-track { display: block; height: 14px; }
-.hb-bar { display: block; height: 100%; background: var(--mark-earlier); border-radius: 0 4px 4px 0; }
-.hbars li.ours .hb-bar { background: var(--mark-pct); }
+.hb-bar { display: block; height: 100%; background: var(--mark-earlier); box-shadow: inset 0 0 0 1px var(--mark-earlier-edge); border-radius: 0 4px 4px 0; }
+.hbars li.ours .hb-bar { background: var(--mark-pct); box-shadow: none; }
 .hbars li.ours .hb-label { font-weight: 650; }
 .hb-value { text-align: right; font-variant-numeric: tabular-nums; }
 

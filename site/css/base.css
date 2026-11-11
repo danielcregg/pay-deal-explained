@@ -23,7 +23,8 @@
   --mark-pct: #00897b;
   --mark-flat: #b45309;
   --mark-price: #b42318;
-  --mark-earlier: #c9ced6;
+  --mark-earlier: #c9ced6;       /* a light fill keeps it well apart from the caps... */
+  --mark-earlier-edge: #8a93a3;  /* ...and this 1px edge gives the shape 3:1 (WCAG 1.4.11) */
   --mark-prev: #8a93a3;
   --grid: #e7e4dc;
 
@@ -58,6 +59,7 @@
     --mark-flat: #c97e33;
     --mark-price: #e0675c;
     --mark-earlier: #3a4256;
+    --mark-earlier-edge: #66708a;
     --mark-prev: #7c869b;
     --grid: #283041;
   }

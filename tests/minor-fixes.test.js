@@ -7,6 +7,9 @@ import { DEFAULT_SELECTION, parseSalary, clampHours, restoreSelection } from '..
 import { createStore } from '../site/js/state.js';
 import { longDate, shortDate } from '../site/js/format.js';
 import { presentKeyAction } from '../site/js/present.js';
+import * as data from '../site/js/data.js';
+import { barClass, legendItems, nextBar } from '../site/js/sections/staircase.js';
+import { model as vsModel } from '../site/js/sections/vs-last-deal.js';
 import { readCss, ruleBody, tokens, themes, contrast } from './helpers/css.js';
 
 const read = (p) => readFileSync(new URL(`../site/${p}`, import.meta.url), 'utf8');
@@ -76,7 +79,8 @@ test('M2: Present mode is high contrast, with chart text big enough for a projec
     for (const bg of ['--paper', '--card']) {
       assert.ok(contrast(t['--muted'], t[bg]) >= 7, `${mode}: --muted on ${bg} is ${contrast(t['--muted'], t[bg]).toFixed(2)}:1, want 7:1`);
     }
-    assert.ok(contrast(t['--mark-earlier'], t['--card']) >= 3, `${mode}: --mark-earlier on --card`);
+    assert.ok(contrast(t['--mark-earlier-edge'], t['--card']) >= 4.5, `${mode}: --mark-earlier-edge on --card`);
+    for (const cap of ['--mark-pct', '--mark-flat']) assert.ok(contrast(t['--mark-earlier'], t[cap]) >= 2, `${mode}: --mark-earlier vs ${cap}`);
   }
   const px = (cls) => Math.max(0, ...[...present.matchAll(new RegExp(`body\\.present[^{}]*\\.${cls}\\b[^{}]*\\{[^}]*font-size:\\s*(\\d+)px`, 'g'))].map((m) => Number(m[1])));
   for (const cls of ['axis-label', 'value-label', 'end-label', 'ruler-year', 'ruler-pct']) assert.ok(px(cls) >= 16, `${cls}: ${px(cls)}px in Present mode`);
@@ -90,4 +94,41 @@ test('M3: Esc that closed a glossary pop-up does not also exit Present mode', ()
   assert.equal(presentKeyAction(key('ArrowRight', { ctrlKey: true }), 3, 11, false), null);
   assert.equal(presentKeyAction(key('ArrowRight'), 3, 11, true), null);
   assert.equal(presentKeyAction(key('ArrowRight'), 11, 11, false), null);
+});
+
+test('M8: counted local bargaining gets its own bar style and legend entry', () => {
+  assert.deepEqual(['pct', 'flat', 'lb', 'lb-possible'].map(barClass), ['bar-pct', 'bar-flat', 'bar-lb', 'bar-possible']);
+  const on = legendItems(true).map((i) => i.kind);
+  const off = legendItems(false).map((i) => i.kind);
+  assert.deepEqual([on.includes('lb'), on.includes('possible')], [true, false]);
+  assert.deepEqual([off.includes('lb'), off.includes('possible')], [false, true]);
+  assert.match(ruleBody(readCss('demos.css'), '.bar-lb'), /fill:\s*url\(#lb-stairs\)/);
+});
+
+test('M9: the staircase is one tab stop, and the arrow keys move between its bars', () => {
+  const keys = ['ArrowRight', 'ArrowRight', 'ArrowLeft', 'ArrowLeft', 'Home', 'End', 'Tab', 'Enter'];
+  const from = [0, 8, 3, 0, 4, 4, 4, 4];
+  assert.deepEqual(keys.map((k, i) => nextBar(from[i], k, 9)), [1, 8, 2, 0, 0, 8, null, null]);
+});
+
+test('M10: each deal shows its largest single rise at a low salary (spec §4, rule 9)', () => {
+  const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-3, `${a} ≉ ${b}`);
+  const m = vsModel(89894, data, { includeLB: false });
+  assert.equal(m.lowSalary, 47572);
+  const [prev, draft] = m.deals.map((d) => d.largestLow);
+  near(prev.pct, 2.3648); assert.deepEqual([prev.date, prev.amount, prev.flat], ['2024-01-01', 1125, true]);
+  near(draft.pct, 2.5225); assert.deepEqual([draft.date, draft.amount, draft.flat], ['2026-09-01', 1200, true]);
+});
+
+test('M14: the "rises so far" grey has an edge at 3:1 or more, and its fill stays apart from the caps', () => {
+  const t = themes(readCss('base.css'));
+  for (const [mode, k] of Object.entries(t)) {
+    assert.ok(k['--mark-earlier-edge'], `${mode}: --mark-earlier-edge is defined`);
+    assert.ok(contrast(k['--mark-earlier-edge'], k['--card']) >= 3, `${mode}: edge ${contrast(k['--mark-earlier-edge'], k['--card']).toFixed(2)}:1`);
+    for (const cap of ['--mark-pct', '--mark-flat']) assert.ok(contrast(k['--mark-earlier'], k[cap]) >= 2, `${mode}: fill vs ${cap}`);
+  }
+  const demos = readCss('demos.css');
+  assert.match(ruleBody(demos, '.bar-earlier'), /stroke:\s*var\(--mark-earlier-edge\)/);
+  assert.match(ruleBody(demos, '.swatch.earlier'), /var\(--mark-earlier-edge\)/);
+  assert.match(ruleBody(demos, '.hb-bar'), /var\(--mark-earlier-edge\)/);
 });

@@ -2,21 +2,33 @@
 // side by side, with how pay builds up month by month from each deal's start.
 // Deliberately no single "pace" figure and no verdict (spec §4, rule 9).
 
-import { finalSalary, payIndexSeries } from '../pay.js';
+import { applySteps, finalSalary, payIndexSeries } from '../pay.js';
 import { resolvePay, figuresFor } from '../selection.js';
 import { eur, pct, longDate } from '../format.js';
 import { h } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { niceRange, createTooltip } from '../chart.js';
 
+/** The lowest point on the lecturing scales: where the flat minimums count most. */
+export const lowestScalePoint = (scales) => Math.min(...scales.grades.flatMap((g) => g.points.map((p) => p.value)));
+
+/** A deal's largest single rise at a given salary, as a share of pay just before it. */
+function largestRise(salary, steps, includeLB) {
+  const rows = applySteps(salary, steps, { includeLB }).filter((r) => r.included);
+  const top = rows.reduce((best, r) => (r.rise / r.before > best.rise / best.before ? r : best));
+  return { pct: (top.rise / top.before) * 100, amount: top.rise, flat: top.flat, date: top.step.date };
+}
+
 export function model(base, data, { includeLB }) {
   const both = [data.PREVIOUS_DEAL, data.DEAL];
+  const lowSalary = lowestScalePoint(data.SCALES);
   const deals = both.map((d) => {
     const end = finalSalary(base, d.steps, { includeLB });
     return {
       id: d.id, name: d.name, start: d.start, end: d.end, months: d.months, stepCount: d.steps.length,
       headline: d.headlinePct, compoundedPct: (end / base - 1) * 100, endSalary: end,
-      threshold: d.threshold, costBn: d.costBn, reviewClause: d.reviewClause,
+      threshold: d.threshold, largestLow: largestRise(lowSalary, d.steps, includeLB),
+      costBn: d.costBn, reviewClause: d.reviewClause,
     };
   });
   const series = (d) => [
@@ -24,7 +36,7 @@ export function model(base, data, { includeLB }) {
     ...payIndexSeries(base, d.steps, { from: d.start.slice(0, 7), to: d.end.slice(0, 7), includeLB })
       .map((p, i) => ({ m: i + 1, value: p.value })),
   ];
-  return { deals, series: { previous: series(data.PREVIOUS_DEAL), draft: series(data.DEAL) } };
+  return { deals, lowSalary, series: { previous: series(data.PREVIOUS_DEAL), draft: series(data.DEAL) } };
 }
 
 const one = (n) => n.toFixed(1);
@@ -92,7 +104,8 @@ function buildChart(m, width) {
   return { svg, at, hide, monthAt, maxM };
 }
 
-function card(deal, accent, note) {
+function card(deal, accent, lowSalary, note) {
+  const low = deal.largestLow;
   return h('article', { class: `vs-card ${accent}` },
     h('h3', {}, deal.name),
     h('p', { class: 'vs-period' }, `${longDate(deal.start)} to ${longDate(deal.end)}`),
@@ -102,6 +115,8 @@ function card(deal, accent, note) {
       h('div', {}, h('dt', {}, 'Headline'), h('dd', {}, `${deal.headline}%`)),
       h('div', { class: 'vs-yours' }, h('dt', {}, 'For your salary'), h('dd', {}, `+${pct(deal.compoundedPct)}`)),
       h('div', {}, h('dt', {}, 'Minimum payments apply below'), h('dd', {}, eur(deal.threshold))),
+      h('div', {}, h('dt', {}, `Largest single rise at ${eur(lowSalary)}, the lowest lecturing point`),
+        h('dd', {}, `${pct(low.pct)}${low.flat ? ` (the ${eur(low.amount)} minimum)` : ''}, ${longDate(low.date)}`)),
       h('div', {}, h('dt', {}, 'Cost'), h('dd', {}, `€${deal.costBn}bn`)),
       h('div', {}, h('dt', {}, 'Review clause'), h('dd', {}, deal.reviewClause))),
     note ? h('p', { class: 'note' }, note) : null);
@@ -148,7 +163,7 @@ export function render(root, { store, data }) {
     const base = resolvePay(sel, data.SCALES).base;
     m = model(base, data, { includeLB: sel.includeLB });
     context.textContent = figuresFor(sel, data.SCALES);
-    cards.replaceChildren(card(m.deals[0], 'prev', data.PREVIOUS_DEAL.tuLbNote), card(m.deals[1], 'draft'));
+    cards.replaceChildren(card(m.deals[0], 'prev', m.lowSalary, data.PREVIOUS_DEAL.tuLbNote), card(m.deals[1], 'draft', m.lowSalary));
     lbNote.textContent = sel.includeLB
       ? 'Both deals include their 1% local bargaining as a rise for you.'
       : 'Local bargaining is left out of both deals. Switch it on in section 1 to include it.';

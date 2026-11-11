@@ -31,6 +31,7 @@ export function presentKeyAction(e, current, count, owned) {
 function ownsKey(el, key) {
   if (!el || el === document.body) return false;
   if (el.matches('input, select, textarea, [contenteditable], svg[tabindex]')) return true;
+  if (el.closest('[data-arrow-keys]')) return true; // a chart that moves between its bars
   return key === ' ' && el.matches('button, a[href], summary');
 }
 
