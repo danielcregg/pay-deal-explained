@@ -28,24 +28,27 @@
       <span class="header-updated">Updated <time datetime="2026-11-11" data-bind="updated-short">11 Nov 2026</time></span>
     </div>
     <span class="status-chip" data-bind="status-chip">Draft · ballot results due w/c 7 Dec</span>
+    <a class="mine" href="#your-pay" data-mount="mine" hidden></a>
     <button class="present-btn" type="button" data-action="present" hidden>▶ Present</button>
   </header>
 
   <main>
     <section class="hero" id="top" data-chapter="0" aria-labelledby="top-h">
-      <div class="hero-inner">
-        <p class="hero-status"><span class="status-dot" aria-hidden="true"></span><span data-bind="status-line">Draft agreed on 11 November 2026. Not final until union members vote; results are due in the week of 7 December 2026.</span></p>
-        <h1 id="top-h">10.75% over 33 months: what the draft deal means for TU lecturers</h1>
-        <p class="hero-lede">An independent, plain-English guide to the draft public service pay agreement, worked out on your own grade and point. Nothing you enter is sent anywhere.</p>
-        <div class="hero-ruler" data-mount="top"></div>
-        <dl class="hero-facts">
-          <div><dt>headline rise, including 1% local bargaining</dt><dd data-count="10.75" data-format="pct2">10.75%</dd></div>
-          <div><dt>months, from July 2026 to March 2029</dt><dd data-count="33">33</dd></div>
-          <div><dt>separate pay rises</dt><dd data-count="9">9</dd></div>
-          <div><dt>new lower-pay threshold, up from €50k</dt><dd data-count="60000" data-format="eurk">€60k</dd></div>
-        </dl>
-        <a class="button" href="#your-pay">Work out your own pay</a>
+      <div class="hero-band">
+        <div class="hero-inner">
+          <p class="hero-status"><span class="status-dot" aria-hidden="true"></span><span data-bind="status-line">Draft agreed on 11 November 2026. Not final until union members vote; results are due in the week of 7 December 2026.</span></p>
+          <h1 id="top-h"><span class="h1-figure">10.75%</span> over 33 months: what the draft deal means for TU lecturers</h1>
+          <p class="hero-lede">An independent, plain-English guide to the draft public service pay agreement, worked out on your own grade and point. Nothing you enter is sent anywhere.</p>
+          <a class="button button-gold" href="#your-pay">Work out your own pay</a>
+          <dl class="hero-facts">
+            <div><dt>headline rise, including 1% local bargaining</dt><dd data-count="10.75" data-format="pct2">10.75%</dd></div>
+            <div><dt>months, from July 2026 to March 2029</dt><dd data-count="33">33</dd></div>
+            <div><dt>separate pay rises</dt><dd data-count="9">9</dd></div>
+            <div><dt>new lower-pay threshold, up from €50k</dt><dd data-count="60000" data-format="eurk">€60k</dd></div>
+          </dl>
+        </div>
       </div>
+      <div class="race-wrap"><div class="race" data-mount="top"></div></div>
     </section>
 
     <noscript>
@@ -72,7 +75,7 @@
       </div>
     </noscript>
 
-    <section class="chapter" id="your-pay" data-chapter="1" aria-labelledby="your-pay-h">
+    <section class="chapter" id="your-pay" data-chapter="1" data-family="teal" aria-labelledby="your-pay-h">
       <div class="chapter-head">
         <span class="chapter-num" aria-hidden="true">1</span>
         <h2 id="your-pay-h">Your pay</h2>
@@ -81,52 +84,52 @@
       <div class="chapter-body" data-mount="your-pay"></div>
     </section>
 
-    <section class="chapter" id="nine-rises" data-chapter="2" aria-labelledby="nine-rises-h">
+    <section class="chapter" id="pay-vs-prices" data-chapter="2" data-family="coral" aria-labelledby="pay-vs-prices-h">
       <div class="chapter-head">
         <span class="chapter-num" aria-hidden="true">2</span>
-        <h2 id="nine-rises-h">The nine pay rises</h2>
-        <p class="chapter-lede">The draft raises pay nine times between September 2026 and March 2029. Each bar shows how much more you would earn a year after each rise.</p>
-      </div>
-      <div class="chapter-body" data-mount="nine-rises"></div>
-    </section>
-
-    <section class="chapter" id="flat-or-percent" data-chapter="3" aria-labelledby="flat-or-percent-h">
-      <div class="chapter-head">
-        <span class="chapter-num" aria-hidden="true">3</span>
-        <h2 id="flat-or-percent-h">Flat sum or percentage?</h2>
-        <p class="chapter-lede">Five of the rises come with a <span data-term="minimum-payment">minimum payment</span>. Whether you get the minimum or the percentage depends on your salary, and the dividing line, the <span data-term="lower-pay-threshold">lower-pay threshold</span>, is €60,000.</p>
-      </div>
-      <div class="chapter-body" data-mount="flat-or-percent"></div>
-    </section>
-
-    <section class="chapter" id="compounding" data-chapter="4" aria-labelledby="compounding-h">
-      <div class="chapter-head">
-        <span class="chapter-num" aria-hidden="true">4</span>
-        <h2 id="compounding-h">Why 10.75% comes to about 11.3%</h2>
-        <p class="chapter-lede">The headline adds the percentages together. Because each rise is worked out on pay that has already gone up, the rises together come to a little more. That is <span data-term="compounding">compounding</span>.</p>
-      </div>
-      <div class="chapter-body" data-mount="compounding"></div>
-    </section>
-
-    <section class="chapter" id="back-pay" data-chapter="5" aria-labelledby="back-pay-h">
-      <div class="chapter-head">
-        <span class="chapter-num" aria-hidden="true">5</span>
-        <h2 id="back-pay-h">Your back pay</h2>
-        <p class="chapter-lede">The first rise is backdated to 1 September 2026. If the deal is accepted, the <span data-term="back-pay">back pay</span> owed since then arrives as a lump sum.</p>
-      </div>
-      <div class="chapter-body" data-mount="back-pay"></div>
-    </section>
-
-    <section class="chapter" id="pay-vs-prices" data-chapter="6" aria-labelledby="pay-vs-prices-h">
-      <div class="chapter-head">
-        <span class="chapter-num" aria-hidden="true">6</span>
         <h2 id="pay-vs-prices-h">Pay vs prices</h2>
         <p class="chapter-lede">Compare how your pay moves with prices, using the Central Bank’s inflation forecasts or a figure of your own.</p>
       </div>
       <div class="chapter-body" data-mount="pay-vs-prices"></div>
     </section>
 
-    <section class="chapter" id="vs-last-deal" data-chapter="7" aria-labelledby="vs-last-deal-h">
+    <section class="chapter" id="nine-rises" data-chapter="3" data-family="sky" aria-labelledby="nine-rises-h">
+      <div class="chapter-head">
+        <span class="chapter-num" aria-hidden="true">3</span>
+        <h2 id="nine-rises-h">The nine pay rises</h2>
+        <p class="chapter-lede">The draft raises pay nine times between September 2026 and March 2029. Each bar shows how much more you would earn a year after each rise.</p>
+      </div>
+      <div class="chapter-body" data-mount="nine-rises"></div>
+    </section>
+
+    <section class="chapter" id="flat-or-percent" data-chapter="4" data-family="amber" aria-labelledby="flat-or-percent-h">
+      <div class="chapter-head">
+        <span class="chapter-num" aria-hidden="true">4</span>
+        <h2 id="flat-or-percent-h">Flat sum or percentage?</h2>
+        <p class="chapter-lede">Five of the rises come with a <span data-term="minimum-payment">minimum payment</span>. Whether you get the minimum or the percentage depends on your salary, and the dividing line, the <span data-term="lower-pay-threshold">lower-pay threshold</span>, is €60,000.</p>
+      </div>
+      <div class="chapter-body" data-mount="flat-or-percent"></div>
+    </section>
+
+    <section class="chapter" id="compounding" data-chapter="5" data-family="violet" aria-labelledby="compounding-h">
+      <div class="chapter-head">
+        <span class="chapter-num" aria-hidden="true">5</span>
+        <h2 id="compounding-h">Why 10.75% comes to about 11.3%</h2>
+        <p class="chapter-lede">The headline adds the percentages together. Because each rise is worked out on pay that has already gone up, the rises together come to a little more. That is <span data-term="compounding">compounding</span>.</p>
+      </div>
+      <div class="chapter-body" data-mount="compounding"></div>
+    </section>
+
+    <section class="chapter" id="back-pay" data-chapter="6" data-family="teal" aria-labelledby="back-pay-h">
+      <div class="chapter-head">
+        <span class="chapter-num" aria-hidden="true">6</span>
+        <h2 id="back-pay-h">Your back pay</h2>
+        <p class="chapter-lede">The first rise is backdated to 1 September 2026. If the deal is accepted, the <span data-term="back-pay">back pay</span> owed since then arrives as a lump sum.</p>
+      </div>
+      <div class="chapter-body" data-mount="back-pay"></div>
+    </section>
+
+    <section class="chapter" id="vs-last-deal" data-chapter="7" data-family="violet" aria-labelledby="vs-last-deal-h">
       <div class="chapter-head">
         <span class="chapter-num" aria-hidden="true">7</span>
         <h2 id="vs-last-deal-h">This deal vs the last one</h2>
@@ -135,7 +138,7 @@
       <div class="chapter-body" data-mount="vs-last-deal"></div>
     </section>
 
-    <section class="chapter" id="beyond-pay" data-chapter="8" aria-labelledby="beyond-pay-h">
+    <section class="chapter" id="beyond-pay" data-chapter="8" data-family="sky" aria-labelledby="beyond-pay-h">
       <div class="chapter-head">
         <span class="chapter-num" aria-hidden="true">8</span>
         <h2 id="beyond-pay-h">Beyond pay</h2>
@@ -144,7 +147,7 @@
       <div class="chapter-body" data-mount="beyond-pay"></div>
     </section>
 
-    <section class="chapter" id="timeline" data-chapter="9" aria-labelledby="timeline-h">
+    <section class="chapter" id="timeline" data-chapter="9" data-family="slate" aria-labelledby="timeline-h">
       <div class="chapter-head">
         <span class="chapter-num" aria-hidden="true">9</span>
         <h2 id="timeline-h">How we got here, what happens next</h2>
@@ -153,7 +156,7 @@
       <div class="chapter-body" data-mount="timeline"></div>
     </section>
 
-    <section class="chapter" id="glossary" data-chapter="10" aria-labelledby="glossary-h">
+    <section class="chapter" id="glossary" data-chapter="10" data-family="slate" aria-labelledby="glossary-h">
       <div class="chapter-head">
         <span class="chapter-num" aria-hidden="true">10</span>
         <h2 id="glossary-h">Plain-English glossary</h2>
@@ -162,7 +165,7 @@
       <div class="chapter-body" data-mount="glossary"></div>
     </section>
 
-    <section class="chapter" id="sources" data-chapter="11" aria-labelledby="sources-h">
+    <section class="chapter" id="sources" data-chapter="11" data-family="slate" aria-labelledby="sources-h">
       <div class="chapter-head">
         <span class="chapter-num" aria-hidden="true">11</span>
         <h2 id="sources-h">Sources and assumptions</h2>

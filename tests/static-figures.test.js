@@ -8,11 +8,12 @@ import { eur, pct, longDate } from '../site/js/format.js';
 
 const read = (p) => readFileSync(new URL(`../site/${p}`, import.meta.url), 'utf8');
 const html = read('index.html');
+const text = html.replace(/<[^>]+>/g, ''); // what the reader sees, without the markup
 
 test('hero, headings and intros match data.js', () => {
   const compounded = pct((compoundFactor(DEAL.steps, { includeLB: true }) - 1) * 100);
+  assert.ok(text.includes(`${DEAL.headlinePct}% over ${DEAL.months} months`), 'the headline');
   for (const expected of [
-    `${DEAL.headlinePct}% over ${DEAL.months} months`,
     `data-count="${DEAL.headlinePct}"`,
     `data-count="${DEAL.months}"`,
     `data-count="${DEAL.steps.length}"`,

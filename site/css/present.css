@@ -59,7 +59,6 @@ body.present .hero-inner { width: 100%; max-width: 72rem; margin-left: auto; mar
 
 body.present h1 { font-size: clamp(2.6rem, 2rem + 3vw, 4.4rem); max-width: 24ch; }
 body.present h2 { font-size: clamp(2.3rem, 1.8rem + 2.2vw, 3.4rem); }
-body.present .chapter-num { position: static; font-size: 1.15rem; }
 body.present .chapter-lede { font-size: 1.35rem; max-width: 46rem; }
 body.present h1:focus, body.present h2:focus { outline: none; }
 

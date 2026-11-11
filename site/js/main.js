@@ -23,11 +23,11 @@ import * as sources from './sections/sources.js';
 const SECTIONS = [
   ['top', hero],
   ['your-pay', yourPay],
+  ['pay-vs-prices', payVsPrices],
   ['nine-rises', staircase],
   ['flat-or-percent', flatOrPercent],
   ['compounding', compounding],
   ['back-pay', backPay],
-  ['pay-vs-prices', payVsPrices],
   ['vs-last-deal', vsLastDeal],
   ['beyond-pay', beyondPay],
   ['timeline', timeline],

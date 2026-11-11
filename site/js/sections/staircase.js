@@ -1,4 +1,4 @@
-// Section 2: The nine pay rises. An animated staircase of the reader's total gain:
+// Section 3: The nine pay rises. An animated staircase of the reader's total gain:
 // each bar is the gain so far, its cap the new rise (teal = percentage, amber = the
 // flat minimum, hatched = local bargaining that may not reach you, striped teal =
 // local bargaining counted as a rise). The chart is one tab stop; the arrow keys

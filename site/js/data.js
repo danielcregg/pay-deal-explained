@@ -1,7 +1,7 @@
 // Every fact the site uses lives in this file.
 // When the official text is published or the ballot result is known, update this
 // file, run `npm test`, and push. A few figures are also written into index.html so
-// they show without JavaScript: the h1, the four hero figures, the chapter 3–5 intros,
+// they show without JavaScript: the h1, the four hero figures, the chapter 4–6 intros,
 // the status line and the <noscript> block. tests/static-figures.test.js and
 // tests/noscript.test.js fail if those drift from this file.
 

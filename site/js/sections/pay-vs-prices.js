@@ -1,4 +1,4 @@
-// Section 6: Pay vs prices. The reader's pay index against a price index (both 100 in
+// Section 2: Pay vs prices. The reader's pay index against a price index (both 100 in
 // July 2026), using the Central Bank's forecasts or a flat inflation figure of their own.
 
 import { payIndexSeries, priceIndexSeries, monthsPricesAhead } from '../pay.js';
