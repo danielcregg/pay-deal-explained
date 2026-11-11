@@ -1,7 +1,7 @@
 // Section 1: Your pay. Pick a grade and point (or type a salary), full-time, part-time
 // or hourly, and see what the draft deal adds. The choice then flows into every demo.
 
-import { applySteps, finalSalary, summarise, backPay } from '../pay.js';
+import { applySteps, finalSalary, summarise, backPay, owedBackPay } from '../pay.js';
 import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection } from '../selection.js';
 import { eur, signedEur, pct, longDate, listSteps } from '../format.js';
 import { h } from '../dom.js';
@@ -41,7 +41,7 @@ export function model(sel, data) {
       ? ['Part-time pay is assumed to be your full-time point times your share of full-time hours, so the flat minimums are pro-rated.']
       : [];
   if (owedCounted) {
-    notes.push(`You are counting the ${owed.pct}% owed since ${longDate(owed.since)}: it is added to today’s scale figure before the new rises. Its own back pay, from that date, is not estimated here.`);
+    notes.push(`You are counting the ${owed.pct}% owed since ${longDate(owed.since)}: it is added to today’s scale figure before the new rises, and its back pay from that date is added to the back pay above.`);
   }
   return {
     scenarios,
@@ -61,6 +61,9 @@ export function model(sel, data) {
     pctWithLB: (endWithLB / base - 1) * 100,
     firstRise: { date: first.step.date, amount: first.rise * factor },
     backPay: annualFactor === 0 ? null : arrears * annualFactor,
+    backPayOwed: owedCounted && annualFactor !== 0
+      ? owedBackPay(today, owed, data.PREVIOUS_DEAL.steps, { payMonth: sel.payMonth }).total * annualFactor
+      : null,
     flatSteps,
     explanation: flatSteps.length
       ? `The flat minimum beat the percentage at ${listSteps(flatSteps)}, because your pay was below ${threshold} at the time.`
@@ -127,7 +130,7 @@ export function render(root, { store, data }) {
   const owedBox = h('input', { id: 'pp-owed', type: 'checkbox' });
   const owedSwitch = h('label', { class: 'switch', for: 'pp-owed', hidden: !SCALES.owed }, owedBox,
     h('span', {}, SCALES.owed
-      ? `Count the ${SCALES.owed.pct}% local bargaining owed since ${longDate(SCALES.owed.since)}, which is not in the pay scales yet`
+      ? `Count the ${SCALES.owed.pct}% local bargaining owed since ${longDate(SCALES.owed.since)}, with its back pay. It is not in the pay scales yet`
       : ''));
 
   const reset = h('button', { type: 'button', class: 'button-quiet' }, 'Clear my choices');
@@ -198,6 +201,9 @@ export function render(root, { store, data }) {
 
   const update = (sel) => {
     showFields(sel);
+    // These two can also be changed from other chapters, so they follow the store.
+    lbBox.checked = sel.includeLB;
+    owedBox.checked = sel.includeOwed;
     const m = model(sel, data);
     const u = m.unit;
     const perText = u === 'hour' ? ' an hour' : ' a year';
@@ -241,7 +247,9 @@ export function render(root, { store, data }) {
     firstDd.textContent = `${signedEur(roundFor(m.firstRise.amount, u), opts)}${perText} from ${longDate(m.firstRise.date)}, backdated.`;
     backDd.replaceChildren(...(m.backPay === null
       ? ['Add the hours you teach in a year to estimate it.']
-      : [`About ${eur(m.backPay)} before tax, if the deal is accepted and first paid in ${longDate(sel.payMonth)}. `,
+      : [m.backPayOwed === null
+        ? `About ${eur(m.backPay)} before tax, if the deal is accepted and first paid in ${longDate(sel.payMonth)}. `
+        : `About ${eur(m.backPay + m.backPayOwed)} before tax if both are paid in ${longDate(sel.payMonth)}: ${eur(m.backPay)} from this deal and ${eur(m.backPayOwed)} for the ${m.owed.pct}% owed since ${longDate(m.owed.since.slice(0, 7))}. `,
         h('a', { href: '#back-pay' }, 'How it adds up')]));
     const hours = u === 'hour' ? sel.hoursPerYear : 0;
     hoursDiv.hidden = !hours;

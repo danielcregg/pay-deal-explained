@@ -10,6 +10,7 @@ import { DEFAULT_SELECTION } from '../site/js/selection.js';
 import * as staircase from '../site/js/sections/staircase.js';
 import * as hero from '../site/js/sections/hero.js';
 import * as yourPay from '../site/js/sections/your-pay.js';
+import * as backPay from '../site/js/sections/back-pay.js';
 import { enhanceTerms } from '../site/js/sections/glossary.js';
 import { presentKeyAction } from '../site/js/present.js';
 
@@ -169,4 +170,27 @@ test('your pay: counting the 1% owed since 2025 moves the figure, the starting p
   assert.match(text('.pay-ways-table td.on'), /^€119,871/);
   assert.match(text('.pay-label'), /with the 1% owed since September 2025$/);
   assert.equal(root.querySelectorAll('.pay-ways-table td.on').length, 1);
+});
+
+test('back pay: its checkbox for the 1% owed since 2025 and the one in section 1 are the same choice', () => {
+  const one = document.createElement('div');
+  const six = document.createElement('div');
+  document.body.append(one, six);
+  const store = createStore({ ...DEFAULT_SELECTION, touched: true, gradeId: 'lect', pointIndex: 10 });
+  yourPay.render(one, { store, data });
+  backPay.render(six, { store, data });
+  assert.equal(six.querySelector('.bp-owed').hidden, true);
+
+  const box = six.querySelector('#bp-owed');
+  box.checked = true;
+  box.dispatchEvent({ type: 'change', bubbles: true });
+  assert.equal(store.get().includeOwed, true);
+  assert.equal(one.querySelector('#pp-owed').checked, true, 'section 1 shows the same choice');
+  assert.match(six.querySelector('.bp-owed').textContent, /about €1,424. .* about €2,149 before tax/);
+
+  const first = one.querySelector('#pp-owed');
+  first.checked = false;
+  first.dispatchEvent({ type: 'change', bubbles: true });
+  assert.equal(six.querySelector('#bp-owed').checked, false);
+  assert.equal(six.querySelector('.bp-owed').hidden, true);
 });

@@ -97,6 +97,34 @@ export function backPay(start, steps, { payMonth = '2027-01', includeLB = false 
   return { items, total: items.reduce((sum, i) => sum + i.amount, 0) };
 }
 
+/** The pay before a rise, given the pay after it: undoes the minimum where it applied. */
+function before(after, step) {
+  if (step.min && after - step.min < thresholdOf(step)) return after - step.min;
+  return after / (1 + step.pct / 100);
+}
+
+/**
+ * Back pay for a rise that was due earlier and is not in the scales yet (the 1% owed
+ * since 1 September 2025): `owed.pct` of the pay in force in each month from
+ * `owed.since` up to the month before `payMonth`. The pay in force is found by undoing,
+ * from today's figure, the general rises in `pastSteps` dated after `owed.since`.
+ */
+export function owedBackPay(today, owed, pastSteps, { payMonth = '2027-01' } = {}) {
+  const levels = []; // { from: 'YYYY-MM', salary }, oldest first
+  let salary = today;
+  const since = pastSteps.filter((s) => s.kind !== 'lb' && s.date > owed.since).sort((a, b) => (a.date < b.date ? 1 : -1));
+  for (const step of since) {
+    levels.unshift({ from: step.date.slice(0, 7), salary });
+    salary = before(salary, step);
+  }
+  levels.unshift({ from: owed.since.slice(0, 7), salary });
+  const items = monthsBetween(owed.since.slice(0, 7), fromIndex(toIndex(payMonth) - 1)).map((month) => {
+    const level = levels.filter((l) => l.from <= month).pop();
+    return { month, amount: (level.salary * owed.pct) / 100 / 12 };
+  });
+  return { items, total: items.reduce((sum, i) => sum + i.amount, 0) };
+}
+
 /** Pay index (start = 100) using the salary in effect on the last day of each month. */
 export function payIndexSeries(start, steps, { from, to, includeLB = false }) {
   return monthsBetween(from, to).map((month) => ({

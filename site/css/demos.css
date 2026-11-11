@@ -397,6 +397,9 @@ tr.muted td { color: var(--muted); }
 /* ---------- 5. Back pay ---------- */
 
 .bp-field { max-width: 17rem; margin: 1rem 0; }
+.bp-owed-switch { margin-top: 1rem; max-width: var(--measure); }
+.bp-owed { margin: 0.75rem 0 0; padding: 0.75rem 0.9rem; border-radius: 10px; background: var(--teal-soft); color: var(--teal-ink); max-width: var(--measure); }
+.bp-owed[hidden] { display: none; }
 .bp-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));

@@ -1,7 +1,7 @@
-// Section 5: Your back pay. The months from September 2026 fill up one at a time, then
+// Section 6: Your back pay. The months from September 2026 fill up one at a time, then
 // arrive together as a lump sum in the month the rise is first paid.
 
-import { applySteps, backPay } from '../pay.js';
+import { applySteps, backPay, owedBackPay } from '../pay.js';
 import { resolvePay, figuresFor, PAY_MONTHS } from '../selection.js';
 import { eur, longDate, monthLabel, splitRounded } from '../format.js';
 import { h } from '../dom.js';
@@ -10,11 +10,22 @@ import { prefersReducedMotion, onFirstView, replayTransition } from '../motion.j
 /** Arrears owed for the reader, by month, in their actual pay (part-time and hourly scaled). */
 export function model(sel, data) {
   const pay = resolvePay(sel, data.SCALES);
-  const owed = backPay(pay.base, data.DEAL.steps, { payMonth: sel.payMonth, includeLB: sel.includeLB });
+  const due = backPay(pay.base, data.DEAL.steps, { payMonth: sel.payMonth, includeLB: sel.includeLB });
   const f = pay.annualFactor;
+  // The 1% owed since September 2025, when the reader counts it, brings back pay of its own.
+  const owedDef = sel.includeOwed ? data.SCALES.owed ?? null : null;
+  const earlier = owedDef ? owedBackPay(pay.published, owedDef, data.PREVIOUS_DEAL.steps, { payMonth: sel.payMonth }) : null;
+  const owed = earlier && {
+    pct: owedDef.pct,
+    since: owedDef.since,
+    items: earlier.items.map((i) => ({ month: i.month, amount: i.amount * f })),
+    total: earlier.total * f,
+  };
   return {
-    items: owed.items.map((i) => ({ month: i.month, amount: i.amount * f })),
-    total: owed.total * f,
+    items: due.items.map((i) => ({ month: i.month, amount: i.amount * f })),
+    total: due.total * f,
+    owed,
+    grandTotal: (due.total + (earlier ? earlier.total : 0)) * f,
     payMonth: sel.payMonth,
     needsHours: pay.unit === 'hour' && f === 0,
     note: pay.unit === 'hour' && f > 0
@@ -34,11 +45,19 @@ export function render(root, { store, data }) {
 
   const context = h('p', { class: 'context-line' });
   const hourlyNote = h('p', { class: 'note', hidden: true });
+  // The same choice as in section 1, offered here where its back pay shows.
+  const owedDef = data.SCALES.owed ?? null;
+  const owedBox = h('input', { id: 'bp-owed', type: 'checkbox' });
+  const owedSwitch = h('label', { class: 'switch bp-owed-switch', for: 'bp-owed', hidden: !owedDef }, owedBox,
+    h('span', {}, owedDef ? `Count the ${owedDef.pct}% owed since ${longDate(owedDef.since)} and its back pay. It is not confirmed yet` : ''));
+  const owedOut = h('p', { class: 'bp-owed', hidden: true });
   root.append(h('div', { class: 'plate' },
     context,
     intro,
     h('div', { class: 'field bp-field' }, h('label', { for: 'bp-month' }, 'If the rise is first paid in'), monthSelect),
     tiles,
+    owedSwitch,
+    owedOut,
     hourlyNote,
     h('div', { class: 'chart-foot' }, note, replay)));
 
@@ -53,6 +72,16 @@ export function render(root, { store, data }) {
     const first = applySteps(pay.base, data.DEAL.steps, { includeLB: sel.includeLB })[0];
     const yearly = first.rise * pay.annualFactor;
     context.textContent = figuresFor(sel, data.SCALES);
+    owedBox.checked = sel.includeOwed;
+    owedOut.hidden = !m.owed || m.needsHours;
+    if (m.owed && !m.needsHours) {
+      const first = m.owed.items[0].month;
+      const last = m.owed.items[m.owed.items.length - 1].month;
+      owedOut.replaceChildren(
+        h('strong', {}, `Back pay for the ${m.owed.pct}% owed since ${longDate(m.owed.since)}: about ${eur(m.owed.total)}. `),
+        `That is ${m.owed.pct}% of the pay scale in force in each of the ${m.owed.items.length} months from ${longDate(first)} to ${longDate(last)}, if it is paid and backdated in full. `
+        + `With the ${eur(m.total)} above, the lump sum would be about ${eur(m.grandTotal)} before tax.`);
+    }
     hourlyNote.hidden = !m.note;
     hourlyNote.textContent = m.note ?? '';
 
@@ -86,6 +115,7 @@ export function render(root, { store, data }) {
   };
 
   monthSelect.addEventListener('change', () => store.set({ payMonth: monthSelect.value }));
+  owedBox.addEventListener('change', () => store.set({ includeOwed: owedBox.checked }));
   replay.addEventListener('click', play);
   store.subscribe(draw);
   draw();

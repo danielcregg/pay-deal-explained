@@ -223,7 +223,7 @@ export const ASSUMPTIONS = [
   'Figures are gross pay, before tax, USC, PRSI and pension deductions.',
   'Annual increments are not included: the figures show only what the deal adds to your current scale point.',
   'Local bargaining (1% on 1 March 2029) is left out of totals unless you switch it on. It is 1% of a bargaining unit’s pay bill, used as negotiated, so it may not reach you as a 1% rise.',
-  'The 1% local bargaining due from 1 September 2025 under the last agreement is not in the lecturer pay scales of 1 June 2026, so it is left out unless you switch it on in section 1. Counting it adds 1% to your current point before the new rises. Its own back pay is not estimated.',
+  'The 1% local bargaining due from 1 September 2025 under the last agreement is not in the lecturer pay scales of 1 June 2026, so it is left out unless you switch it on in section 1. Counting it adds 1% to your current point before the new rises, and adds its back pay: 1% of the pay scale in force in each month since then, assuming it is backdated in full.',
   'Amounts are worked out to the cent and shown in whole euros. Official pay scales may differ by about €1 because of rounding.',
   'Part-time pay is your full-time scale point times your FTE, so the flat minimums are pro-rated.',
   'Hourly rates for Assistant Lecturers are point 1 of the annual scale divided by 630 hours, which matches the 2026 pay circulars exactly.',
