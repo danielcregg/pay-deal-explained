@@ -1,0 +1,12 @@
+{
+  "name": "pay-deal-2026",
+  "private": true,
+  "type": "module",
+  "description": "Unofficial, neutral explainer of the November 2026 draft public service pay deal, for TU lecturers",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\""
+  }
+}
