@@ -352,7 +352,10 @@ export function render(root, { store, data, now = thisMonth() }) {
   const monthly = h('span', { class: 'race-monthly' });
   const payLabel = h('small', {}, 'Pay is up');
   const payOut = h('b');
-  const split = h('p', { class: 'race-split', hidden: true }); // deal and increments apart, when both are counted
+  // The reader's own pay with increments, apart from the deal: the figure follows the slider, the reason does not change.
+  const splitOwn = h('span');
+  const split = h('p', { class: 'race-split', hidden: true }, splitOwn, ' ',
+    h('span', { class: 'race-split-why' }, 'Increments are normal progression, so they are not counted against prices.'));
   const priceOut = h('b');
   const realOut = h('b');
   const realNote = h('span', { class: 'race-real-note', hidden: true }, 'increments not counted'); // shown when the reader has added them
@@ -414,9 +417,8 @@ export function render(root, { store, data, now = thisMonth() }) {
     payLabel.textContent = m.own ? 'The deal adds' : 'Pay is up';
     realNote.hidden = !m.own;
     split.hidden = !m.own;
-    split.textContent = m.own
-      ? `With your increments, your own pay is up ${signed(s.own - 100)} (${s.label === m.own.startLabel ? `still on ${lower(s.label)}` : `${lower(m.own.startLabel)} to ${lower(s.label)}`}). `
-        + 'Increments are normal progression, so they are not counted against prices.'
+    splitOwn.textContent = m.own
+      ? `With your increments, your own pay is up ${signed(s.own - 100)} (${s.label === m.own.startLabel ? `still on ${lower(s.label)}` : `${lower(m.own.startLabel)} to ${lower(s.label)}`}).`
       : '';
     payOut.textContent = signed(s.pay - 100);
     priceOut.textContent = signed(s.price - 100);
@@ -469,7 +471,6 @@ export function render(root, { store, data, now = thisMonth() }) {
     const counting = climbs && who === 'mine';
     const prices = scenarioOf(sel, data.INFLATION);
     m = model(base, data, { includeLB: sel.includeLB, career: counting ? career : null, rates: prices.rates });
-    const incMonth = sel.incrementMonth ? MONTHS[sel.incrementMonth - 1] : '';
     incNote.hidden = !sel.incrementMonth;
     incNote.textContent = incrementNote({ sel, career, climbs, who, now });
     // On a projector screen the whole opening has to fit: a shorter chart in Present mode.
@@ -493,7 +494,7 @@ export function render(root, { store, data, now = thisMonth() }) {
       ? `Prices are never ahead of ${against} in these ${N} months`
       : `Prices are ahead of ${against} in ${behind} of the ${N} months`;
     ownKey.hidden = !m.own;
-    ownKey.replaceChildren(...(m.own ? [h('span', { class: 'swatch line own' }), 'Your pay with increments, not counted against prices'] : []));
+    ownKey.replaceChildren(...(m.own ? [h('span', { class: 'swatch line own' }), 'Your pay with increments'] : []));
     incKey.hidden = !marked;
     incKey.replaceChildren(...(marked ? [h('span', { class: 'race-key-mark', 'aria-hidden': 'true' }, '◆'), 'Your increment'] : []));
     chart.svg.setAttribute('aria-label', `Pay and prices from July 2026 to March 2029. By the end, ${m.own ? 'the deal’s rises add' : 'pay is up'} ${pct(end.pay - 100)} and prices are up ${pct(end.price - 100)}. ${aheadText.textContent}.`
@@ -501,7 +502,7 @@ export function render(root, { store, data, now = thisMonth() }) {
     source.replaceChildren(
       `${prices.note} `
       + `Gross pay; local bargaining is ${sel.includeLB ? 'counted' : 'not counted'}. `
-      + (counting ? `Your increments (one point each ${incMonth}) are shown but not counted against prices; the rest of the page shows the deal on its own. ` : '')
+      + (counting ? 'The rest of the page shows the deal without your increments. ' : '')
       + 'A projection, not a promise. ',
       h('a', { href: '#pay-vs-prices' }, 'Try your own inflation figure'));
 

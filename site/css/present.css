@@ -135,6 +135,8 @@ body.present .race-options { margin-top: 0.4rem; padding-top: 0.4rem; gap: 0.3re
 body.present .race .extras { gap: 0.25rem; }
 body.present .race .extras .switch { font-size: 0.85rem; }
 body.present .race-when-row { margin: 0.4rem 0 0.3rem; }
+/* The tile beside it says "increments not counted": one line here keeps the card on a short screen. */
+body.present .race-split-why { display: none; }
 @media (max-height: 820px) {
   /* A short projector screen: the tick boxes and the comparison give way. Set them before presenting;
      the note under the chart still says what is counted. */

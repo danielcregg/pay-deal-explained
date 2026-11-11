@@ -3,6 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installDom } from './helpers/dom.js';
+import { readCss } from './helpers/css.js';
 import * as data from '../site/js/data.js';
 import { positionIn, careerEvents, finalSalary } from '../site/js/pay.js';
 import { restoreSelection, careerOf, gradePatch, thisMonth } from '../site/js/selection.js';
@@ -167,7 +168,7 @@ test('the race: the pickers set job, grade, point and increment month, and the f
   const note = root.querySelector('.race-inc-note');
   assert.equal(note.hidden, false);
   assert.match(note.textContent, /one point each September, working from the point you are on now \(November 2026\)/);
-  assert.match(root.querySelector('.race-source').textContent, /Your increments \(one point each September\) are shown but not counted against prices/);
+  assert.match(root.querySelector('.race-source').textContent, /The rest of the page shows the deal without your increments\./);
   assert.equal(root.querySelectorAll('.race-inc-mark').length, 3, 'each increment is marked on the line');
   assert.equal(root.querySelector('.race-key-inc').hidden, false, 'and the key says what the mark is');
 
@@ -333,8 +334,10 @@ test('the race: with increments on, the tiles still compare the deal with prices
   assert.equal(root.querySelector('.race-split').textContent,
     'With your increments, your own pay is up +21.5% (point 4 to point 7). Increments are normal progression, so they are not counted against prices.');
   assert.equal(root.querySelector('.race-legend li').textContent, 'Prices are ahead of the deal’s rises in 7 of the 33 months');
-  assert.match(root.querySelector('.race-legend').textContent, /Your pay with increments, not counted against prices/);
-  assert.match(root.querySelector('.race-source').textContent, /Your increments \(one point each September\) are shown but not counted against prices; the rest of the page shows the deal on its own\./);
+  assert.equal(root.querySelector('.race-split-why').textContent, 'Increments are normal progression, so they are not counted against prices.');
+  assert.equal(root.querySelector('.race-key-own').textContent, 'Your pay with increments', 'the key names the line; the sentence above it gives the reason');
+  assert.match(root.querySelector('.race-source').textContent, /Gross pay; local bargaining is not counted\. The rest of the page shows the deal without your increments\. A projection, not a promise\./);
+  assert.doesNotMatch(root.querySelector('.race-source').textContent, /not counted against prices/, 'said in the sentence by the figures, not again in the source note');
   const label = root.querySelector('svg').getAttribute('aria-label');
   assert.match(label, /By the end, the deal’s rises add 10\.2% and prices are up 7\.5%\./);
   assert.match(label, /With your increments, your own pay is up 21\.5%, which is not counted against prices\.$/);
@@ -409,4 +412,9 @@ test('copy: increments are described as a line of their own, never set against p
   assert.match(glossary, /drawn as a second line, and prices are still compared with the deal’s rises alone/);
   assert.ok(data.ASSUMPTIONS.some((a) => /^Annual increments are not included/.test(a) && /Prices are always compared with the deal’s rises alone, because an increment is normal progression up a scale and not part of the deal/.test(a)));
   assert.doesNotMatch(JSON.stringify([data.ASSUMPTIONS, data.GLOSSARY]), /Advanced/);
+});
+
+test('Present mode: the reason increments are left out is said by the figures, not twice, so the card fits a short screen', () => {
+  const present = readCss('present.css');
+  assert.match(present, /body\.present \.race-split-why\s*\{\s*display:\s*none;/, 'the tile beside it already says "increments not counted"');
 });
