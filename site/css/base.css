@@ -264,7 +264,7 @@ td.r, th.r { text-align: right; }
 .mine b { color: var(--on-navy); font-variant-numeric: tabular-nums; }
 .mine-label { max-width: 20rem; overflow: hidden; text-overflow: ellipsis; }
 .mine .mine-go { padding: 0.15rem 0.7rem; border-radius: 999px; background: var(--on-navy); color: var(--navy); font-weight: 650; font-size: 0.8rem; }
-@media (min-width: 900px) {
+@media (min-width: 1040px) {
   .mine:not([hidden]) { display: inline-flex; }
   .mine:not([hidden]) + .present-btn { margin-left: 0; }
 }
