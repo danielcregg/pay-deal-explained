@@ -2,7 +2,7 @@
 // or hourly, and see what the draft deal adds. The choice then flows into every demo.
 
 import { applySteps, finalSalary, summarise, backPay, owedBackPay } from '../pay.js';
-import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradesIn, gradeOf, owedFor } from '../selection.js';
+import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradesIn, gradeOf, owedFor, sectorPatch, gradePatch } from '../selection.js';
 import { eur, signedEur, pct, longDate, listSteps } from '../format.js';
 import { h } from '../dom.js';
 import { countTo } from '../motion.js';
@@ -112,7 +112,9 @@ export function render(root, { store, data }) {
 
   // The grades on offer follow the job.
   const gradeSelect = h('select', { id: 'pp-grade' });
+  const listed = { sector: null, grade: null }; // what the grade and point lists hold at the moment
   const fillGrades = (sectorId) => {
+    listed.sector = sectorId;
     const option = (g) => h('option', { value: g.id }, g.name);
     const grades = gradesIn(SCALES, sectorId);
     const legacy = grades.filter((g) => g.group === 'legacy');
@@ -190,6 +192,7 @@ export function render(root, { store, data }) {
 
   // ---- syncing ----
   const fillPoints = (gradeId) => {
+    listed.grade = gradeId;
     const grade = SCALES.grades.find((g) => g.id === gradeId);
     pointSelect.replaceChildren(...(grade ? grade.points : []).map((p, i) => h('option', { value: i }, `${p.label} (${eur(p.value)})`)));
   };
@@ -229,9 +232,15 @@ export function render(root, { store, data }) {
 
   const update = (sel) => {
     showFields(sel);
-    // These two can also be changed from other chapters, so they follow the store.
+    // These can also be changed from other chapters, so they follow the store.
     lbBox.checked = sel.includeLB;
     owedBox.checked = sel.includeOwed;
+    for (const r of form.querySelectorAll('input[name="pp-contract"]')) r.checked = r.value === sel.contract;
+    if (listed.sector !== sel.sector) fillGrades(sel.sector);
+    sectorSelect.value = sel.sector;
+    gradeSelect.value = sel.gradeId;
+    if (listed.grade !== sel.gradeId) fillPoints(sel.gradeId);
+    if (sel.gradeId !== 'typed') pointSelect.value = String(sel.pointIndex);
     const m = model(sel, data);
     const u = m.unit;
     const perText = u === 'hour' ? ' an hour' : ' a year';
@@ -303,21 +312,8 @@ export function render(root, { store, data }) {
     else if (t === owedBox) store.set({ includeOwed: owedBox.checked });
     else if (t === pointSelect) set({ pointIndex: Number(pointSelect.value) });
     else if (t === sectorSelect) {
-      // A new job starts at the first point of its first grade.
-      const sel = store.get();
-      const sector = SCALES.sectors.find((s) => s.id === sectorSelect.value);
-      const first = gradesIn(SCALES, sector.id)[0];
-      fillGrades(sector.id);
-      gradeSelect.value = first.id;
-      fillPoints(first.id);
-      pointSelect.value = '0';
-      set({
-        sector: sector.id,
-        gradeId: first.id,
-        pointIndex: 0,
-        contract: sel.contract === 'hourly' && !sector.hourly ? 'full' : sel.contract,
-        includeOwed: sector.owed ? sel.includeOwed : false,
-      });
+      // A new job starts at the first point of its first grade; `update` then refills the lists.
+      set(sectorPatch(store.get(), SCALES, sectorSelect.value));
     }
     else if (t === gradeSelect) {
       const sel = store.get();
@@ -326,11 +322,7 @@ export function render(root, { store, data }) {
         typedInput.value = String(base);
         set({ gradeId: 'typed', typed: base });
       } else {
-        const grade = SCALES.grades.find((g) => g.id === gradeSelect.value);
-        const pointIndex = Math.min(sel.gradeId === 'typed' ? 0 : sel.pointIndex, grade.points.length - 1);
-        fillPoints(grade.id);
-        pointSelect.value = String(pointIndex);
-        set({ gradeId: grade.id, pointIndex });
+        set(gradePatch(sel, SCALES, gradeSelect.value));
       }
     }
   });

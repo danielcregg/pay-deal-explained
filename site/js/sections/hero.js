@@ -6,8 +6,8 @@
 // (print, background tabs, reduced motion). The first time it is seen, it replays from
 // the start.
 
-import { applySteps, priceIndexSeries } from '../pay.js';
-import { resolvePay, figuresFor, lowestScalePoint, sectorOf } from '../selection.js';
+import { applySteps, priceIndexSeries, careerEvents, positionIn } from '../pay.js';
+import { resolvePay, figuresFor, lowestScalePoint, sectorOf, gradesIn, gradeOf, careerOf, sectorPatch, gradePatch } from '../selection.js';
 import { eur, pct } from '../format.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { h } from '../dom.js';
@@ -26,25 +26,46 @@ export function monthOffset(date, startYm) {
   return (y - sy) * 12 + (m - sm) + (d - 1) / daysInMonth;
 }
 
+/** The month we are in, as 'YYYY-MM', kept inside the agreement: "the point you are on now" is read against it. */
+export function currentMonth(data, today = new Date()) {
+  const ym = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  const [from, to] = [data.DEAL.start.slice(0, 7), data.DEAL.end.slice(0, 7)];
+  return ym < from ? from : ym > to ? to : ym;
+}
+
 /**
  * The race for one salary: each counted rise as a step (`at` months after the deal's
  * start, with the pay index before and after), and the price index at the start and at
  * the end of each month. Both indices are 100 on 1 July 2026.
+ *
+ * With a `career` (see careerOf) the steps are the deal's rises and the reader's
+ * increments together, measured from their pay on 1 July 2026, and `deal` holds the
+ * deal's rises alone on the point they held then, so the two can be told apart.
  */
-export function model(base, data, { includeLB }) {
+export function model(base, data, { includeLB, career = null }) {
   const { DEAL, INFLATION } = data;
   const start = DEAL.start.slice(0, 7);
-  const steps = applySteps(base, DEAL.steps, { includeLB }).filter((r) => r.included).map((r) => ({
+  const dealSteps = (salary) => applySteps(salary, DEAL.steps, { includeLB }).filter((r) => r.included).map((r) => ({
     at: monthOffset(r.step.date, start),
-    before: (r.before / base) * 100,
-    after: (r.after / base) * 100,
+    before: (r.before / salary) * 100,
+    after: (r.after / salary) * 100,
     pct: r.step.pct,
     rise: r.rise,
     flat: r.flat,
     kind: r.step.kind,
   }));
   const price = [100, ...priceIndexSeries({ from: INFLATION.from, to: INFLATION.to, rates: INFLATION.rates }).map((p) => p.value)];
-  return { months: DEAL.months, start, steps, price, base };
+  if (!career) return { months: DEAL.months, start, steps: dealSteps(base), price, base };
+  const path = careerEvents(career.values, DEAL.steps, { ...career, from: start, to: DEAL.end.slice(0, 7), includeLB });
+  const first = path.start.salary;
+  const steps = path.events.map((e) => ({
+    at: monthOffset(e.date, start),
+    before: (e.before / first) * 100,
+    after: (e.after / first) * 100,
+    kind: e.kind,
+    label: career.labels[e.pos],
+  }));
+  return { months: DEAL.months, start, steps, price, base: first, deal: dealSteps(first), startLabel: career.labels[path.start.pos] };
 }
 
 /**
@@ -54,10 +75,13 @@ export function model(base, data, { includeLB }) {
  */
 export function stateAt(m, t) {
   let pay = 100;
-  for (const s of m.steps) if (s.at < t) pay = s.after;
+  let label = m.startLabel; // the scale point held, when increments are counted
+  for (const s of m.steps) if (s.at < t) { pay = s.after; label = s.label ?? label; }
+  let deal = pay; // what the deal alone has added
+  if (m.deal) { deal = 100; for (const s of m.deal) if (s.at < t) deal = s.after; }
   const i = Math.min(m.months - 1, Math.floor(t));
   const price = m.price[i] + (m.price[i + 1] - m.price[i]) * Math.min(1, t - i);
-  return { pay, price, real: (pay / price - 1) * 100 };
+  return { pay, price, real: (pay / price - 1) * 100, deal, label };
 }
 
 /** Where the play head is, in words. */
@@ -89,7 +113,8 @@ const signed = (n) => `${n < 0 ? '−' : '+'}${pct(Math.abs(n))}`;
 function buildChart(m, width, text, compact) {
   const W = Math.max(280, width);
   const narrow = W < 520;
-  const H = compact ? 196 : narrow ? 250 : 310;
+  // Present mode on a short screen: with increments the tiles and the note run longer, so the chart gives way.
+  const H = compact ? (m.deal ? 160 : 196) : narrow ? 250 : 310;
   const k = text / 12;
   const margin = { top: 16, right: Math.round(58 * k), bottom: Math.round(30 * k), left: Math.round(38 * k) };
   const N = m.months;
@@ -106,6 +131,11 @@ function buildChart(m, width, text, compact) {
   const below = `V${H - margin.bottom}H${r(x(0))}Z`;
   const above = `V${margin.top}H${r(x(0))}Z`;
 
+  // A move between two points on the same figure changes nothing, so it gets no mark.
+  const marks = m.steps.filter((s) => s.kind === 'increment' && s.after > s.before).map((s) => {
+    const [cx, cy] = [r(x(s.at)), r(y(s.after))];
+    return svgEl('path', { class: 'race-inc-mark', d: `M${cx},${cy - 5.5}L${cx + 5.5},${cy}L${cx},${cy + 5.5}L${cx - 5.5},${cy}Z` });
+  });
   const seen = svgEl('rect', { x: 0, y: 0, width: W, height: H });
   const svg = svgEl('svg', { class: 'chart-svg race-svg', viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img' }, [
     svgEl('defs', {}, [
@@ -128,6 +158,7 @@ function buildChart(m, width, text, compact) {
     svgEl('path', { class: 'race-price-ahead', d: priceLine + below, 'clip-path': 'url(#race-above-pay)' }),
     svgEl('path', { class: 'line-price', d: priceLine }),
     svgEl('path', { class: 'line-pay', d: payLine }),
+    ...marks,
   ]));
   const head = svgEl('line', { class: 'race-head', y1: margin.top, y2: H - margin.bottom });
   const dotPrice = svgEl('circle', { class: 'dot-price', r: 5.5 });
@@ -184,8 +215,9 @@ function weave() {
   return svgEl('svg', { class: 'hero-weave', viewBox: '0 0 1200 600', preserveAspectRatio: 'xMidYMid slice', 'aria-hidden': 'true' }, lines);
 }
 
-export function render(root, { store, data }) {
+export function render(root, { store, data, now = currentMonth(data) }) {
   const N = data.DEAL.months;
+  const { SCALES } = data;
   const motion = !prefersReducedMotion();
   const band = typeof root.closest === 'function' ? root.closest('.hero')?.querySelector('.hero-band') : null;
   if (band) band.prepend(weave());
@@ -194,16 +226,64 @@ export function render(root, { store, data }) {
   const mine = h('button', { type: 'button', 'aria-pressed': 'true' });
   const lowest = h('button', { type: 'button', 'aria-pressed': 'false' });
   const picks = h('div', { class: 'race-picks', role: 'group', 'aria-label': 'Whose pay' }, mine, lowest);
+
+  // Advanced: the reader's own grade, point and increment month, without leaving the chart.
+  const option = (value, text) => h('option', { value }, text);
+  const field = (id, label, control, hidden = false) => h('div', { class: 'field', hidden }, h('label', { for: id }, label), control);
+  const jobSelect = h('select', { id: 'race-job' }, SCALES.sectors.map((s) => option(s.id, s.name)));
+  const gradeSelect = h('select', { id: 'race-grade' });
+  const pointSelect = h('select', { id: 'race-point' });
+  const incSelect = h('select', { id: 'race-inc' }, option('', 'Do not count increments'), MONTHS.map((name, i) => option(i + 1, name)));
+  const advNote = h('p', { class: 'note race-adv-note' });
+  const advanced = h('details', { class: 'race-advanced' },
+    h('summary', {}, 'Advanced: add my yearly increments'),
+    h('div', { class: 'race-adv-grid' },
+      field('race-job', 'Your job', jobSelect, SCALES.sectors.length < 2),
+      field('race-grade', 'Grade', gradeSelect),
+      field('race-point', 'Scale point you are on now', pointSelect),
+      field('race-inc', 'Month your increment falls in', incSelect)),
+    advNote);
+  if (store.get().incrementMonth) advanced.setAttribute('open', '');
+  const listed = { grades: null, points: null }; // what the two lists hold at the moment
+  const syncAdvanced = (sel) => {
+    const grade = gradeOf(sel, SCALES);
+    const gradesKey = `${sel.sector}|${grade ? 'grade' : 'none'}`;
+    if (listed.grades !== gradesKey) {
+      listed.grades = gradesKey;
+      // A typed salary or an hourly rate has no grade here until one is chosen.
+      gradeSelect.replaceChildren(grade ? null : option('', 'Choose a grade'), ...gradesIn(SCALES, sel.sector).map((g) => option(g.id, g.name)));
+    }
+    const pointsKey = grade ? grade.id : '';
+    if (listed.points !== pointsKey) {
+      listed.points = pointsKey;
+      pointSelect.replaceChildren(...(grade ? grade.points : []).map((p, i) => option(i, `${p.label} (${eur(p.value)})`)));
+    }
+    jobSelect.value = sel.sector;
+    gradeSelect.value = grade ? grade.id : '';
+    pointSelect.value = grade ? String(sel.pointIndex) : '';
+    pointSelect.disabled = !grade;
+    incSelect.value = sel.incrementMonth ? String(sel.incrementMonth) : '';
+  };
+  const choose = (patch) => store.set({ ...patch, touched: true });
+  jobSelect.addEventListener('change', () => choose(sectorPatch(store.get(), SCALES, jobSelect.value)));
+  gradeSelect.addEventListener('change', () => {
+    if (!gradeSelect.value) return;
+    const sel = store.get();
+    choose({ ...gradePatch(sel, SCALES, gradeSelect.value), contract: sel.contract === 'hourly' ? 'full' : sel.contract });
+  });
+  pointSelect.addEventListener('change', () => choose({ pointIndex: Number(pointSelect.value) }));
+  incSelect.addEventListener('change', () => choose({ incrementMonth: incSelect.value ? Number(incSelect.value) : null }));
   const when = h('p', { class: 'race-when' });
   const euroLabel = h('small');
   const euroOut = h('b');
   const monthly = h('span', { class: 'race-monthly' });
   const payOut = h('b');
+  const split = h('span', { class: 'race-split', hidden: true }); // deal and increments apart, when both are counted
   const priceOut = h('b');
   const realOut = h('b');
   const tiles = h('div', { class: 'race-tiles' },
     h('div', { class: 'race-tile euro' }, euroLabel, euroOut, monthly),
-    h('div', { class: 'race-tile pay' }, h('small', {}, 'Pay is up'), payOut),
+    h('div', { class: 'race-tile pay' }, h('small', {}, 'Pay is up'), payOut, split),
     h('div', { class: 'race-tile price' }, h('small', {}, 'Prices are up'), priceOut),
     h('div', { class: 'race-tile real' }, h('small', {}, 'So pay buys'), realOut));
   const wrap = h('div', { class: 'chart-wrap' });
@@ -214,11 +294,12 @@ export function render(root, { store, data }) {
   root.append(
     h('h2', { id: 'race-h' }, 'Your pay against prices, month by month'),
     h('p', { class: 'race-sub' }, 'Press play, or slide to any month to see your pay then. Pay rises in steps; prices creep up every month.'),
-    context, picks, extrasSwitches(store, data, 'race'), when, tiles,
+    context, picks, extrasSwitches(store, data, 'race'), advanced, when, tiles,
     h('div', { class: 'race-controls' }, playBtn, scrub), // beside the figures it changes
     wrap,
     source);
 
+  const m0 = data.DEAL.start.slice(0, 7);
   let who = 'mine';
   let money = { factor: 1, unit: 'year' }; // how the index turns into the pay shown
   let t = N; // complete until it is first seen
@@ -236,12 +317,16 @@ export function render(root, { store, data }) {
     const hourly = money.unit === 'hour';
     euroLabel.textContent = hourly ? 'Hourly rate then' : 'Yearly pay then';
     euroOut.textContent = eur(euro, { cents: hourly });
-    monthly.textContent = hourly ? 'before tax' : `about ${eur(euro / 12)} a month before tax`;
+    // With increments counted, say which point the figure is for and how much is the deal's doing.
+    const onPoint = m.deal && s.label ? `, on ${s.label[0].toLowerCase()}${s.label.slice(1)}` : '';
+    monthly.textContent = hourly ? 'before tax' : `about ${eur(euro / 12)} a month before tax${onPoint}`;
+    split.hidden = !m.deal;
+    split.textContent = m.deal ? `${signed(s.deal - 100)} from the deal, ${signed(s.pay - s.deal)} from increments` : '';
     payOut.textContent = signed(s.pay - 100);
     priceOut.textContent = signed(s.price - 100);
     realOut.textContent = `${pct(Math.abs(s.real))} ${s.real >= 0 ? 'more' : 'less'}`;
     scrub.value = String(t);
-    scrub.setAttribute('aria-valuetext', `${label}: ${euroOut.textContent} ${hourly ? 'an hour' : 'a year'}, pay ${signed(s.pay - 100)}, prices ${signed(s.price - 100)}`);
+    scrub.setAttribute('aria-valuetext', `${label}: ${euroOut.textContent} ${hourly ? 'an hour' : 'a year'}${onPoint}, pay ${signed(s.pay - 100)}, prices ${signed(s.price - 100)}`);
   };
 
   const stop = () => {
@@ -279,12 +364,27 @@ export function render(root, { store, data }) {
     // The lowest point gets the same treatment as the reader's own: lifted if they count the 1% from 2025.
     const base = who === 'low' ? low * (pay.base / pay.published) : pay.base;
     money = who === 'low' ? { factor: 1, unit: 'year' } : { factor: pay.factor, unit: pay.unit };
-    m = model(base, data, { includeLB: sel.includeLB });
+    // Increments, when the reader has asked for them and has a scale left to climb in these months.
+    syncAdvanced(sel);
+    const career = careerOf(sel, SCALES, now);
+    const place0 = (month) => positionIn(month, { ...career, count: career.values.length });
+    const climbs = Boolean(career) && place0(m0) !== place0(data.DEAL.end.slice(0, 7));
+    const counting = climbs && who === 'mine';
+    m = model(base, data, { includeLB: sel.includeLB, career: counting ? career : null });
+    const incMonth = sel.incrementMonth ? MONTHS[sel.incrementMonth - 1] : '';
+    const [nowYear, nowMonth] = now.split('-').map(Number);
+    advNote.textContent = !sel.incrementMonth
+      ? 'Most scales move you up one point on the same date each year. Choose the month yours takes effect, and the chart adds it to the deal’s rises.'
+      : !career
+        ? 'Increments need a grade and scale point: choose them here or in section 1.'
+        : !climbs
+          ? 'You are at the top of this scale, so there are no increments to count between July 2026 and March 2029.'
+          : `The chart adds one point each ${incMonth}, counting from the point you are on now (${MONTHS[nowMonth - 1]} ${nowYear}), up to the top of the scale. Long service increments and promotions are not included. The rest of the page shows the deal on its own.`;
     // On a projector screen the whole opening has to fit: a shorter chart in Present mode.
     const compact = document.body.classList.contains('present') && window.innerHeight < 900;
     chart = buildChart(m, width, labelSize(wrap), compact);
 
-    context.textContent = figuresFor(sel, data.SCALES);
+    context.textContent = figuresFor(sel, data.SCALES) + (counting ? ` With a yearly increment each ${incMonth}.` : '');
     mine.textContent = pay.isExample ? `Example: ${pay.label}` : pay.label;
     mine.setAttribute('aria-pressed', String(who === 'mine'));
     lowest.setAttribute('aria-pressed', String(who === 'low'));
@@ -294,7 +394,9 @@ export function render(root, { store, data }) {
     chart.svg.setAttribute('aria-label', `Pay and prices from July 2026 to March 2029. By the end, pay is up ${pct(end.pay - 100)} and prices are up ${pct(end.price - 100)}.`);
     source.replaceChildren(
       `Prices follow the Central Bank’s forecasts as reported by RTÉ: ${forecastText(data.INFLATION)}. `
-      + `Gross pay; local bargaining is ${sel.includeLB ? 'counted' : 'not counted'}. A projection, not a promise. `,
+      + `Gross pay; local bargaining is ${sel.includeLB ? 'counted' : 'not counted'}. `
+      + (counting ? `Increments are counted: one point each ${incMonth}, marked ◆ on the line. ` : '')
+      + 'A projection, not a promise. ',
       h('a', { href: '#pay-vs-prices' }, 'Try your own inflation figure'));
 
     for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();

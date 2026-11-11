@@ -74,6 +74,61 @@ export function monthsBetween(from, to) {
   return out;
 }
 
+// ---- increments ----
+// Only the opening chart counts these, and only when the reader asks. Everywhere else
+// the site shows what the deal adds to one scale point.
+
+/** How many of the months after `a`, up to and including `b`, are calendar month `month` (1 to 12). */
+const incrementsIn = (a, b, month) => monthsBetween(a, b).slice(1).filter((ym) => Number(ym.slice(5)) === month).length;
+
+/**
+ * The position on a scale (0 is the first of `count`) held in `month`, by someone who
+ * holds `pos` in the month `now` and moves up one position on the 1st of calendar month
+ * `incrementMonth` each year until they reach the top. Months are 'YYYY-MM'. Someone at
+ * the top now is taken to have been there already: there is no telling when they arrived.
+ */
+export function positionIn(month, { pos, count, incrementMonth, now }) {
+  const top = count - 1;
+  const moved = month >= now
+    ? incrementsIn(now, month, incrementMonth)
+    : pos >= top ? 0 : -incrementsIn(month, now, incrementMonth);
+  return Math.max(0, Math.min(top, pos + moved));
+}
+
+/**
+ * Pay through an agreement for someone who also moves up their scale each year.
+ * `values` are the scale's figures when the agreement starts, one for each position.
+ * Each position's figure is revised by every rise so far, so an increment lands on the
+ * new position's figure as it then stands. Returns the pay in the month `from` and every
+ * change after it, in date order; an increment on the same date as a rise comes first.
+ */
+export function careerEvents(values, steps, { pos, incrementMonth, now, from, to, includeLB = false }) {
+  const where = (month) => positionIn(month, { pos, count: values.length, incrementMonth, now });
+  const rises = counted(steps, includeLB);
+  // ladder[position][n]: that position's figure after the first n counted rises
+  const ladder = values.map((v) => [v, ...applySteps(v, rises, { includeLB: true }).map((r) => r.after)]);
+  const dates = [
+    ...rises.map((s, i) => ({ date: s.date, kind: s.kind, done: i + 1 })),
+    ...monthsBetween(from, to).slice(1).filter((ym) => Number(ym.slice(5)) === incrementMonth).map((ym) => ({ date: `${ym}-01`, kind: 'increment' })),
+  ].sort((a, b) => (a.date === b.date ? (a.kind === 'increment' ? -1 : 1) : a.date < b.date ? -1 : 1));
+  let at = where(from);
+  let done = 0;
+  let salary = ladder[at][0];
+  const start = { pos: at, salary };
+  const events = [];
+  for (const d of dates) {
+    if (d.kind === 'increment') {
+      const next = where(d.date.slice(0, 7));
+      if (next === at) continue; // already at the top
+      at = next;
+    } else done = d.done;
+    const before = salary;
+    salary = ladder[at][done];
+    events.push({ date: d.date, kind: d.kind, pos: at, before, after: salary });
+  }
+  return { start, events };
+}
+
 /** 'YYYY-MM' → the last day of that month as 'YYYY-MM-DD'. */
 export function lastDayOf(ym) {
   const [y, m] = ym.split('-').map(Number);

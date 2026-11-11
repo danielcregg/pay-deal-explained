@@ -23,6 +23,7 @@ export const DEFAULT_SELECTION = Object.freeze({
   includeLB: SITE.includeLBDefault,
   includeOwed: SITE.includeOwedDefault, // count the 1% from September 2025 (the sector's `owed` entry)
   payMonth: '2027-01',
+  incrementMonth: null,    // 1 to 12: the opening chart then adds a yearly increment in that month (its Advanced panel)
 });
 
 /**
@@ -124,6 +125,48 @@ export function resolvePay(sel, scales) {
   return { base: point.value * lift, published: point.value, factor: fte, annualFactor: fte, unit: 'year', label, isExample };
 }
 
+/** The changes to make when the reader picks another job: its first grade and point, and nothing the job does not have. */
+export function sectorPatch(sel, scales, sectorId) {
+  const sector = scales.sectors.find((s) => s.id === sectorId);
+  return {
+    sector: sector.id,
+    gradeId: gradesIn(scales, sector.id)[0].id,
+    pointIndex: 0,
+    contract: sel.contract === 'hourly' && !sector.hourly ? 'full' : sel.contract,
+    includeOwed: sector.owed ? sel.includeOwed : false,
+  };
+}
+
+/** The changes to make when the reader picks another grade: the same point number, where the new scale has one. */
+export function gradePatch(sel, scales, gradeId) {
+  const grade = findGrade(scales, gradeId);
+  return { gradeId: grade.id, pointIndex: Math.min(sel.gradeId === 'typed' ? 0 : sel.pointIndex, grade.points.length - 1) };
+}
+
+/**
+ * The reader's way up their scale, for the opening chart when it counts increments: the
+ * points they can stand on (skipped points and long service increments are left out),
+ * where they stand in the month `now`, and the month their increment falls in. Null when
+ * no month is chosen or there is no scale to climb (an hourly rate, a typed salary).
+ */
+export function careerOf(sel, scales, now) {
+  if (!sel.incrementMonth) return null;
+  const grade = gradeOf(sel, scales);
+  if (!grade) return null;
+  const pay = resolvePay(sel, scales);
+  const lift = pay.base / pay.published; // the 1% from September 2025, when counted, lifts every point
+  const own = grade.points[sel.pointIndex];
+  // A long service increment needs years at the top, so it is neither climbed to nor climbed from.
+  const steps = own.lsi ? [own] : grade.points.filter((p) => p === own || (!p.skipped && !p.lsi));
+  return {
+    values: steps.map((p) => p.value * lift),
+    labels: steps.map((p) => p.label),
+    pos: steps.indexOf(own),
+    incrementMonth: sel.incrementMonth,
+    now,
+  };
+}
+
 /**
  * The low point of a job's scales, where the flat minimums count most: the lowest point of
  * all, or of the grade the job names (`lowGrade`) where older scales start below the point
@@ -151,6 +194,7 @@ function isValid(sel, scales) {
   if (!sector || (sel.contract === 'hourly' && !sector.hourly)) return false;
   if (!PAY_MONTHS.includes(sel.payMonth)) return false;
   if (typeof sel.includeLB !== 'boolean' || typeof sel.includeOwed !== 'boolean') return false;
+  if (sel.incrementMonth !== null && !(Number.isInteger(sel.incrementMonth) && sel.incrementMonth >= 1 && sel.incrementMonth <= 12)) return false;
   if (!(typeof sel.fte === 'number' && sel.fte >= 0.01 && sel.fte <= 1)) return false;
   if (!['al-ne', 'al-pre'].includes(sel.alScale)) return false;
   if (!(typeof sel.hoursPerYear === 'number' && sel.hoursPerYear >= 0 && sel.hoursPerYear <= MAX_HOURS)) return false;

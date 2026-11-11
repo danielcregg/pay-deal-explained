@@ -126,3 +126,4 @@ body.present .race-tile { padding: 0.4rem 0.65rem; }
 body.present .race .extras { margin: 0.45rem 0 0.1rem; gap: 0.25rem; }
 body.present .race .extras .switch { font-size: 0.85rem; }
 body.present .race-when { margin: 0.4rem 0 0.3rem; }
+body.present .race-advanced { display: none; } /* set it up before presenting; the note under the chart still says so */
