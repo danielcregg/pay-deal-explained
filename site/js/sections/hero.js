@@ -379,7 +379,8 @@ export function render(root, { store, data, now = currentMonth(data) }) {
         ? 'Increments need a grade and scale point: choose them here or in section 1.'
         : !climbs
           ? 'You are at the top of this scale, so there are no increments to count between July 2026 and March 2029.'
-          : `The chart adds one point each ${incMonth}, counting from the point you are on now (${MONTHS[nowMonth - 1]} ${nowYear}), up to the top of the scale. Long service increments and promotions are not included. The rest of the page shows the deal on its own.`;
+          : `The chart adds one point each ${incMonth}, counting from the point you are on now (${MONTHS[nowMonth - 1]} ${nowYear}), up to the top of the scale. Long service increments and promotions are not included. The rest of the page shows the deal on its own.`
+            + (sel.incrementMonth === nowMonth ? ' This month’s increment is taken as already paid, so choose the point you are on after it.' : '');
     // On a projector screen the whole opening has to fit: a shorter chart in Present mode.
     const compact = document.body.classList.contains('present') && window.innerHeight < 900;
     chart = buildChart(m, width, labelSize(wrap), compact);

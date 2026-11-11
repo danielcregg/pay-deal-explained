@@ -97,6 +97,20 @@ chart and chapter 7 (`lowGrade`).
 To add a job: add the sector and its grades, add its sources to `SOURCES`, and add a
 test with the scale figures to `tests/sectors.test.js`.
 
+### Increments in the opening chart
+
+Every figure on the site shows what the deal adds to one scale point, with one
+exception: the opening chart's Advanced panel, where a reader can pick their grade,
+the point they are on now and the month their increment falls in. The chart then adds
+one point a year to the deal's rises.
+
+- The rules are in `positionIn` and `careerEvents` (`site/js/pay.js`) and `careerOf`
+  (`site/js/selection.js`); `tests/increments.test.js` works examples through.
+- A point marked `skipped: true` in `data.js` is passed over, and a point marked
+  `lsi: true` (a long service increment) is never climbed to, because it depends on
+  years spent at the top. Mark new scales the same way.
+- "Now" is the month on the reader's device, kept inside the agreement's dates.
+
 ### If local bargaining turns out to reach staff as a pay rise
 
 Set `SITE.includeLBDefault` to `true` and update the sector's `lastDealNote`.

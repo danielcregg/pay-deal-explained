@@ -211,3 +211,21 @@ test('the grade lists hold options and groups only, with no stray text', () => {
     assert.deepEqual(strays(form.querySelector('#pp-grade')), [], `section 1, ${job}`);
   }
 });
+
+test('the race: an increment in the month we are in is taken as paid, and the panel says so', () => {
+  const { root, tiles, pick } = mountRace({ touched: true });
+  pick('#race-inc', 11); // now is November 2026
+  assert.match(root.querySelector('.race-adv-note').textContent, /This month’s increment is taken as already paid, so choose the point you are on after it\./);
+  const scrub = root.querySelector('input.race-scrub');
+  const euroAt = (t) => { scrub.value = String(t); scrub.dispatchEvent({ type: 'input', bubbles: true }); return tiles()[0]; };
+  assert.deepEqual([euroAt(4), euroAt(5)], ['€88,675', '€91,692'], 'October 2026 on point 4, November on point 5, each with the September rise');
+  pick('#race-inc', 9);
+  assert.doesNotMatch(root.querySelector('.race-adv-note').textContent, /This month/);
+});
+
+test('copy: the assumptions say how increments are counted when they are added', () => {
+  const line = data.ASSUMPTIONS.find((a) => /1st of the month you choose/.test(a));
+  assert.ok(line, 'an assumption about the date');
+  assert.match(line, /skipped/);
+  assert.match(line, /long service increments and promotions/i);
+});

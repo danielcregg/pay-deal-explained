@@ -401,6 +401,7 @@ export const ASSUMPTIONS = [
   'Everything is based on the draft deal’s terms as published by the ICTU Public Services Committee and reported on 11 November 2026. The full text of the agreement had not been published.',
   'Figures are gross pay, before tax, USC, PRSI and pension deductions.',
   'Annual increments are not included: the figures show only what the deal adds to your current scale point. The one exception is the opening chart, where you can add your own increment month under Advanced.',
+  'Where you add increments to the opening chart, each is counted from the 1st of the month you choose: one point a year, worked out from the point you are on now. Skipped points are passed over, and long service increments and promotions are left out.',
   'Local bargaining (1% on 1 March 2029) is left out of totals unless you switch it on. It is 1% of a bargaining unit’s pay bill, used as negotiated, so it may not reach you as a 1% rise.',
   'Lecturer, teacher and nurse figures are the pay scales in force from 1 June 2026. Garda figures are the official table of 1 August 2025 with the two rises since applied, because no later table could be found.',
   'For teachers, nurses, midwives and gardaí the figures are basic pay only: allowances, premium pay and overtime are not included.',
