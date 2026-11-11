@@ -145,7 +145,8 @@ test('the race: the tiles show pay in euro for the chosen month, and the chips s
   scrubTo(12);
   assert.equal(root.querySelector('.race-when').textContent, 'In June 2027');
   assert.deepEqual(tiles().slice(0, 2), ['€92,609', '+3.0%']);
-  assert.equal(root.querySelector('.race-monthly').textContent, 'about €7,717 a month before tax');
+  assert.equal(root.querySelector('.race-monthly').textContent, 'about €7,717 a month');
+  assert.equal(root.querySelector('.race-tile.euro small').textContent, 'Yearly pay, before tax');
 
   scrubTo(16);
   assert.equal(root.querySelector('.race-when').textContent, 'In October 2027');

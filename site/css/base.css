@@ -306,7 +306,7 @@ td.r, th.r { text-align: right; }
   text-underline-offset: 0.2em;
 }
 
-/* ---------- hero: a navy band; the pay-against-prices card overlaps its lower edge ---------- */
+/* ---------- the opening: a navy band holding the headline, the pay-against-prices card and four facts ---------- */
 
 .hero { padding: 0; }
 
@@ -315,11 +315,27 @@ td.r, th.r { text-align: right; }
   overflow: hidden;
   background: var(--navy);
   color: var(--on-navy);
-  padding: clamp(2rem, 6vw, 4rem) var(--gutter) clamp(6.5rem, 13vw, 9rem);
+  padding: clamp(1.25rem, 3.5vw, 2.25rem) var(--gutter) clamp(1.75rem, 4vw, 3rem);
 }
 .hero-weave { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .hero-weave path { fill: none; stroke: var(--navy-line); stroke-width: 1; }
-.hero-inner { position: relative; max-width: var(--wide); margin: 0 auto; }
+.hero-inner { position: relative; max-width: 78rem; margin: 0 auto; display: grid; gap: clamp(1.1rem, 3vw, 1.75rem); }
+.hero-text, .race-wrap, .hero-facts { min-width: 0; }
+.hero h1 { font-size: clamp(1.8rem, 1.1rem + 2.6vw, 2.6rem); max-width: 26ch; } /* a shorter headline: the chart is the main thing */
+@media (min-width: 1040px) {
+  /* Headline and chart side by side, so the chart is on the first screen. */
+  .hero-inner {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-areas: "text race" "facts race";
+    grid-template-rows: auto 1fr;
+    column-gap: clamp(1.5rem, 3vw, 2.75rem);
+    align-items: start;
+  }
+  .hero-text { grid-area: text; padding-top: 0.5rem; }
+  .race-wrap { grid-area: race; }
+  .hero-facts { grid-area: facts; }
+  .hero h1 { font-size: clamp(2rem, 0.9rem + 2.2vw, 2.9rem); }
+}
 
 .hero-status {
   display: flex;
@@ -328,20 +344,28 @@ td.r, th.r { text-align: right; }
   max-width: var(--measure);
   color: var(--on-navy-muted);
   font-size: 0.95rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 .status-dot { flex: none; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--gold); }
 .h1-figure { color: var(--gold); }
-.hero-lede { max-width: var(--measure); font-size: 1.2rem; color: var(--on-navy-muted); }
+.hero-lede { max-width: var(--measure); font-size: 1.1rem; color: var(--on-navy-muted); margin-bottom: 0; }
 .hero-band :focus-visible, .site-header :focus-visible { outline-color: var(--gold); }
+.race :focus-visible { outline-color: var(--mark-pct); }
+@media (max-width: 699px) {
+  /* On a phone the headline gives way sooner to the pickers and the chart. The footer and
+     the sources section also say the site is independent. */
+  .hero h1 { font-size: 1.8rem; }
+  .hero-lede { font-size: 1rem; }
+  .lede-about { display: none; }
+}
 
 .hero-facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem 2rem;
-  margin: 2rem 0 0;
+  margin: 0;
 }
-@media (min-width: 760px) {
+@media (min-width: 760px) and (max-width: 1039px) {
   .hero-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 .hero-facts div {
@@ -362,11 +386,9 @@ td.r, th.r { text-align: right; }
 }
 .hero-facts dt { color: var(--on-navy-muted); font-size: 0.9rem; line-height: 1.35; margin-top: 0.35rem; }
 
-.race-wrap { max-width: calc(var(--wide) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
 .race {
   position: relative;
-  margin-top: clamp(-7rem, -10vw, -4.75rem);
-  margin-bottom: clamp(2rem, 5vw, 3.25rem);
+  color: var(--ink);
   background: var(--card);
   border-radius: 16px;
   padding: clamp(1rem, 3vw, 1.6rem);

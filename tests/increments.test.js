@@ -134,25 +134,29 @@ function mountRace(selection) {
   return { root, form, store, tiles, pick };
 }
 
-test('the race: the advanced panel sets grade, point and increment month, and the figures follow', () => {
+test('the race: the pickers set job, grade, point and increment month, and the figures follow', () => {
   const { root, form, store, tiles, pick } = mountRace({});
-  const panel = root.querySelector('details.race-advanced');
-  assert.ok(panel, 'there is an advanced panel');
-  assert.equal(panel.hasAttribute('open'), false);
-  assert.match(panel.querySelector('summary').textContent, /Advanced/);
-  assert.deepEqual(root.querySelectorAll('#race-inc option').map((o) => o.textContent).slice(0, 3), ['Do not count increments', 'January', 'February']);
+  const picker = root.querySelector('.race-picker');
+  assert.ok(picker, 'the pickers are on the chart');
+  assert.equal(picker.closest('details'), null, 'in the open, not folded away');
+  assert.deepEqual(picker.querySelectorAll('label').map((l) => l.textContent), ['Your job', 'Grade', 'Point you are on now', 'Increment month']);
+  assert.deepEqual(root.querySelectorAll('#race-inc option').map((o) => o.textContent).slice(0, 3), ['Do not add increments', 'January', 'February']);
   assert.deepEqual(tiles().slice(0, 2), ['€99,037', '+10.2%']);
   assert.equal(root.querySelector('.race-split').hidden, true);
+  assert.equal(root.querySelector('.race-inc-note').hidden, true, 'nothing to explain until a month is chosen');
 
   pick('#race-inc', 9);
   assert.deepEqual([store.get().incrementMonth, store.get().touched], [9, true]);
   assert.deepEqual(tiles().slice(0, 2), ['€105,601', '+21.5%']);
   assert.equal(root.querySelector('.race-split').hidden, false);
-  assert.equal(root.querySelector('.race-split').textContent, '+10.2% from the deal, +11.3% from increments');
-  assert.match(root.querySelector('.race-monthly').textContent, /^about €8,800 a month before tax, on point 7$/);
-  assert.match(root.querySelector('.race-adv-note').textContent, /one point each September, counting from the point you are on now \(November 2026\)/);
+  assert.equal(root.querySelector('.race-split').textContent, 'Pay is up +21.5%: +10.2% from the deal, +11.3% from increments.');
+  assert.match(root.querySelector('.race-monthly').textContent, /^about €8,800 a month, on point 7$/);
+  const note = root.querySelector('.race-inc-note');
+  assert.equal(note.hidden, false);
+  assert.match(note.textContent, /one point each September, counting from the point you are on now \(November 2026\)/);
   assert.match(root.querySelector('.race-source').textContent, /Increments are counted/);
   assert.equal(root.querySelectorAll('.race-inc-mark').length, 3, 'each increment is marked on the line');
+  assert.equal(root.querySelector('.race-key-inc').hidden, false, 'and the key says what the mark is');
 
   const scrub = root.querySelector('input.race-scrub');
   scrub.value = '12';
@@ -176,11 +180,13 @@ test('the race: the advanced panel sets grade, point and increment month, and th
   assert.equal(store.get().incrementMonth, null);
   assert.equal(root.querySelector('.race-split').hidden, true);
   assert.equal(root.querySelectorAll('.race-inc-mark').length, 0);
+  assert.equal(root.querySelector('.race-key-inc').hidden, true);
 });
 
-test('the race: a saved increment month opens the panel, and the lowest-point view ignores it', () => {
+test('the race: a saved increment month is counted from the start, and the lowest-point view ignores it', () => {
   const { root, tiles } = mountRace({ touched: true, incrementMonth: 9 });
-  assert.equal(root.querySelector('details.race-advanced').hasAttribute('open'), true);
+  assert.equal(root.querySelector('#race-inc').value, '9');
+  assert.equal(root.querySelector('.race-inc-note').hidden, false);
   assert.deepEqual(tiles().slice(0, 2), ['€105,601', '+21.5%']);
   const [, lowest] = root.querySelectorAll('.race-picks button');
   lowest.click();
@@ -188,13 +194,14 @@ test('the race: a saved increment month opens the panel, and the lowest-point vi
   assert.equal(root.querySelector('.race-split').hidden, true);
 });
 
-test('the race: where increments cannot apply, the panel says why', () => {
+test('the race: where increments cannot apply, the note says why', () => {
   const top = mountRace({ touched: true, incrementMonth: 9, pointIndex: 10 });
-  assert.match(top.root.querySelector('.race-adv-note').textContent, /top of this scale/);
+  assert.match(top.root.querySelector('.race-inc-note').textContent, /top of this scale/);
   assert.deepEqual(top.tiles().slice(0, 2), ['€118,684', '+10.2%']);
   const hourly = mountRace({ touched: true, incrementMonth: 9, contract: 'hourly' });
-  assert.match(hourly.root.querySelector('.race-adv-note').textContent, /need a grade and scale point/);
+  assert.match(hourly.root.querySelector('.race-inc-note').textContent, /need a grade and scale point/);
   assert.equal(hourly.root.querySelector('.race-split').hidden, true);
+  assert.equal(hourly.root.querySelector('#race-grade').value, '', 'no grade is shown as chosen for an hourly rate');
 });
 
 test('copy: the page still says increments are left out everywhere but the opening chart', () => {
@@ -212,15 +219,15 @@ test('the grade lists hold options and groups only, with no stray text', () => {
   }
 });
 
-test('the race: an increment in the month we are in is taken as paid, and the panel says so', () => {
+test('the race: an increment in the month we are in is taken as paid, and the note says so', () => {
   const { root, tiles, pick } = mountRace({ touched: true });
   pick('#race-inc', 11); // now is November 2026
-  assert.match(root.querySelector('.race-adv-note').textContent, /This month’s increment is taken as already paid, so choose the point you are on after it\./);
+  assert.match(root.querySelector('.race-inc-note').textContent, /This month’s increment is taken as already paid, so choose the point you are on after it\./);
   const scrub = root.querySelector('input.race-scrub');
   const euroAt = (t) => { scrub.value = String(t); scrub.dispatchEvent({ type: 'input', bubbles: true }); return tiles()[0]; };
   assert.deepEqual([euroAt(4), euroAt(5)], ['€88,675', '€91,692'], 'October 2026 on point 4, November on point 5, each with the September rise');
   pick('#race-inc', 9);
-  assert.doesNotMatch(root.querySelector('.race-adv-note').textContent, /This month/);
+  assert.doesNotMatch(root.querySelector('.race-inc-note').textContent, /This month/);
 });
 
 test('copy: the assumptions say how increments are counted when they are added', () => {

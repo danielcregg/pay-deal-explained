@@ -172,9 +172,30 @@ input[type="number"] {
 /* ---------- the opening: pay against prices, month by month ---------- */
 
 .race h2 { font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem); margin-bottom: 0.25rem; }
-.race-sub { color: var(--muted); margin: 0 0 0.5rem; }
 .race .context-line { margin-bottom: 0.25rem; }
-.race-picks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.6rem 0 0.25rem; }
+.race-picker { display: grid; gap: 0.6rem 0.75rem; align-items: end; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0.6rem 0 0.6rem; }
+@media (min-width: 700px) and (max-width: 1039px), (min-width: 1280px) { .race-picker { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.race-picker .field { min-width: 0; }
+.race-picker .field[hidden] { display: none; }
+.race-picker .field > label { font-size: 0.85rem; }
+.race-picker select { min-width: 0; min-height: 2.6rem; padding: 0.4rem 0.6rem; font-size: 0.95rem; }
+.race-inc-note { margin: 0.35rem 0 0; max-width: none; }
+.race-inc-note[hidden] { display: none; }
+.race-when-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.1rem 0.75rem; margin: 0.7rem 0 0.4rem; }
+.race-hint { color: var(--muted); font-size: 0.85rem; }
+.race-legend { margin: 0.4rem 0 0; }
+.race-key-inc[hidden] { display: none; }
+.race-key-mark { color: var(--mark-pct); }
+.race-options { display: grid; gap: 0.55rem; margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--line); }
+.race-options .extras { margin: 0; }
+.race-picks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; }
+.race-more { margin: 0; font-size: 0.9rem; }
+@media (min-width: 1040px) {
+  /* Beside the headline the card is narrower: smaller figures keep the chart on the first screen. */
+  .race h2 { font-size: 1.45rem; }
+  .race-tile { padding: 0.45rem 0.65rem; }
+  .race-tile b { font-size: clamp(1.25rem, 0.6rem + 1.1vw, 1.6rem); }
+}
 .race-picks[hidden], .race .context-line[hidden] { display: none; }
 .race-picks button {
   min-height: 2.5rem;
@@ -189,21 +210,14 @@ input[type="number"] {
   cursor: pointer;
 }
 .race-picks button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-.race-advanced { margin: 0.7rem 0 0.2rem; border: 1px solid var(--line); border-radius: 12px; padding: 0 0.85rem; background: var(--paper); }
-.race-advanced summary { cursor: pointer; font-weight: 650; padding: 0.6rem 0; }
-.race-advanced summary:focus-visible { outline: 3px solid var(--mark-pct); outline-offset: 2px; border-radius: 6px; }
-.race-adv-grid { display: grid; gap: 0.75rem; align-items: end; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); margin: 0.2rem 0 0.7rem; }
-.race-adv-grid .field[hidden] { display: none; }
-.race-adv-grid select { width: 100%; min-width: 0; }
-.race-adv-note { margin: 0 0 0.8rem; max-width: none; }
-.race-split { display: block; font-size: 0.78rem; font-weight: 600; line-height: 1.3; margin-top: 0.15rem; }
+.race-split { margin: -0.15rem 0 0.4rem; font-size: 0.88rem; font-weight: 600; color: var(--teal-ink); }
 .race-split[hidden] { display: none; }
 .race-inc-mark { fill: var(--card); stroke: var(--mark-pct); stroke-width: 2; }
-.race-when { font-weight: 650; margin: 0.6rem 0 0.4rem; }
-.race-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.5rem; }
-@media (min-width: 640px) { .race-tiles { grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); } }
+.race-when { font-weight: 650; margin: 0; }
+.race-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.5rem; }
+@media (min-width: 640px) { .race-tiles { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr); } } /* room for "2.5% more" on one line */
 .race-tile.euro { background: var(--card); box-shadow: inset 0 0 0 2px var(--ink); }
-@media (max-width: 639px) { .race-tile.euro { grid-column: 1 / -1; } .race-tile.real { grid-column: 1 / -1; } }
+@media (max-width: 639px) { .race-tile.euro { grid-column: 1 / -1; } .race-tile { padding: 0.5rem 0.5rem; } .race-tile:not(.euro) b { font-size: 1.05rem; } }
 .race-monthly { display: block; font-size: 0.8rem; color: var(--muted); }
 .extras { display: grid; gap: 0.45rem; margin: 0.7rem 0 0.2rem; }
 .extras .switch { font-size: 0.92rem; }

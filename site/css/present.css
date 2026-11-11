@@ -103,27 +103,40 @@ body.present h1:focus, body.present h2:focus { outline: none; }
 }
 
 /* The opening screen: the headline beside the chart, navy from edge to edge. */
-body.present .hero.is-current { padding: 0 0 4.25rem; background: var(--navy); justify-content: flex-start; }
-body.present .hero .button { display: none; }
-body.present .hero-band { padding: 2.5rem clamp(1.25rem, 4vw, 3.5rem) 1.5rem; }
-body.present .race-wrap { width: 100%; max-width: none; padding: 0 clamp(1.25rem, 4vw, 3.5rem) 1.5rem; }
-body.present .race { margin: 0; }
+body.present .hero.is-current { padding: 0 0 4.25rem; background: var(--navy); justify-content: center; }
+body.present .hero-band { padding: 1rem clamp(1.25rem, 3vw, 3rem); }
+body.present .hero-inner { max-width: 84rem; }
 @media (min-width: 1000px) {
-  body.present .hero.is-current { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center; }
-  body.present .hero-band { padding: 1.75rem 1.5rem 1.25rem clamp(1.25rem, 4vw, 3.5rem); } /* 1366 by 768 with no scrolling */
-  body.present .race-wrap { padding: 1.5rem clamp(1.25rem, 3vw, 3rem) 1.5rem 0; }
-  body.present .hero-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1rem; }
+  body.present .hero-inner {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-areas: "text race" "facts race";
+    grid-template-rows: auto 1fr;
+    column-gap: 2rem;
+    align-items: start;
+  }
+  body.present .hero-text { grid-area: text; }
+  body.present .race-wrap { grid-area: race; }
+  body.present .hero-facts { grid-area: facts; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body.present .hero-lede { font-size: 1.05rem; }
-  body.present .hero h1 { font-size: clamp(2.2rem, 1.2rem + 2.6vw, 3.6rem); }
+  body.present .hero h1 { font-size: clamp(2rem, 1rem + 2.4vw, 3.2rem); } /* 1366 by 768 with no scrolling */
 }
-body.present .race { padding: 1.1rem 1.25rem 1rem; }
-body.present .race h2 { font-size: 1.6rem; }
-body.present .race-sub { display: none; }
-body.present .race-source { font-size: 0.8rem; }
-/* The opening card has to fit a projector screen beside the headline. */
-body.present .race .context-line { display: none; }
+/* The card has to fit a projector screen beside the headline. */
+body.present .race { padding: 0.9rem 1.25rem 0.8rem; }
+body.present .race h2 { font-size: 1.45rem; }
+body.present .race-source { font-size: 0.8rem; margin-top: 0.4rem; }
+body.present .race .context-line,
+body.present .race-hint,
+body.present .race-picks,
+body.present .race-inc-note { display: none; }
+body.present .race-picker { margin: 0.4rem 0; }
+body.present .race-picker .field > label { font-size: 0.8rem; }
 body.present .race-tile { padding: 0.4rem 0.65rem; }
-body.present .race .extras { margin: 0.45rem 0 0.1rem; gap: 0.25rem; }
+body.present .race-options { margin-top: 0.4rem; padding-top: 0.4rem; gap: 0.3rem; }
+body.present .race .extras { gap: 0.25rem; }
 body.present .race .extras .switch { font-size: 0.85rem; }
-body.present .race-when { margin: 0.4rem 0 0.3rem; }
-body.present .race-advanced { display: none; } /* set it up before presenting; the note under the chart still says so */
+body.present .race-when-row { margin: 0.4rem 0 0.3rem; }
+@media (max-height: 820px) {
+  /* A short projector screen: the tick boxes and the comparison give way. Set them before presenting;
+     the note under the chart still says what is counted. */
+  body.present .race-options { display: none; }
+}
