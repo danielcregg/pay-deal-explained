@@ -40,6 +40,29 @@ export function monthLabel(ym) {
   return `${MONTHS[m - 1].slice(0, 3)} ${y}`;
 }
 
+/**
+ * Round a list of amounts to whole euros so the parts add up to the rounded total
+ * (largest remainder first), e.g. four months of €149.82 → 150, 150, 150, 149 = €599.
+ */
+export function splitRounded(amounts) {
+  const target = Math.round(amounts.reduce((a, b) => a + b, 0));
+  const out = amounts.map(Math.floor);
+  let remaining = target - out.reduce((a, b) => a + b, 0);
+  const order = amounts.map((a, i) => [a - Math.floor(a), i]).sort((x, y) => y[0] - x[0] || x[1] - y[1]);
+  for (const [, i] of order) {
+    if (remaining <= 0) break;
+    out[i] += 1;
+    remaining -= 1;
+  }
+  return out;
+}
+
+/** The gain as shown on screen: rounded end minus rounded start, so the sum reads correctly. */
+export function roundedGain(now, end, { cents = false } = {}) {
+  const r = (n) => (cents ? Math.round(n * 100) / 100 : Math.round(n));
+  return Math.round((r(end) - r(now)) * 100) / 100;
+}
+
 /** [1] → 'step 1'; [1, 3] → 'steps 1 and 3'; [1, 3, 4] → 'steps 1, 3 and 4'. */
 export function listSteps(ns) {
   if (!ns.length) return '';

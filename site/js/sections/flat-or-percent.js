@@ -5,8 +5,13 @@ import { applySteps, finalSalary } from '../pay.js';
 import { resolvePay } from '../selection.js';
 import { eur, signedEur, pct, longDate } from '../format.js';
 import { h } from '../dom.js';
+import { DEAL } from '../data.js';
 
 export const SLIDER = { min: 30000, max: 140000, step: 500 };
+
+/** Who gets which rule, with the hourly-paid case worded as the inference it is. */
+export const LECTURER_NOTE = `Everyone on the Lecturer and Senior Lecturer scales is above ${eur(DEAL.threshold)} at every step, so all their rises are percentages. `
+  + 'Assistant Lecturers on the lower points get the flat sums, and, going by how hourly rates were set in the 2026 pay circulars, so would hourly-paid staff.';
 
 /** Where the slider starts for a given salary: rounded to €500 and kept in range. */
 export function sliderStart(salary) {
@@ -84,7 +89,7 @@ export function render(root, { store, data }) {
       h('span', { class: 'hb-label' }, r.role),
       h('span', { class: 'hb-track' }, h('span', { class: 'hb-bar', style: `width:${((r.pct / maxPct) * 100).toFixed(1)}%` })),
       h('span', { class: 'hb-value' }, pct(r.pct))))),
-    h('p', { class: 'note' }, 'Everyone on the Lecturer and Senior Lecturer scales is above €60,000 at every step, so all their rises are percentages. Assistant Lecturers on the lower points, and hourly-paid staff, get the flat sums.'));
+    h('p', { class: 'note' }, LECTURER_NOTE));
 
   root.append(
     h('div', { class: 'plate fp' },

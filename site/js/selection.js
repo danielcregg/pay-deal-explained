@@ -32,11 +32,15 @@ export function parseSalary(input) {
   return { ok: true, value };
 }
 
-/** A percentage of full-time (1–100) → a fraction from 0.01 to 1. Invalid input means full-time. */
+/**
+ * A share of full-time → a fraction from 0.01 to 1. Accepts a percentage (50) or an
+ * FTE fraction (0.5); anything up to 1 is read as a fraction. Invalid input means full-time.
+ */
 export function clampFte(input) {
   const text = String(input ?? '').replace('%', '').trim();
   const n = Number(text);
   if (text === '' || !Number.isFinite(n)) return 1;
+  if (n > 0 && n <= 1) return Math.max(0.01, n);
   return Math.min(100, Math.max(1, n)) / 100;
 }
 
@@ -68,6 +72,14 @@ export function resolvePay(sel, scales) {
   const point = grade.points[sel.pointIndex];
   const label = point.label.startsWith('Point') ? `${grade.name}, point ${sel.pointIndex + 1}` : `${grade.name}, ${point.label}`;
   return { base: point.value, factor: fte, annualFactor: fte, unit: 'year', label, isExample };
+}
+
+/** The line each demo shows so readers know whose figures they are looking at. */
+export function figuresFor(sel, scales) {
+  const pay = resolvePay(sel, scales);
+  if (pay.isExample) return `Example: ${pay.label}. Pick your own grade and point in section 1.`;
+  const part = sel.contract === 'part' ? `, ${Math.round(sel.fte * 1000) / 10}% of full-time` : '';
+  return `Showing: ${pay.label}${part}.`;
 }
 
 function isValid(sel, scales) {

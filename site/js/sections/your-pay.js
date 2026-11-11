@@ -32,6 +32,12 @@ export function model(sel, data) {
     explanation: flatSteps.length
       ? `The flat minimum beat the percentage at ${listSteps(flatSteps)}, because your pay was below ${threshold} at the time.`
       : `All the rises are percentages for you: your salary is above ${threshold} at every step.`,
+    caveat: 'Gross pay at your current scale point: before tax, USC, PRSI and pension, and without annual increments.',
+    notes: pay.unit === 'hour'
+      ? [`Based on how hourly rates were set in the 2026 pay circulars (point 1 of the annual scale, ${eur(base)}, divided by ${data.SCALES.hourlyDivisor} hours), your hourly rate would follow point 1 and get the flat minimums too.`]
+      : sel.contract === 'part'
+        ? ['Part-time pay is assumed to be your full-time point times your share of full-time hours, so the flat minimums are pro-rated.']
+        : [],
   };
 }
 
@@ -72,9 +78,9 @@ export function render(root, { store, data }) {
   const typedField = h('div', { class: 'field' },
     h('label', { for: 'pp-typed' }, 'Full-time salary (€ a year)'), typedInput, typedError);
 
-  const fteInput = h('input', { id: 'pp-fte', type: 'number', min: 1, max: 100, step: 0.5, inputmode: 'decimal' });
+  const fteInput = h('input', { id: 'pp-fte', type: 'number', min: 0.01, max: 100, step: 'any', inputmode: 'decimal' });
   const fteField = h('div', { class: 'field' },
-    h('label', { for: 'pp-fte' }, 'Your hours as a percentage of full-time'), fteInput);
+    h('label', { for: 'pp-fte' }, 'Your hours as a percentage of full-time (or as FTE, such as 0.5)'), fteInput);
 
   const alScale = h('fieldset', { class: 'seg' },
     h('legend', {}, 'Assistant Lecturer scale'),
@@ -103,8 +109,10 @@ export function render(root, { store, data }) {
   const per = h('span', { class: 'per' });
   const big = h('p', { class: 'pay-big' }, from, h('span', { class: 'arrow', 'aria-hidden': 'true' }, ' → '),
     h('span', { class: 'visually-hidden' }, ' rising to '), to, per);
-  const gain = h('p', { class: 'pay-gain' });
+  const gain = h('p', { class: 'pay-gain', 'aria-live': 'polite' });
   const alt = h('p', { class: 'pay-alt' });
+  const caveat = h('p', { class: 'pay-caveat' });
+  const notes = h('ul', { class: 'pay-notes' });
   const firstDd = h('dd');
   const backDd = h('dd');
   const hoursDiv = h('div', {}, h('dt', {}, 'Over a year'), h('dd'));
@@ -113,7 +121,7 @@ export function render(root, { store, data }) {
     h('div', {}, h('dt', {}, 'Back pay'), backDd),
     hoursDiv);
   const explain = h('p', { class: 'pay-explain' });
-  const results = h('div', { class: 'plate pay-result', 'aria-live': 'polite' }, badge, label, big, gain, alt, facts, explain);
+  const results = h('div', { class: 'plate pay-result' }, badge, label, big, gain, alt, caveat, facts, explain, notes);
 
   root.append(h('div', { class: 'pay-grid' }, form, results));
 
@@ -177,10 +185,10 @@ export function render(root, { store, data }) {
     if (hours) {
       hoursDiv.querySelector('dd').textContent = `For ${hours} hours: ${eur(nowR * hours)} now, ${eur(endR * hours)} by March 2029, before tax.`;
     }
-    const pointOne = SCALES.grades.find((g) => g.id === sel.alScale)?.points[0].value;
-    explain.textContent = u === 'hour'
-      ? `${m.explanation} Your hourly rate follows point 1 of the annual scale (${eur(pointOne)} ÷ ${SCALES.hourlyDivisor} hours), so it gets the flat minimums too.`
-      : m.explanation;
+    explain.textContent = m.explanation;
+    caveat.textContent = m.caveat;
+    notes.hidden = m.notes.length === 0;
+    notes.replaceChildren(...m.notes.map((n) => h('li', {}, n)));
   };
 
   // ---- events ----

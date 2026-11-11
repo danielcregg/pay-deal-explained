@@ -1,6 +1,9 @@
 // Every fact the site uses lives in this file.
 // When the official text is published or the ballot result is known, update this
-// file (and the matching <noscript> lines in index.html), run `npm test`, and push.
+// file, run `npm test`, and push. A few figures are also written into index.html so
+// they show without JavaScript: the h1, the four hero figures, the chapter 3–5 intros,
+// the status line and the <noscript> block. tests/static-figures.test.js and
+// tests/noscript.test.js fail if those drift from this file.
 
 export const SITE = {
   title: 'Pay Deal Explained',
@@ -53,7 +56,7 @@ export const DEAL = {
     { role: 'Secondary teacher', pct: 12.8 },
   ],
   reviewClause: 'Reported to include a review clause that either side can invoke if inflation rises to unexpected levels or other unforeseen economic factors arise.',
-  sourceIds: ['rte-deal', 'it-whats-in-it', 'indo-explainer'],
+  sourceIds: ['ictu-psc-release', 'rte-deal', 'it-whats-in-it', 'indo-explainer'],
 };
 
 export const PREVIOUS_DEAL = {
@@ -144,13 +147,15 @@ export const INFLATION = {
 export const TIMELINE = [
   { date: '2026-06-30', when: '30 June 2026', label: 'The Public Service Agreement 2024–2026 expires.', sourceId: 'psa-2024' },
   { date: '2026-07-03', when: '3 July 2026', label: 'Unions begin preparing for possible industrial action ballots over pay talks.', sourceId: 'it-ballots-july' },
-  { date: '2026-09-30', when: '30 September 2026', label: 'A coordinated work-to-rule begins across the public service.', sourceId: 'indo-explainer' },
-  { date: '2026-10-14', when: '14 October 2026', label: 'A 24-hour national strike involving teachers, nurses, doctors and civil servants.', sourceId: 'indo-explainer' },
-  { date: '2026-10-21', when: '21 October 2026', label: 'A second planned strike is suspended to allow talks.', sourceId: 'indo-explainer' },
-  { date: '2026-10-22', when: 'After 21 October 2026', label: 'Talks break down and unions call a national strike for Thursday 12 November.', sourceId: 'indo-explainer' },
+  { date: '2026-09-30', when: '30 September 2026', label: 'Work-to-rule action begins across public services.', sourceId: 'ictu-psc-release' },
+  { date: '2026-10-14', when: '14 October 2026', label: 'Public service-wide strike action.', sourceId: 'ictu-psc-release' },
+  { date: '2026-10-21', when: '21 October 2026', label: 'Another planned strike is suspended to allow talks.', sourceId: 'indo-explainer' },
+  { date: '2026-10-22', when: 'After 21 October 2026', label: 'Talks break down and unions plan a public service strike for Thursday 12 November.', sourceId: 'indo-explainer' },
   { date: '2026-11-08', when: '8 November 2026', label: 'The Government offers increases reported to be worth 10.5%.', sourceId: 'it-offer' },
+  { date: '2026-11-09', when: '9 November 2026, late evening', label: 'The Government Appointed Group proposes a pay formula to overcome the impasse in the talks.', sourceId: 'ictu-psc-release' },
   { date: '2026-11-10', when: '10 November 2026', label: 'Unions consider a revised offer.', sourceId: 'rte-revised' },
   { date: '2026-11-11', when: '11 November 2026, about 3.30am', label: 'The draft deal is agreed at the Workplace Relations Commission and the strike is suspended.', sourceId: 'rte-deal' },
+  { date: '2026-11-12', when: 'In the following days', label: 'Union executives consider the full terms before their members ballot.', sourceId: 'ictu-psc-release' },
   { date: '2026-12-07', when: 'Week of 7 December 2026', label: 'Union ballot results are due.', sourceId: 'rte-deal' },
   { date: '2027-01-01', when: 'January 2027', label: 'If the deal is accepted, the first increases and back pay are likely to be paid.', sourceId: 'it-whats-in-it' },
 ];
@@ -164,7 +169,7 @@ export const GLOSSARY = [
   { id: 'back-pay', term: 'Back pay (arrears)', text: 'Money owed for a rise that applies from an earlier date. The first rise is backdated to 1 September 2026, so if the deal is accepted the amount owed since then is paid as a lump sum.' },
   { id: 'review-clause', term: 'Review clause', text: 'A term that lets the parties reopen the agreement if circumstances change. The draft deal is reported to include one that either side can invoke if inflation rises to unexpected levels.' },
   { id: 'ballot', term: 'Ballot', text: 'A vote of union members on whether to accept the draft deal. Each union runs its own ballot.' },
-  { id: 'ratification', term: 'Ratification', text: 'Formal acceptance of the deal. After each union’s members have voted, the ICTU Public Services Committee meets to accept or reject the deal on the combined result. Until then, it is a draft.' },
+  { id: 'ratification', term: 'Ratification', text: 'Formal acceptance of the deal by the unions after their members have voted. Until then, it is a draft.' },
   { id: 'wrc', term: 'WRC', text: 'The Workplace Relations Commission, the State body that hosted the talks where the draft deal was agreed.' },
   { id: 'ictu-psc', term: 'ICTU Public Services Committee', text: 'The committee of the Irish Congress of Trade Unions that brings the public service unions together to negotiate pay agreements and decide on them.' },
   { id: 'increment', term: 'Increment', text: 'The yearly step up your pay scale for service. Increments are separate from this deal and are not included in the figures on this site.' },
@@ -175,7 +180,7 @@ export const BEYOND_PAY = [
   {
     id: 'local-bargaining', title: 'Local bargaining', status: 'reported',
     text: 'The 1% on 1 March 2029 is the second phase of local bargaining that began under the 2024–2026 agreement, which allowed up to 3% of the basic pay cost in all. The final phase is left to the next agreement. Each phase is worth 1% of a sector’s or grade’s pay bill and is used as negotiated locally, so it may not arrive as a 1% rise for each person.',
-    sourceIds: ['rte-deal', 'psa-2024'],
+    sourceIds: ['ictu-psc-release', 'psa-2024'],
   },
   {
     id: 'review-clause', title: 'Inflation review clause', status: 'reported',
@@ -200,7 +205,7 @@ export const BEYOND_PAY = [
 ];
 
 export const ASSUMPTIONS = [
-  'Everything is based on the draft deal as reported on 11 November 2026. The official text had not been published.',
+  'Everything is based on the draft deal’s terms as published by the ICTU Public Services Committee and reported on 11 November 2026. The full text of the agreement had not been published.',
   'Figures are gross pay, before tax, USC, PRSI and pension deductions.',
   'Annual increments are not included: the figures show only what the deal adds to your current scale point.',
   'Local bargaining (1% on 1 March 2029) is left out of totals unless you switch it on. It is 1% of a bargaining unit’s pay bill, used as negotiated, so it may not reach you as a 1% rise.',
@@ -208,11 +213,13 @@ export const ASSUMPTIONS = [
   'Part-time pay is your full-time scale point times your FTE, so the flat minimums are pro-rated.',
   'Hourly rates for Assistant Lecturers are point 1 of the annual scale divided by 630 hours, which matches the 2026 pay circulars exactly.',
   'Back pay assumes the first rise is paid in the January 2027 payroll, with arrears from 1 September 2026. You can change the month.',
+  'For hourly-paid staff, back pay assumes your teaching hours are spread evenly across the year.',
   'Prices use the Central Bank’s inflation forecasts for 2026 to 2028, as reported by RTÉ. 2029 is assumed to be 2%.',
   'TU Dublin academic staff are assumed to be on the same scales as staff in the former institutes of technology.',
 ];
 
 export const SOURCES = [
+  { id: 'ictu-psc-release', publisher: 'ICTU Public Services Committee (published by Fórsa)', title: 'Unions and Government representatives reach draft public sector pay agreement', date: '2026-11-11', url: 'https://www.forsa.ie/draft-public-sector-pay-agreement/' },
   { id: 'rte-deal', publisher: 'RTÉ News', title: 'Public sector strike suspended as unions agree pay deal', date: '2026-11-11', url: 'https://www.rte.ie/news/ireland/2026/1111/1598773-public-sector-pay-deal/' },
   { id: 'rte-analysis', publisher: 'RTÉ News', title: 'Inside the €5bn pay offer to public servants', date: '2026-11-10', url: 'https://www.rte.ie/news/2026/1110/1598605-public-pay-deal-analysis/' },
   { id: 'rte-revised', publisher: 'RTÉ News', title: 'Public sector unions are considering a revised pay deal offer', date: '2026-11-10', url: 'https://www.rte.ie/news/ireland/2026/1110/1598619-pay-talks/' },

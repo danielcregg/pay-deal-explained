@@ -3,7 +3,7 @@
 // Deliberately no single "pace" figure and no verdict (spec §4, rule 9).
 
 import { finalSalary, payIndexSeries } from '../pay.js';
-import { resolvePay } from '../selection.js';
+import { resolvePay, figuresFor } from '../selection.js';
 import { eur, pct, longDate } from '../format.js';
 import { h } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
@@ -121,7 +121,8 @@ export function render(root, { store, data }) {
       tbody)));
   const lbNote = h('p', { class: 'note' });
 
-  root.append(cards, h('div', { class: 'plate vs-chart' },
+  const context = h('p', { class: 'context-line' });
+  root.append(context, cards, h('div', { class: 'plate vs-chart' },
     h('h3', {}, 'How your pay builds up under each deal'),
     h('p', { class: 'note' }, 'The same starting salary run through both agreements, from each one’s first month. Index: pay at the start = 100.'),
     legend, wrap, live, lbNote, details));
@@ -146,6 +147,7 @@ export function render(root, { store, data }) {
     const sel = store.get();
     const base = resolvePay(sel, data.SCALES).base;
     m = model(base, data, { includeLB: sel.includeLB });
+    context.textContent = figuresFor(sel, data.SCALES);
     cards.replaceChildren(card(m.deals[0], 'prev', data.PREVIOUS_DEAL.tuLbNote), card(m.deals[1], 'draft'));
     lbNote.textContent = sel.includeLB
       ? 'Both deals include their 1% local bargaining as a rise for you.'

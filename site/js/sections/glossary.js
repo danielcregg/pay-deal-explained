@@ -7,14 +7,16 @@ export const termHref = (id) => `#term-${id}`;
 
 function enhanceTerms(doc, glossary) {
   const byId = new Map(glossary.map((g) => [g.id, g]));
-  const pop = h('div', { class: 'term-pop', id: 'term-pop', hidden: true });
-  doc.body.append(pop);
+  // One shared explanation, moved next to whichever term is open so it follows the term
+  // in reading order (screen readers reach it next; its link is the next tab stop).
+  const pop = h('span', { class: 'term-pop', id: 'term-pop', role: 'note', hidden: true });
   let openFor = null;
 
   const close = () => {
     if (!openFor) return;
     openFor.setAttribute('aria-expanded', 'false');
     pop.hidden = true;
+    pop.remove();
     openFor = null;
   };
 
@@ -23,12 +25,16 @@ function enhanceTerms(doc, glossary) {
       h('strong', {}, entry.term),
       h('span', {}, ` ${entry.text} `),
       h('a', { href: termHref(entry.id) }, 'In the glossary'));
+    btn.after(pop);
     pop.hidden = false;
-    const box = btn.getBoundingClientRect();
-    const width = Math.min(320, doc.documentElement.clientWidth - 24);
-    pop.style.width = `${width}px`;
-    pop.style.left = `${Math.max(12, Math.min(box.left + window.scrollX, window.scrollX + doc.documentElement.clientWidth - width - 12))}px`;
-    pop.style.top = `${box.bottom + window.scrollY + 6}px`;
+    const viewport = doc.documentElement.clientWidth;
+    pop.style.width = `${Math.min(320, viewport - 24)}px`;
+    pop.style.left = '0px';
+    const box = pop.getBoundingClientRect();
+    let shift = 0;
+    if (box.right > viewport - 12) shift = viewport - 12 - box.right;
+    if (box.left + shift < 12) shift = 12 - box.left;
+    pop.style.left = `${shift}px`;
     btn.setAttribute('aria-expanded', 'true');
     openFor = btn;
   };
@@ -41,7 +47,7 @@ function enhanceTerms(doc, glossary) {
       e.stopPropagation();
       if (openFor === btn) close(); else { close(); open(btn, entry); }
     });
-    el.replaceWith(btn);
+    el.replaceWith(h('span', { class: 'term-wrap' }, btn));
   }
 
   doc.addEventListener('click', (e) => { if (openFor && !pop.contains(e.target)) close(); });

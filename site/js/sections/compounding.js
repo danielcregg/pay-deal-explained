@@ -47,11 +47,11 @@ export function render(root, { data }) {
   const compoundValue = h('span', { class: 'cmp-value' }, `€${two(withLB.compounded)}`);
   const bars = h('div', { class: 'cmp' },
     h('div', { class: 'cmp-row' },
-      h('p', { class: 'cmp-label' }, 'Adding up the percentages'),
+      h('p', { class: 'cmp-label' }, 'Percentages added up'),
       h('div', { class: 'cmp-track', role: 'img', 'aria-label': `Nine rises added up: €${two(withLB.sum)} on every €100.` }, segments(simpleAdds, kindOf)),
       simpleValue),
     h('div', { class: 'cmp-row' },
-      h('p', { class: 'cmp-label' }, 'What your pay actually gains'),
+      h('p', { class: 'cmp-label' }, 'Rises applied one after another'),
       h('div', { class: 'cmp-track', role: 'img', 'aria-label': `The same rises, each worked out on pay that has already gone up: €${two(withLB.compounded)} on every €100.` }, segments(compoundAdds, kindOf),
         h('span', { class: 'cmp-extra', style: `left:${pctOf(withLB.sum)};width:${pctOf(extra)}` })),
       compoundValue));
@@ -73,7 +73,8 @@ export function render(root, { data }) {
     bars,
     h('p', { class: 'cmp-note' },
       `The second bar ends €${two(extra)} further along, because each rise is worked out on pay that has already gone up. `
-      + `Without local bargaining the same thing happens: ${two(general.sum)}% added up becomes ${two(general.compounded)}%.`),
+      + `This explains the ${withLB.sum}% headline, which counts local bargaining as a 1% rise. `
+      + `Without local bargaining, which section 1 leaves out unless you switch it on, ${two(general.sum)}% added up becomes ${two(general.compounded)}%.`),
     h('div', { class: 'chart-foot' },
       h('ul', { class: 'legend' },
         h('li', {}, h('span', { class: 'swatch pct' }), 'A percentage rise'),

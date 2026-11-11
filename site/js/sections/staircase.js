@@ -3,8 +3,8 @@
 // flat minimum, hatched = local bargaining that may not reach you).
 
 import { applySteps, finalSalary } from '../pay.js';
-import { resolvePay } from '../selection.js';
-import { eur, signedEur, pct, longDate, monthLabel } from '../format.js';
+import { resolvePay, figuresFor } from '../selection.js';
+import { eur, signedEur, pct, longDate, monthLabel, roundedGain } from '../format.js';
 import { h } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { niceTicks, roundedTopPath, axisMoney, createTooltip } from '../chart.js';
@@ -18,7 +18,27 @@ export function model(base, steps, { includeLB }) {
     const kind = r.step.kind === 'lb' ? (r.included ? 'lb' : 'lb-possible') : (r.flat ? 'flat' : 'pct');
     return { n: r.n, step: r.step, month: r.step.date.slice(0, 7), rise: r.rise, cumulative, potential: r.potential, kind };
   });
-  return { bars, total: cumulative, totalWithLB: finalSalary(base, steps, { includeLB: true }) - base };
+  const endWithLB = finalSalary(base, steps, { includeLB: true });
+  return {
+    bars,
+    total: cumulative,
+    totalWithLB: endWithLB - base,
+    endSalary: finalSalary(base, steps, { includeLB }),
+    endWithLB,
+  };
+}
+
+/** The figures the summary line shows, rounded the same way as section 1 so they agree. */
+export function summaryNumbers(pay, m) {
+  const now = pay.base * pay.factor;
+  const end = m.endSalary * pay.factor;
+  return {
+    now,
+    end,
+    endWithLB: m.endWithLB * pay.factor,
+    gain: roundedGain(now, end, { cents: pay.unit === 'hour' }),
+    pct: (m.endSalary / pay.base - 1) * 100,
+  };
 }
 
 const GAP = 2;
@@ -102,7 +122,8 @@ export function render(root, { store, data }) {
       h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Date'), h('th', { scope: 'col' }, 'Rule'),
         h('th', { scope: 'col', class: 'r' }, 'This rise'), h('th', { scope: 'col', class: 'r' }, 'Total gain so far'))),
       tbody)));
-  root.append(h('div', { class: 'plate' }, legend, wrap, h('div', { class: 'chart-foot' }, result, replay), details));
+  const context = h('p', { class: 'context-line' });
+  root.append(h('div', { class: 'plate' }, context, legend, wrap, h('div', { class: 'chart-foot' }, result, replay), details));
 
   const tip = createTooltip(wrap);
   const motion = !prefersReducedMotion();
@@ -133,10 +154,10 @@ export function render(root, { store, data }) {
     const u = pay.unit;
     const money = (n) => eur(n, { cents: u === 'hour' });
     const per = u === 'hour' ? ' an hour' : ' a year';
-    const now = pay.base * pay.factor;
-    const end = (pay.base + m.total) * pay.factor;
-    result.textContent = `By March 2029: ${money(end)}${per}, up ${money(end - now)} (${pct((m.total / pay.base) * 100)}).`
-      + (sel.includeLB ? '' : ` Counting local bargaining: ${money((pay.base + m.totalWithLB) * pay.factor)}.`);
+    const s = summaryNumbers(pay, m);
+    context.textContent = figuresFor(sel, data.SCALES);
+    result.textContent = `By March 2029: ${money(s.end)}${per}, up ${money(s.gain)} (${pct(s.pct)}).`
+      + (sel.includeLB ? '' : ` Counting local bargaining: ${money(s.endWithLB)}.`);
 
     tbody.replaceChildren(...m.bars.map((b) => h('tr', { class: b.kind === 'lb-possible' ? 'muted' : '' },
       h('td', {}, longDate(b.step.date)),

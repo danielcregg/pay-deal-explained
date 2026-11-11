@@ -1,4 +1,4 @@
-// Hero: the "deal ruler" (nine rises drawn to scale across the 33 months) and the
+// Hero: the "deal ruler" (the rises drawn to scale across the deal's term) and the
 // four key figures, which count up once on load.
 
 import { svgEl } from '../svg.js';
@@ -104,7 +104,7 @@ function countUp(el) {
 export function render(root, { data }) {
   const animate = !prefersReducedMotion();
   const caption = h('p', { class: 'ruler-caption' },
-    'Each bar is one rise, drawn to scale across the 33 months. The hatched bar is local bargaining: 1% that may not reach you as a pay rise.');
+    `Each bar is one rise, drawn to scale across the ${data.DEAL.months} months. The hatched bar is local bargaining: 1% that may not reach you as a pay rise.`);
   let lastWidth = -1;
 
   const draw = (withMotion) => {

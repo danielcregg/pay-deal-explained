@@ -2,7 +2,7 @@
 // July 2026), using the Central Bank's forecasts or a flat inflation figure of their own.
 
 import { payIndexSeries, priceIndexSeries, monthsPricesAhead } from '../pay.js';
-import { resolvePay } from '../selection.js';
+import { resolvePay, figuresFor } from '../selection.js';
 import { pct, monthLabel } from '../format.js';
 import { h } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
@@ -14,6 +14,13 @@ export function model(base, steps, inflation, { includeLB, flatRate = null }) {
   const price = priceIndexSeries({ ...span, rates: inflation.rates, flatRate });
   const real = (pay[pay.length - 1].value / price[price.length - 1].value - 1) * 100;
   return { pay, price, real, ahead: monthsPricesAhead(pay, price) };
+}
+
+/** The readout, worded as a projection on the chosen inflation figures (not as a fact). */
+export function readoutText(m, flatRate) {
+  const lead = flatRate === null ? 'On these forecasts' : `If prices rose by ${flatRate.toFixed(1)}% a year`;
+  return `${lead}, by March 2029 your pay would buy about ${pct(Math.abs(m.real))} ${m.real >= 0 ? 'more' : 'less'} than in July 2026. `
+    + `Prices would be ahead of your pay in ${m.ahead.length} of the ${m.pay.length} months.`;
 }
 
 const one = (n) => n.toFixed(1);
@@ -100,7 +107,7 @@ export function render(root, { store, data }) {
   const live = h('p', { class: 'visually-hidden', 'aria-live': 'polite' });
   const readout = h('p', { class: 'pvp-readout', 'aria-live': 'polite' });
   const source = h('p', { class: 'note' },
-    'Forecasts: Central Bank of Ireland, as reported by RTÉ: 3.4% in 2026, 3.1% in 2027 and 2.0% in 2028. No forecast was reported for 2029, so this assumes 2.0%. Inflation is currently about 4%. Index: July 2026 = 100.');
+    'Forecasts: Central Bank of Ireland, as reported by RTÉ: 3.4% in 2026, 3.1% in 2027 and 2.0% in 2028. No forecast was reported for 2029, so this assumes 2.0%. Inflation is currently about 4%. Index: 1 July 2026 = 100; each month shows its end-of-month value.');
   const tbody = h('tbody');
   const details = h('details', { class: 'data' }, h('summary', {}, 'Show the numbers as a table'),
     h('div', { class: 'table-scroll' }, h('table', {},
@@ -108,7 +115,9 @@ export function render(root, { store, data }) {
         h('th', { scope: 'col', class: 'r' }, 'Prices'), h('th', { scope: 'col' }, 'Ahead'))),
       tbody)));
 
+  const context = h('p', { class: 'context-line' });
   root.append(h('div', { class: 'plate' },
+    context,
     h('fieldset', { class: 'seg' }, h('legend', {}, 'Prices'), pills), rateField,
     readout, legend, wrap, live, source, details));
 
@@ -153,9 +162,8 @@ export function render(root, { store, data }) {
       showAt(current);
     });
 
-    const months = m.pay.length;
-    readout.textContent = `By March 2029 your pay buys about ${pct(Math.abs(m.real))} ${m.real >= 0 ? 'more' : 'less'} than in July 2026. `
-      + `Prices were ahead of your pay in ${m.ahead.length} of the ${months} months.`;
+    context.textContent = figuresFor(sel, data.SCALES);
+    readout.textContent = readoutText(m, mode.flat ? mode.rate : null);
     const ahead = new Set(m.ahead);
     tbody.replaceChildren(...m.pay.map((p, i) => h('tr', {},
       h('td', {}, monthLabel(p.month)),
