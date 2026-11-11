@@ -68,10 +68,14 @@ Every fact lives in [`site/js/data.js`](site/js/data.js).
    `npm test` fails until the `<noscript>` sentence and both dates match.
 5. Run `npm test`, then commit and push to `main`. The site redeploys in a minute or two.
 
-### When the official text is published
+### If the agreement's text changes
 
-1. Update the facts in `DEAL`, `BEYOND_PAY` and `ASSUMPTIONS`, and add the document to
-   `SOURCES`.
+The facts come from the proposed Public Service Agreement 2026–2029, issued through the
+Workplace Relations Commission on 11 November 2026 (`psa-2026-text` in `SOURCES`). If a
+revised or final text is published:
+
+1. Update the facts in `DEAL`, `BEYOND_PAY` and `ASSUMPTIONS`, and the document's entry
+   in `SOURCES`.
 2. If the steps or headline figures change, update the copies in `index.html` too: the
    `<noscript>` table, the h1, the four hero figures and the chapter intros.
    `tests/static-figures.test.js` and `tests/noscript.test.js` point to anything you
@@ -97,6 +101,22 @@ chart and chapter 7 (`lowGrade`).
 To add a job: add the sector and its grades, add its sources to `SOURCES`, and add a
 test with the scale figures to `tests/sectors.test.js`.
 
+### Inflation paths
+
+The charts and the pay panel use one of three inflation paths, chosen with the buttons
+under either chart. They are in `INFLATION.scenarios` in `data.js`.
+
+- **Central Bank** is the default: the Central Bank of Ireland's forecasts, with 2029
+  assumed. When a new Quarterly Bulletin comes out, update `CENTRAL_RATES`, the
+  scenario's `note`, the `cbi-qb3-2026` source and the reference values in the tests.
+- **Optimistic** and **Pessimistic** are round-number illustrations (2% a year from
+  2027, and 4% a year). They are labelled "an illustration, not a forecast" wherever
+  they are used. The 4% is the rate in the year to October 2026 (`INFLATION.current`);
+  if inflation moves a long way from it, choose a new round figure and say where it
+  comes from.
+- `INFLATION.others` lists what other institutions forecast, for the table in chapter 2.
+  Only add figures you have read at the source.
+
 ### Increments in the opening chart
 
 Every figure on the site shows what the deal adds to one scale point, with one
@@ -109,7 +129,8 @@ one point a year to the deal's rises.
 - A point marked `skipped: true` in `data.js` is passed over, and a point marked
   `lsi: true` (a long service increment) is never climbed to, because it depends on
   years spent at the top. Mark new scales the same way.
-- "Now" is the month on the reader's device, kept inside the agreement's dates.
+- The point a reader picks is saved with the month it was picked in (`pointMonth`), so
+  a later visit works from the same starting point.
 
 ### If local bargaining turns out to reach staff as a pay rise
 
@@ -139,7 +160,8 @@ has a switch to count it and shows pay with and without it.
 | `site/index.html` | The page skeleton, one mount per section, and the no-JavaScript facts |
 | `site/js/data.js` | Every fact, pay scale, date and source |
 | `site/js/pay.js` | The pay maths: pure functions, no data or DOM |
-| `site/js/selection.js` | The reader's grade, point and contract, saved on their device |
+| `site/js/selection.js` | The reader's job, grade, point, contract and switches, saved on their device |
+| `site/js/switches.js` | The tick boxes and inflation buttons that several charts share |
 | `site/js/sections/` | One module per section, each with a testable `model()` and a `render()` |
 | `site/js/present.js` | Present mode for projectors |
 | `tests/` | Node's built-in test runner; `tests/helpers/` has a CSS reader and a small stand-in DOM, so tests can run the real render code |
