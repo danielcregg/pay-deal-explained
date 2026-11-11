@@ -76,10 +76,10 @@ export function forecastText(inflation) {
 
 const signed = (n) => `${n < 0 ? '−' : '+'}${pct(Math.abs(n))}`;
 
-function buildChart(m, width, text) {
+function buildChart(m, width, text, compact) {
   const W = Math.max(280, width);
   const narrow = W < 520;
-  const H = narrow ? 250 : 310;
+  const H = compact ? 236 : narrow ? 250 : 310;
   const k = text / 12;
   const margin = { top: 16, right: Math.round(58 * k), bottom: Math.round(30 * k), left: Math.round(38 * k) };
   const N = m.months;
@@ -254,7 +254,9 @@ export function render(root, { store, data }) {
     if (sameAsLowest) who = 'mine';
     const base = who === 'low' ? low : pay.base;
     m = model(base, data, { includeLB: sel.includeLB });
-    chart = buildChart(m, width, labelSize(wrap));
+    // On a projector screen the whole opening has to fit: a shorter chart in Present mode.
+    const compact = document.body.classList.contains('present') && window.innerHeight < 900;
+    chart = buildChart(m, width, labelSize(wrap), compact);
 
     context.textContent = figuresFor(sel, data.SCALES);
     mine.textContent = pay.isExample ? `Example: ${pay.label}` : pay.label;

@@ -609,3 +609,12 @@ button.term[aria-expanded="true"] { color: var(--teal); }
   font-weight: 400;
   letter-spacing: normal;
 }
+
+/* ---------- narrow screens: nothing forces the page wider than the phone ---------- */
+
+/* Grid columns may shrink below their content, so a wide table scrolls inside its own box. */
+.pay-grid > *, .pay-result > *, .pay-detail > * { min-width: 0; }
+@media (max-width: 480px) {
+  .pay-ways-pct { display: block; }
+  .pay-ways-table th, .pay-ways-table td { padding-left: 0.4rem; padding-right: 0.4rem; }
+}

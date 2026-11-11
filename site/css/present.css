@@ -101,3 +101,21 @@ body.present h1:focus, body.present h2:focus { outline: none; }
   .present-dots { display: none; }
   .present-nav .label { margin: 0 auto; }
 }
+
+/* The opening screen: the headline beside the chart, navy from edge to edge. */
+body.present .hero.is-current { padding: 0 0 4.25rem; background: var(--navy); justify-content: flex-start; }
+body.present .hero .button { display: none; }
+body.present .hero-band { padding: 2.5rem clamp(1.25rem, 4vw, 3.5rem) 1.5rem; }
+body.present .race-wrap { width: 100%; max-width: none; padding: 0 clamp(1.25rem, 4vw, 3.5rem) 1.5rem; }
+body.present .race { margin: 0; }
+@media (min-width: 1000px) {
+  body.present .hero.is-current { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center; }
+  body.present .hero-band { padding-right: 1.5rem; }
+  body.present .race-wrap { padding: 1.5rem clamp(1.25rem, 3vw, 3rem) 1.5rem 0; }
+  body.present .hero-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.5rem; }
+  body.present .hero h1 { font-size: clamp(2.2rem, 1.2rem + 2.6vw, 3.6rem); }
+}
+body.present .race { padding: 1.1rem 1.25rem 1rem; }
+body.present .race h2 { font-size: 1.6rem; }
+body.present .race-sub { display: none; }
+body.present .race-source { font-size: 0.8rem; }
