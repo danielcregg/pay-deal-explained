@@ -254,6 +254,7 @@ input[type="number"] {
 .race-tile.real b { color: var(--gold); }
 .race-real-note { display: block; font-size: 0.78rem; line-height: 1.3; color: var(--on-navy-muted); }
 .race-real-note[hidden] { display: none; }
+.race-price-note { display: block; font-size: 0.78rem; line-height: 1.3; }
 .line-own { fill: none; stroke: var(--ink); stroke-width: 2; stroke-dasharray: 5 4; stroke-linejoin: round; }
 .dot-own { fill: var(--ink); stroke: var(--card); stroke-width: 2; }
 .chart-svg .race-label-own { fill: var(--ink); }

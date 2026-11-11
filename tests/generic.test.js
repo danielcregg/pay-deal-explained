@@ -131,7 +131,7 @@ test('chapter 1 opens on the example salary, with no job chosen and nothing that
   assert.deepEqual([root.querySelector('.pay-big .from').textContent, root.querySelector('.pay-big .to').textContent], ['€60,000', '€66,103']);
   assert.equal(root.querySelector('label.switch-owed').hidden, true);
   assert.equal(root.querySelector('label.pill-hourly').hidden, true);
-  assert.equal(root.querySelector('.pay-caveat').textContent, 'Gross pay at your current scale point: before tax, USC, PRSI and pension, and without annual increments.');
+  assert.equal(root.querySelector('.pay-caveat').textContent, 'Gross pay on this salary: before tax, USC, PRSI and pension, and without annual increments.');
   job.value = 'garda';
   job.dispatchEvent({ type: 'change', bubbles: true });
   assert.deepEqual([store.get().sector, store.get().gradeId, store.get().pointIndex, store.get().touched], ['garda', 'garda-2015', 0, true]);

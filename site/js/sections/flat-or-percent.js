@@ -85,25 +85,33 @@ export function render(root, { store, data }) {
       h('thead', {}, h('tr', {}, th('Date'), th('Rule'), th('You get', 'r'), th('Which wins'))),
       tbody));
 
-  // Published starting-pay examples, with TU starting pay worked out the same way.
-  const exampleRows = (() => {
-    const tu = [
-      { role: 'Assistant Lecturer, starting pay (calculated here)', base: data.SCALES.grades.find((g) => g.id === 'al-ne').points[0].value },
-      { role: 'Lecturer, starting pay (calculated here)', base: data.SCALES.grades.find((g) => g.id === 'lect').points[0].value },
-    ].map((r) => ({ role: r.role, pct: (finalSalary(r.base, steps, { includeLB: true }) / r.base - 1) * 100, ours: true }));
-    return [...data.DEAL.publishedExamples, ...tu].sort((a, b) => b.pct - a.pct);
-  })();
-  const maxPct = Math.max(...exampleRows.map((r) => r.pct));
+  // Published starting-pay examples. For a lecturer, lecturer starting pay is worked out the
+  // same way and shown beside them; for anyone else that would name grades they did not choose.
+  const lecturerRows = [
+    { role: 'Assistant Lecturer, starting pay (calculated here)', base: data.SCALES.grades.find((g) => g.id === 'al-ne').points[0].value },
+    { role: 'Lecturer, starting pay (calculated here)', base: data.SCALES.grades.find((g) => g.id === 'lect').points[0].value },
+  ].map((r) => ({ role: r.role, pct: (finalSalary(r.base, steps, { includeLB: true }) / r.base - 1) * 100, ours: true }));
   const who = h('p', { class: 'note fp-who' });
   const exampleNote = h('p', { class: 'note fp-example-note', hidden: true });
-  const examples = h('div', { class: 'plate examples' },
-    h('h3', {}, 'Rises in starting pay, highest first'),
-    h('p', { class: 'note' }, 'As reported on 11 November, alongside lecturer starting pay worked out on this site. All include local bargaining as a 1% rise, as the reported figures do.'),
-    h('ul', { class: 'hbars' }, exampleRows.map((r) => h('li', { class: r.ours ? 'ours' : '' },
+  const exampleIntro = h('p', { class: 'note' });
+  const bars = h('ul', { class: 'hbars' });
+  let barsWithOurs = null;
+  const drawExamples = (sector) => {
+    const withOurs = sector.id === 'tu';
+    if (barsWithOurs === withOurs) return;
+    barsWithOurs = withOurs;
+    const rows = [...data.DEAL.publishedExamples, ...(withOurs ? lecturerRows : [])].sort((a, b) => b.pct - a.pct);
+    const maxPct = Math.max(...rows.map((r) => r.pct));
+    exampleIntro.textContent = withOurs
+      ? 'As reported on 11 November, alongside lecturer starting pay worked out on this site. All include local bargaining as a 1% rise, as the reported figures do.'
+      : 'As reported on 11 November. All include local bargaining as a 1% rise.';
+    bars.replaceChildren(...rows.map((r) => h('li', { class: r.ours ? 'ours' : '' },
       h('span', { class: 'hb-label' }, r.role),
       h('span', { class: 'hb-track' }, h('span', { class: 'hb-bar', style: `width:${((r.pct / maxPct) * 100).toFixed(1)}%` })),
-      h('span', { class: 'hb-value' }, pct(r.pct))))),
-    exampleNote, who);
+      h('span', { class: 'hb-value' }, pct(r.pct)))));
+  };
+  const examples = h('div', { class: 'plate examples' },
+    h('h3', {}, 'Rises in starting pay, highest first'), exampleIntro, bars, exampleNote, who);
 
   root.append(
     h('div', { class: 'plate fp' },
@@ -135,6 +143,7 @@ export function render(root, { store, data }) {
     const sel = store.get();
     const sector = sectorOf(sel, data.SCALES);
     who.textContent = flatNote(sector, data);
+    drawExamples(sector);
     exampleNote.hidden = !sector.exampleNote;
     exampleNote.textContent = sector.exampleNote ?? '';
     const base = resolvePay(sel, data.SCALES).base;

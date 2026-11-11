@@ -9,8 +9,8 @@
 // the start.
 
 import { applySteps, priceIndexSeries, careerEvents, positionIn } from '../pay.js';
-import { resolvePay, figuresFor, lowestScalePoint, sectorOf, gradesIn, gradeOf, careerOf, scenarioOf, sectorPatch, gradePatch, thisMonth, ANY_JOB } from '../selection.js';
-import { eur, pct } from '../format.js';
+import { resolvePay, figuresFor, lowestScalePoint, sectorOf, gradesIn, gradeOf, careerOf, scenarioOf, owedFor, sectorPatch, gradePatch, thisMonth, ANY_JOB } from '../selection.js';
+import { eur, pct, longDate } from '../format.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { h } from '../dom.js';
 import { niceRange, labelSize } from '../chart.js';
@@ -239,7 +239,9 @@ function incrementNote({ sel, career, climbs, who, now }) {
     + `working from the point you ${career.now === now ? 'are on now' : 'gave'} (${MONTHS[month - 1]} ${year}), up to the top of the scale. `
     + 'Increments are normal pay progression, so only the deal’s rises are compared with prices. '
     + 'Long service increments and promotions are not included.'
-    + (sel.incrementMonth === month ? ' This month’s increment is taken as already paid, so choose the point you are on after it.' : '');
+    + (sel.incrementMonth !== month ? ''
+      : career.now === now ? ' This month’s increment is taken as already paid, so choose the point you are on after it.'
+        : ` The ${MONTHS[month - 1]} ${year} increment is taken as already paid, so the point you gave is read as the one after it.`);
 }
 
 /** The four key figures count up once. Their final text is already in the page. */
@@ -361,12 +363,13 @@ export function render(root, { store, data, now = thisMonth() }) {
   const split = h('p', { class: 'race-split', hidden: true }, splitOwn, ' ',
     h('span', { class: 'race-split-why' }, 'Increments are normal progression, so they are not counted against prices.'));
   const priceOut = h('b');
+  const priceNote = h('span', { class: 'race-price-note' }); // a forecast or an illustration: said beside the figure
   const realOut = h('b');
   const realNote = h('span', { class: 'race-real-note', hidden: true }, 'increments not counted'); // shown when the reader has added them
   const tiles = h('div', { class: 'race-tiles' },
     h('div', { class: 'race-tile euro' }, euroLabel, euroOut, monthly),
     h('div', { class: 'race-tile pay' }, payLabel, payOut),
-    h('div', { class: 'race-tile price' }, h('small', {}, 'Prices are up'), priceOut),
+    h('div', { class: 'race-tile price' }, h('small', {}, 'Prices are up'), priceOut, priceNote),
     h('div', { class: 'race-tile real' }, h('small', {}, 'So pay buys'), realOut, realNote));
   const wrap = h('div', { class: 'chart-wrap' });
   const playBtn = h('button', { type: 'button', class: 'race-play', 'aria-label': 'Play' }, '▶');
@@ -494,18 +497,30 @@ export function render(root, { store, data, now = thisMonth() }) {
     const behind = monthsBehind(m);
     const marked = Boolean(m.own) && m.own.steps.some((s) => s.kind === 'increment' && s.after > s.before);
     const against = m.own ? 'the deal’s rises' : 'pay';
+    // An illustration is not a claim about what will happen: its figures are marked, and its key says "would be".
+    const would = prices.kind !== 'forecast';
+    priceNote.textContent = prices.kind;
     aheadText.textContent = behind === 0
-      ? `Prices are never ahead of ${against} in these ${N} months`
-      : `Prices are ahead of ${against} in ${behind} of the ${N} months`;
+      ? `Prices ${would ? 'would never be' : 'are never'} ahead of ${against} in these ${N} months`
+      : `Prices ${would ? 'would be' : 'are'} ahead of ${against} in ${behind} of the ${N} months`;
     ownKey.hidden = !m.own;
     ownKey.replaceChildren(...(m.own ? [h('span', { class: 'swatch line own' }), 'Your pay with increments'] : []));
     incKey.hidden = !marked;
     incKey.replaceChildren(...(marked ? [h('span', { class: 'race-key-mark', 'aria-hidden': 'true' }, '◆'), 'Your increment'] : []));
     chart.svg.setAttribute('aria-label', `Pay and prices from July 2026 to March 2029. By the end, ${m.own ? 'the deal’s rises add' : 'pay is up'} ${pct(end.pay - 100)} and prices are up ${pct(end.price - 100)}. ${aheadText.textContent}.`
       + (m.own ? ` With your increments, your own pay is up ${pct(end.own - 100)}, which is not counted against prices.` : ''));
+    // Which 1% is counted: Present mode hides the tick boxes on a short screen, so the note has to say.
+    const owedDef = owedFor(sel, SCALES);
+    const counted = (() => {
+      if (!owedDef || (!sel.includeOwed && !sel.includeLB)) return `local bargaining is ${sel.includeLB ? 'counted' : 'not counted'}`;
+      const first = `the ${owedDef.pct}% from ${longDate(owedDef.since)}`;
+      const second = 'the 1% on 1 March 2029';
+      if (sel.includeOwed && sel.includeLB) return 'both local bargaining 1%s are counted';
+      return sel.includeOwed ? `${first} is counted, ${second} is not` : `${second} is counted, ${first} is not`;
+    })();
     source.replaceChildren(
       `${prices.note} `
-      + `Gross pay; local bargaining is ${sel.includeLB ? 'counted' : 'not counted'}. `
+      + `Gross pay; ${counted}. `
       + (counting ? 'The rest of the page shows the deal without your increments. ' : '')
       + 'A projection, not a promise. ',
       h('a', { href: '#pay-vs-prices' }, 'Try your own inflation figure'));

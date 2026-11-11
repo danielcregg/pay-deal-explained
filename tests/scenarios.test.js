@@ -104,17 +104,17 @@ test('the main chart: three buttons switch the inflation path, and every figure 
   assert.deepEqual(tiles(), ['€99,037', '+10.2%', '+11.4%', '1.1% less']);
   assert.match(opening.querySelector('.race-source').textContent, /an illustration, not a forecast: prices keep rising by 4% a year/);
   const behind = hero.monthsBehind(hero.model(89894, data, { includeLB: false, rates: scenario('higher').rates }));
-  assert.equal(opening.querySelector('.race-legend').textContent, `Prices are ahead of pay in ${behind} of the 33 months`);
+  assert.equal(opening.querySelector('.race-legend').textContent, `Prices would be ahead of pay in ${behind} of the 33 months`);
   // the same choice shows in chapter 2 and in the pay panel
   assert.deepEqual(checked(two, 'pvp-mode'), ['higher']);
   assert.match(two.querySelector('.pvp-readout').textContent, /^If prices kept rising by 4% a year, by March 2029 your pay would buy about 1\.1% less than in July 2026\./);
-  assert.match(form.querySelector('.pay-real').textContent, /^After inflation on the pessimistic path \(4% a year\), that would buy about 1\.1% less than in July 2026/);
+  assert.match(form.querySelector('.pay-real').textContent, /^After inflation on the pessimistic path \(4% a year, an illustration\), that would buy about 1\.1% less than in July 2026/);
 
   pick(two, 'pvp-mode', 'lower');
   assert.equal(store.get().scenario, 'lower');
   assert.deepEqual(checked(opening, 'race-prices'), ['lower']);
   assert.deepEqual(tiles().slice(2), ['+6.3%', '3.6% more']);
-  assert.match(form.querySelector('.pay-real').textContent, /^After inflation on the optimistic path \(2% a year from 2027\), that would buy about 3\.6% more/);
+  assert.match(form.querySelector('.pay-real').textContent, /^After inflation on the optimistic path \(2% a year from 2027, an illustration\), that would buy about 3\.6% more/);
 });
 
 test('chapter 2: your own figure is still there, and the other forecasts are listed', () => {
@@ -135,7 +135,9 @@ test('chapter 2: your own figure is still there, and the other forecasts are lis
   assert.deepEqual(rows[1], ['IMF, World Economic Outlook, October 2026', '3.4%', '2.8%', '1.9%', '2.0%']);
   assert.equal(rows.length, 4);
   assert.match(two.querySelector('.pvp-others').textContent, /sit close together/);
-  assert.match(two.textContent, /Prices rose 4\.0% in the year to October 2026/);
+  assert.match(two.textContent, /the rate in the year to October 2026 \(CSO flash estimate\)/, 'on the 4% path its own note gives October’s rate, with its source');
+  pick(two, 'pvp-mode', 'central');
+  assert.match(two.textContent, /Prices rose 4\.0% in the year to October 2026 \(CSO flash estimate\)/);
   assert.doesNotMatch(two.textContent, /as reported by RTÉ/);
 });
 

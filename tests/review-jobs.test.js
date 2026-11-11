@@ -59,7 +59,7 @@ test('your pay: a typed salary survives a job change and does not borrow the job
   assert.deepEqual([store.get().sector, store.get().gradeId, store.get().typed], ['garda', 'typed', 52000]);
   assert.equal(root.querySelector('.pay-big .from').textContent, '€52,000');
   assert.doesNotMatch(root.querySelector('.pay-caveat').textContent, /An Garda Síochána’s table/);
-  assert.match(root.querySelector('.pay-caveat').textContent, /^Gross pay at your current scale point/);
+  assert.match(root.querySelector('.pay-caveat').textContent, /^Gross pay on this salary/);
 });
 
 test('gardaí: the GRA’s position is given for garda rank only, and in the GRA’s own terms', () => {

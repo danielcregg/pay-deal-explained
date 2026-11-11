@@ -1,10 +1,11 @@
-// Section 8: Beyond pay. What else the draft covers, each item marked as confirmed,
-// as reported, or not yet published.
+// Section 8: Beyond pay. What else the draft covers, each item marked by where it comes
+// from: the proposed agreement's text (not ratified until the ballots are counted), a
+// report, or nothing published yet.
 
 import { h } from '../dom.js';
 
 const BADGE = {
-  known: ['Confirmed', 'known'],
+  known: ['In the proposed text', 'known'],
   reported: ['As reported', 'reported'],
   'not-yet-published': ['Not yet published', 'unpublished'],
 };

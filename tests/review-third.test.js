@@ -13,6 +13,9 @@ import { DEFAULT_SELECTION, sectorPatch } from '../site/js/selection.js';
 import * as hero from '../site/js/sections/hero.js';
 import * as yourPay from '../site/js/sections/your-pay.js';
 import * as pvp from '../site/js/sections/pay-vs-prices.js';
+import * as beyondPay from '../site/js/sections/beyond-pay.js';
+import * as flat from '../site/js/sections/flat-or-percent.js';
+import * as vsLastDeal from '../site/js/sections/vs-last-deal.js';
 
 const document = installDom();
 const html = readFileSync(new URL('../site/index.html', import.meta.url), 'utf8');
@@ -205,4 +208,129 @@ test('chapter 2: a path chosen on the opening chart replaces a figure of your ow
   assert.deepEqual(checked(), ['own']);
   store.reset({ ...DEFAULT_SELECTION });
   assert.deepEqual([checked(), slider.closest('.field').hidden, slider.value], [['central'], true, '3']);
+});
+
+// ---------- what the page says ----------
+
+const beyond = Object.fromEntries(data.BEYOND_PAY.map((b) => [b.id, b]));
+const scenario = (id) => data.INFLATION.scenarios.find((s) => s.id === id);
+
+test('chapter 8: what comes from the agreement’s text is marked as proposed, not as confirmed', () => {
+  const { root } = mount(beyondPay);
+  const badges = root.querySelectorAll('.badge.known').map((b) => b.textContent);
+  assert.ok(badges.length >= 4);
+  assert.deepEqual([...new Set(badges)], ['In the proposed text'], 'the agreement is not ratified until the ballots are counted');
+  assert.doesNotMatch(root.textContent, /Confirmed/);
+});
+
+test('local bargaining: each statement is the text’s own, with its section', () => {
+  const text = beyond['local-bargaining'].text;
+  assert.match(text, /The proposed text calls it a payment of up to 1% of basic pay costs \(section 3\.1\.2\)/);
+  assert.match(text, /not meant, as a rule, to deliver a general pay rise \(section 4\.1\.3\)/);
+  assert.doesNotMatch(text, /calls it[^.]*used as each sector negotiates/, 'our own gloss is not put in the text’s mouth');
+  // section 4.2.4: who may take a later 1% as a general rise
+  assert.match(text, /Bargaining units that settled the first phase in the way that was envisaged \(the text’s Category One\) may opt to take either the second or the third 1% as a general pay rise; units whose first phase included a general rise \(Category Two\) will not have that option \(section 4\.2\.4\)/);
+  assert.match(text, /The text says first-phase matters still outstanding \(the 1% due from 1 September 2025\) must be resolved by 24 November 2026 \(section 4\.2\.3\)/);
+});
+
+test('post-primary teachers: section 4.2.4 leaves their agreement untouched; it does not itself promise it', () => {
+  const note = data.SCALES.sectors.find((s) => s.id === 'postprimary').lastDealNote;
+  for (const text of [note, beyond.education.text]) {
+    assert.match(text, /do(es)? not affect the full implementation of the post-primary teachers’ 3% local bargaining agreement/);
+    assert.match(text, /senior cycle reform/);
+    assert.doesNotMatch(text, /is to be implemented in full/);
+    assert.match(text, /section 4\.2\.4/);
+  }
+});
+
+test('artificial intelligence: the guidelines are named as the text names them, with what it says on redundancy', () => {
+  const text = beyond['ai-hybrid'].text;
+  assert.match(text, /the Guidelines for the Responsible Use of Artificial Intelligence in the Public Service/);
+  assert.doesNotMatch(text, /national guidelines/);
+  assert.match(text, /compulsory redundancy will not apply in the public service, save for the limited exceptions in earlier agreements \(section 2\.5\)/);
+});
+
+test('chapter 4: lecturer starting pay is worked out beside the reported figures only for a lecturer', () => {
+  const { root, store } = mount(flat);
+  const ours = () => root.querySelectorAll('.examples .hbars li').filter((li) => li.className === 'ours').map((li) => li.querySelector('.hb-label').textContent);
+  const intro = () => root.querySelector('.examples .note').textContent;
+  assert.deepEqual(ours(), [], 'no job chosen: no job’s grades are named');
+  assert.equal(intro(), 'As reported on 11 November. All include local bargaining as a 1% rise.');
+  assert.equal(root.querySelectorAll('.examples .hbars li').length, data.DEAL.publishedExamples.length);
+  store.set({ ...lecturer });
+  assert.deepEqual(ours(), ['Assistant Lecturer, starting pay (calculated here)', 'Lecturer, starting pay (calculated here)']);
+  assert.match(intro(), /alongside lecturer starting pay worked out on this site/);
+  store.set({ sector: 'garda', gradeId: 'garda-2015', pointIndex: 0 });
+  assert.deepEqual(ours(), []);
+});
+
+test('inflation paths: each says whether it is a forecast or an illustration, wherever its figures are', () => {
+  assert.deepEqual(data.INFLATION.scenarios.map((s) => s.kind), ['illustration', 'forecast', 'illustration']);
+  for (const id of ['lower', 'higher']) assert.match(scenario(id).phrase, /, an illustration\)$/);
+  const { root, store } = mount(hero, lecturer);
+  const tile = () => root.querySelector('.race-tile.price .race-price-note').textContent;
+  const key = () => root.querySelector('.race-legend li').textContent;
+  assert.deepEqual([tile(), key()], ['forecast', 'Prices are ahead of pay in 7 of the 33 months']);
+  store.set({ scenario: 'higher' });
+  assert.deepEqual([tile(), key()], ['illustration', 'Prices would be ahead of pay in 29 of the 33 months']);
+  assert.match(root.querySelector('svg').getAttribute('aria-label'), /Prices would be ahead of pay in 29 of the 33 months\./);
+  store.set({ scenario: 'lower' });
+  assert.deepEqual([tile(), key()], ['illustration', 'Prices would be ahead of pay in 4 of the 33 months']);
+});
+
+test('the Central Bank path’s note states the same rates the chart uses', () => {
+  assert.ok(scenario('central').note.includes(hero.forecastText(data.INFLATION)), 'a change to the rates has to reach the sentence that quotes them');
+  const rates = data.INFLATION.scenarios.map((s) => s.rates);
+  assert.match(scenario('lower').note, new RegExp(`${rates[0][2026]}% for 2026, then ${rates[0][2027]}% a year`));
+  assert.match(scenario('lower').lead, new RegExp(`${rates[0][2027]}% a year from 2027`));
+  assert.match(scenario('higher').note, new RegExp(`rising by ${rates[2][2027]}% a year`));
+  assert.equal(rates[2][2026], data.INFLATION.current, 'the pessimistic path is "today’s rate goes on"');
+  const assumption = data.ASSUMPTIONS.find((a) => /^Prices use the Central Bank/.test(a));
+  assert.match(assumption, new RegExp(`${rates[0][2027]}% a year from 2027, and ${rates[2][2027]}% a year throughout`));
+  assert.match(assumption, new RegExp(`with 2029 assumed to be ${data.INFLATION.rates[2029]}%`));
+});
+
+test('the opening chart’s note says which 1% is counted, where a job has two', () => {
+  const { root, store } = mount(hero, lecturer);
+  const note = () => root.querySelector('.race-source').textContent;
+  assert.match(note(), /Gross pay; local bargaining is not counted\. /);
+  store.set({ includeOwed: true });
+  assert.match(note(), /Gross pay; the 1% from 1 September 2025 is counted, the 1% on 1 March 2029 is not\. /);
+  store.set({ includeLB: true });
+  assert.match(note(), /Gross pay; both local bargaining 1%s are counted\. /);
+  store.set({ includeOwed: false });
+  assert.match(note(), /Gross pay; the 1% on 1 March 2029 is counted, the 1% from 1 September 2025 is not\. /);
+  store.set({ sector: 'primary', gradeId: 'pt-new', pointIndex: 0 }); // a job with one
+  assert.match(note(), /Gross pay; local bargaining is counted\. /);
+});
+
+test('copy: a salary of exactly the threshold, a salary with no scale point, and an increment given in an earlier month', () => {
+  const at = yourPay.model({ ...DEFAULT_SELECTION }, data);
+  assert.equal(at.explanation, 'All the rises are percentages for you: your salary is €60,000 or more at every step.');
+  assert.match(at.caveat, /^Gross pay on this salary: before tax/);
+  assert.match(yourPay.model({ ...lecturer }, data).caveat, /^Gross pay at your current scale point: before tax/);
+  // a point given in September with a September increment, read in November
+  const earlier = mount(hero, { ...lecturer, incrementMonth: 9, pointMonth: '2026-09' });
+  assert.match(earlier.root.querySelector('.race-inc-note').textContent, /The September 2026 increment is taken as already paid, so the point you gave is read as the one after it\.$/);
+  assert.doesNotMatch(earlier.root.querySelector('.race-inc-note').textContent, /This month/);
+  const thisMonth = mount(hero, { ...lecturer, incrementMonth: 11, pointMonth: NOW });
+  assert.match(thisMonth.root.querySelector('.race-inc-note').textContent, /This month’s increment is taken as already paid, so choose the point you are on after it\.$/);
+});
+
+test('chapter 2: the source note gives October’s rate once', () => {
+  const { root, store } = mount(pvp);
+  const count = () => (root.querySelector('.pvp-source').textContent.match(/October 2026/g) ?? []).length;
+  assert.equal(count(), 1);
+  store.set({ scenario: 'higher' }); // this path's own note already says "the rate in the year to October 2026"
+  assert.equal(count(), 1);
+});
+
+test('chapter 7 with no job chosen: the two deals’ 1% for local bargaining are counted or left out together', () => {
+  const { root, store } = mount(vsLastDeal);
+  const yours = (which) => root.querySelector(`.vs-card.${which} .vs-yours dd`).textContent;
+  const pctOf = (deal, includeLB) => `+${((finalSalary(60000, deal.steps, { includeLB }) / 60000 - 1) * 100).toFixed(1)}%`;
+  assert.deepEqual([yours('prev'), yours('draft')], [pctOf(data.PREVIOUS_DEAL, false), pctOf(data.DEAL, false)]);
+  store.set({ includeLB: true });
+  assert.deepEqual([yours('prev'), yours('draft')], [pctOf(data.PREVIOUS_DEAL, true), pctOf(data.DEAL, true)], 'like for like');
+  assert.match(root.textContent, /With no job chosen, each deal’s 1% for local bargaining is treated the same way: both are counted\./);
 });

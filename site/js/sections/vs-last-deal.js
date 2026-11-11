@@ -3,7 +3,7 @@
 // Deliberately no single "pace" figure and no verdict (spec §4, rule 9).
 
 import { finalSalary, payIndexSeries } from '../pay.js';
-import { resolvePay, figuresFor, lowestScalePoint, sectorOf } from '../selection.js';
+import { resolvePay, figuresFor, lowestScalePoint, sectorOf, ANY_JOB } from '../selection.js';
 import { eur, pct, longDate } from '../format.js';
 import { h } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
@@ -159,7 +159,9 @@ export function render(root, { store, data }) {
     // September 2025, so it follows that switch where the job has one.
     const base = resolvePay(sel, data.SCALES).published;
     const sector = sectorOf(sel, data.SCALES);
-    const includePrevLB = sector.owed ? sel.includeOwed : Boolean(sector.lastDealLB);
+    // With no job chosen nothing says how the last deal's 1% was used, so the two deals are treated alike.
+    const noJob = sector.id === ANY_JOB.id;
+    const includePrevLB = sector.owed ? sel.includeOwed : noJob ? sel.includeLB : Boolean(sector.lastDealLB);
     m = model(base, data, { includeLB: sel.includeLB, includePrevLB, sector: sector.id });
     const low = m.lowSalary === null ? null : { salary: m.lowSalary, label: sector.low }; // none until a job is chosen
     context.textContent = figuresFor({ ...sel, includeOwed: false }, data.SCALES);
@@ -167,7 +169,9 @@ export function render(root, { store, data }) {
     const said = (on) => (on ? 'counted' : 'left out');
     lbNote.textContent = sector.owed
       ? `Each deal has a 1% for local bargaining, counted by its own switch in section 1: the 2024–26 deal’s, from 1 September 2025, is ${said(includePrevLB)}; the draft’s, on 1 March 2029, is ${said(sel.includeLB)}.`
-      : `The draft’s 1% local bargaining, on 1 March 2029, is ${said(sel.includeLB)}; switch it in section 1. The 2024–26 deal’s 1% is ${said(includePrevLB)}.`;
+      : noJob
+        ? `With no job chosen, each deal’s 1% for local bargaining is treated the same way: both are ${said(sel.includeLB)}. Switch them in section 1.`
+        : `The draft’s 1% local bargaining, on 1 March 2029, is ${said(sel.includeLB)}; switch it in section 1. The 2024–26 deal’s 1% is ${said(includePrevLB)}.`;
 
     chart = buildChart(m, width, labelSize(wrap));
     for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();

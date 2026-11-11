@@ -166,8 +166,10 @@ export function render(root, { store, data }) {
     const prices = scenarioOf(sel, inflation);
     for (const r of radios) r.input.checked = r.value === (mode.flat ? 'own' : prices.id);
     m = model(pay.base, steps, inflation, { includeLB: sel.includeLB, flatRate: mode.flat ? mode.rate : null, rates: prices.rates });
-    source.textContent = (mode.flat ? `Prices here rise by ${mode.rate.toFixed(1)}% a year, a figure of your own. ` : `${prices.note} `)
-      + `Prices rose ${inflation.current.toFixed(1)}% in the year to October 2026 (CSO flash estimate). Index: 1 July 2026 = 100; each month shows its end-of-month value.`;
+    const lead = mode.flat ? `Prices here rise by ${mode.rate.toFixed(1)}% a year, a figure of your own. ` : `${prices.note} `;
+    source.textContent = lead
+      + (/October 2026/.test(lead) ? '' : `Prices rose ${inflation.current.toFixed(1)}% in the year to October 2026 (CSO flash estimate). `) // the 4% path's own note says it
+      + 'Index: 1 July 2026 = 100; each month shows its end-of-month value.';
     chart = buildChart(m, width);
     for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();
     wrap.prepend(chart.svg);

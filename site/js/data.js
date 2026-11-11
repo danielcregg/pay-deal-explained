@@ -176,7 +176,7 @@ export const SCALES = {
       hourly: false,
       caveat: 'Basic scale only: qualification allowances, posts of responsibility and other allowances are not included. These are the scales in Circular 0074/2026 of 1 October 2026, which include the 1% local bargaining from 1 September 2025. The circular says the payroll changes and back pay will take time, so your payslip may not show these rates yet.',
       lastDealLB: true,
-      lastDealNote: 'For post-primary teachers, the first local bargaining instalment was a 1% rise in the salary scale from 1 September 2025, under Circular 0074/2026, so this comparison counts it. The proposed agreement says the rest of the post-primary local bargaining agreement is to be implemented in full (section 4.2.4), so the draft’s figure is also given with its 1%.',
+      lastDealNote: 'For post-primary teachers, the first local bargaining instalment was a 1% rise in the salary scale from 1 September 2025, under Circular 0074/2026, so this comparison counts it. The proposed agreement says its new rules do not affect the full implementation of the post-primary teachers’ 3% local bargaining agreement for cooperation with senior cycle reform (section 4.2.4), so the draft’s figure is also given with its 1%.',
       // The reported "Secondary teacher 12.8%" was worked out on the scale before Circular 0074/2026.
       exampleNote: 'The reported secondary teacher figure matches the scale as it was before Circular 0074/2026 raised it. On today’s scale the same sum gives 12.7%.',
     },
@@ -345,26 +345,27 @@ export const INFLATION = {
   current: 4, // % in the year to October 2026 (CSO flash estimate of the HICP)
   sourceId: 'cbi-qb3-2026',
   defaultScenario: 'central',
+  // `kind` is shown beside the figures: only the Central Bank's path is a forecast.
   scenarios: [
     {
-      id: 'lower', label: 'Optimistic: 2%', rates: { 2026: 3.4, 2027: 2, 2028: 2, 2029: 2 },
+      id: 'lower', kind: 'illustration', label: 'Optimistic: 2%', rates: { 2026: 3.4, 2027: 2, 2028: 2, 2029: 2 },
       lead: 'If inflation fell to 2% a year from 2027',
-      phrase: 'on the optimistic path (2% a year from 2027)',
+      phrase: 'on the optimistic path (2% a year from 2027, an illustration)',
       note: 'Prices here are an illustration, not a forecast: the Central Bank’s 3.4% for 2026, then 2% a year, the European Central Bank’s target.',
       sourceIds: ['cbi-qb3-2026', 'ecb-target'],
     },
     {
-      id: 'central', label: 'Central Bank', rates: CENTRAL_RATES,
+      id: 'central', kind: 'forecast', label: 'Central Bank', rates: CENTRAL_RATES,
       lead: 'On the Central Bank’s forecasts',
       phrase: 'on the Central Bank’s forecasts (2029 assumed at 2%)',
       note: 'Prices follow the Central Bank of Ireland’s forecasts of September 2026: 3.4% in 2026, 3.1% in 2027 and 2% in 2028, with 2029 assumed at 2%.',
       sourceIds: ['cbi-qb3-2026'],
     },
     {
-      id: 'higher', label: 'Pessimistic: 4%', rates: { 2026: 4, 2027: 4, 2028: 4, 2029: 4 },
+      id: 'higher', kind: 'illustration', label: 'Pessimistic: 4%', rates: { 2026: 4, 2027: 4, 2028: 4, 2029: 4 },
       lead: 'If prices kept rising by 4% a year',
-      phrase: 'on the pessimistic path (4% a year)',
-      note: 'Prices here are an illustration, not a forecast: prices keep rising by 4% a year, the rate in the year to October 2026.',
+      phrase: 'on the pessimistic path (4% a year, an illustration)',
+      note: 'Prices here are an illustration, not a forecast: prices keep rising by 4% a year, the rate in the year to October 2026 (CSO flash estimate).',
       sourceIds: ['cso-hicp-oct2026'],
     },
   ],
@@ -412,7 +413,7 @@ export const GLOSSARY = [
 export const BEYOND_PAY = [
   {
     id: 'local-bargaining', title: 'Local bargaining', status: 'known',
-    text: 'The 1% on 1 March 2029 is the second phase of local bargaining that began under the 2024–2026 agreement, which allowed up to 3% of the basic pay cost in all. The text calls it a payment of up to 1% of basic pay costs, used as each sector negotiates, and says the process was not meant, as a rule, to deliver a general pay rise. So it may not arrive as a 1% rise for each person. The final phase is left to the next agreement. First-phase claims still outstanding (the 1% due from 1 September 2025) must be resolved by 24 November 2026.',
+    text: 'The 1% on 1 March 2029 is the second phase of local bargaining that began under the 2024–2026 agreement, which allowed up to 3% of the basic pay cost in all. The proposed text calls it a payment of up to 1% of basic pay costs (section 3.1.2), and says local bargaining was not meant, as a rule, to deliver a general pay rise (section 4.1.3). What the money is spent on is negotiated for each grade or group, so it may not arrive as a 1% rise for each person. Bargaining units that settled the first phase in the way that was envisaged (the text’s Category One) may opt to take either the second or the third 1% as a general pay rise; units whose first phase included a general rise (Category Two) will not have that option (section 4.2.4). The final phase is left to the next agreement. The text says first-phase matters still outstanding (the 1% due from 1 September 2025) must be resolved by 24 November 2026 (section 4.2.3).',
     sourceIds: ['psa-2026-text', 'psa-2024'],
   },
   {
@@ -422,12 +423,12 @@ export const BEYOND_PAY = [
   },
   {
     id: 'ai-hybrid', title: 'AI and blended working', status: 'known',
-    text: 'On artificial intelligence, the parties agree to work together on how it is used in the public service, with regard to the national guidelines on its responsible use (section 2.5). Blended working continues under the existing policy frameworks and stays under review, with issues dealt with locally where possible (section 2.7).',
+    text: 'On artificial intelligence, the parties agree to work together on how it is used in the public service, in line with the Guidelines for the Responsible Use of Artificial Intelligence in the Public Service, and restate that compulsory redundancy will not apply in the public service, save for the limited exceptions in earlier agreements (section 2.5). Blended working continues under the existing policy frameworks and stays under review, with issues dealt with locally where possible (section 2.7).',
     sourceIds: ['psa-2026-text'],
   },
   {
     id: 'education', title: 'Education measures', status: 'reported',
-    text: 'Measures on recruitment and retention, workload and class sizes in schools were mentioned in reports when the deal was agreed. The agreement’s text does not set class sizes. Its appendix lists education reforms already under way, such as senior cycle reform, and section 4.2.4 says the post-primary teachers’ local bargaining agreement is to be implemented in full.',
+    text: 'Measures on recruitment and retention, workload and class sizes in schools were mentioned in reports when the deal was agreed. The agreement’s text does not set class sizes. Its appendix lists education reforms already under way, such as senior cycle reform, and section 4.2.4 says its new rules on local bargaining do not affect the full implementation of the post-primary teachers’ 3% local bargaining agreement for cooperation with senior cycle reform.',
     sourceIds: ['rte-deal', 'psa-2026-text'],
   },
   {

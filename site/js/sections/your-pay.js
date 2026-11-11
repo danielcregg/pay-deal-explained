@@ -77,9 +77,9 @@ export function model(sel, data) {
     flatSteps,
     explanation: flatSteps.length
       ? `The flat minimum beat the percentage at ${listSteps(flatSteps)}, because your pay was below ${threshold} at the time.`
-      : `All the rises are percentages for you: your salary is above ${threshold} at every step.`,
+      : `All the rises are percentages for you: your salary is ${threshold} or more at every step.`,
     sector,
-    caveat: 'Gross pay at your current scale point: before tax, USC, PRSI and pension, and without annual increments.'
+    caveat: `Gross pay ${sel.gradeId === 'typed' && sel.contract !== 'hourly' ? 'on this salary' : 'at your current scale point'}: before tax, USC, PRSI and pension, and without annual increments.`
       + (sector.caveat && sel.gradeId !== 'typed' ? ` ${sector.caveat}` : ''), // a typed salary is not from the job's scale
     notes,
   };
