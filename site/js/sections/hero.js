@@ -13,6 +13,7 @@ import { svgEl, scaleLinear } from '../svg.js';
 import { h } from '../dom.js';
 import { niceRange, labelSize } from '../chart.js';
 import { prefersReducedMotion, onFirstView } from '../motion.js';
+import { extrasSwitches } from '../switches.js';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DURATION = 7000; // ms for the play head to cross the chart
@@ -43,13 +44,17 @@ export function model(base, data, { includeLB }) {
     kind: r.step.kind,
   }));
   const price = [100, ...priceIndexSeries({ from: INFLATION.from, to: INFLATION.to, rates: INFLATION.rates }).map((p) => p.value)];
-  return { months: DEAL.months, start, steps, price };
+  return { months: DEAL.months, start, steps, price, base };
 }
 
-/** Pay and price indices `t` months in, and what pay then buys compared with the start (%). */
+/**
+ * Pay and price indices `t` months in, and what pay then buys compared with the start (%).
+ * A whole number of months is the end of a month, so a rise dated the 1st of the next
+ * month is not in it yet (the same convention as chapter 2).
+ */
 export function stateAt(m, t) {
   let pay = 100;
-  for (const s of m.steps) if (s.at <= t) pay = s.after;
+  for (const s of m.steps) if (s.at < t) pay = s.after;
   const i = Math.min(m.months - 1, Math.floor(t));
   const price = m.price[i] + (m.price[i + 1] - m.price[i]) * Math.min(1, t - i);
   return { pay, price, real: (pay / price - 1) * 100 };
@@ -59,9 +64,14 @@ export function stateAt(m, t) {
 export function whenText(t, startYm, months) {
   const [y, m] = startYm.split('-').map(Number);
   if (t <= 0) return `Starting line: 1 ${MONTHS[m - 1]} ${y}`;
-  const index = (m - 1) + Math.min(months - 1, Math.floor(t));
+  const index = (m - 1) + Math.min(months, Math.ceil(t)) - 1; // the month `t` falls in, or has just completed
   const name = `${MONTHS[index % 12]} ${y + Math.floor(index / 12)}`;
-  return t >= months ? `By the end of ${name}` : `By ${name}`;
+  return t >= months ? `By the end of ${name}` : `In ${name}`;
+}
+
+/** The yearly salary in force `t` months in, in euro. */
+export function payThen(m, t) {
+  return (stateAt(m, t).pay / 100) * m.base;
 }
 
 /** '3.4% in 2026, 3.1% in 2027 and 2% in 2028, with 2029 assumed at 2%'. */
@@ -79,7 +89,7 @@ const signed = (n) => `${n < 0 ? '−' : '+'}${pct(Math.abs(n))}`;
 function buildChart(m, width, text, compact) {
   const W = Math.max(280, width);
   const narrow = W < 520;
-  const H = compact ? 236 : narrow ? 250 : 310;
+  const H = compact ? 196 : narrow ? 250 : 310;
   const k = text / 12;
   const margin = { top: 16, right: Math.round(58 * k), bottom: Math.round(30 * k), left: Math.round(38 * k) };
   const N = m.months;
@@ -142,7 +152,7 @@ function buildChart(m, width, text, compact) {
   const timeAt = (clientX) => {
     const box = svg.getBoundingClientRect();
     const px = ((clientX - box.left) / box.width) * W;
-    return Math.max(0, Math.min(N, Math.round(((px - margin.left) / (W - margin.left - margin.right)) * N * 4) / 4));
+    return Math.max(0, Math.min(N, Math.round(((px - margin.left) / (W - margin.left - margin.right)) * N)));
   };
   return { svg, place, timeAt };
 }
@@ -185,26 +195,32 @@ export function render(root, { store, data }) {
   const lowest = h('button', { type: 'button', 'aria-pressed': 'false' });
   const picks = h('div', { class: 'race-picks', role: 'group', 'aria-label': 'Whose pay' }, mine, lowest);
   const when = h('p', { class: 'race-when' });
+  const euroLabel = h('small');
+  const euroOut = h('b');
+  const monthly = h('span', { class: 'race-monthly' });
   const payOut = h('b');
   const priceOut = h('b');
   const realOut = h('b');
   const tiles = h('div', { class: 'race-tiles' },
+    h('div', { class: 'race-tile euro' }, euroLabel, euroOut, monthly),
     h('div', { class: 'race-tile pay' }, h('small', {}, 'Pay is up'), payOut),
     h('div', { class: 'race-tile price' }, h('small', {}, 'Prices are up'), priceOut),
     h('div', { class: 'race-tile real' }, h('small', {}, 'So pay buys'), realOut));
   const wrap = h('div', { class: 'chart-wrap' });
   const playBtn = h('button', { type: 'button', class: 'race-play', 'aria-label': 'Play' }, '▶');
-  const scrub = h('input', { type: 'range', class: 'race-scrub', min: 0, max: N, step: 0.25, value: N, 'aria-label': 'Month, from July 2026 to March 2029' });
+  const scrub = h('input', { type: 'range', class: 'race-scrub', min: 0, max: N, step: 1, value: N, 'aria-label': 'Month, from July 2026 to March 2029' });
   const source = h('p', { class: 'note race-source' });
 
   root.append(
     h('h2', { id: 'race-h' }, 'Your pay against prices, month by month'),
-    h('p', { class: 'race-sub' }, 'Press play, or drag along the chart. Pay rises in steps; prices creep up every month.'),
-    context, picks, when, tiles, wrap,
-    h('div', { class: 'race-controls' }, playBtn, scrub),
+    h('p', { class: 'race-sub' }, 'Press play, or slide to any month to see your pay then. Pay rises in steps; prices creep up every month.'),
+    context, picks, extrasSwitches(store, data, 'race'), when, tiles,
+    h('div', { class: 'race-controls' }, playBtn, scrub), // beside the figures it changes
+    wrap,
     source);
 
   let who = 'mine';
+  let money = { factor: 1, unit: 'year' }; // how the index turns into the pay shown
   let t = N; // complete until it is first seen
   let timer = null;
   let m = null;
@@ -216,11 +232,16 @@ export function render(root, { store, data }) {
     chart.place(t, s);
     const label = whenText(t, m.start, N);
     when.textContent = label;
+    const euro = (s.pay / 100) * m.base * money.factor;
+    const hourly = money.unit === 'hour';
+    euroLabel.textContent = hourly ? 'Hourly rate then' : 'Yearly pay then';
+    euroOut.textContent = eur(euro, { cents: hourly });
+    monthly.textContent = hourly ? 'before tax' : `about ${eur(euro / 12)} a month before tax`;
     payOut.textContent = signed(s.pay - 100);
     priceOut.textContent = signed(s.price - 100);
     realOut.textContent = `${pct(Math.abs(s.real))} ${s.real >= 0 ? 'more' : 'less'}`;
     scrub.value = String(t);
-    scrub.setAttribute('aria-valuetext', `${label}: pay ${signed(s.pay - 100)}, prices ${signed(s.price - 100)}`);
+    scrub.setAttribute('aria-valuetext', `${label}: ${euroOut.textContent} ${hourly ? 'an hour' : 'a year'}, pay ${signed(s.pay - 100)}, prices ${signed(s.price - 100)}`);
   };
 
   const stop = () => {
@@ -255,7 +276,9 @@ export function render(root, { store, data }) {
     lowest.textContent = `The ${sector.low} (${eur(low)})`;
     const sameAsLowest = pay.published === low;
     if (sameAsLowest) who = 'mine';
-    const base = who === 'low' ? low : pay.base;
+    // The lowest point gets the same treatment as the reader's own: lifted if they count the 1% from 2025.
+    const base = who === 'low' ? low * (pay.base / pay.published) : pay.base;
+    money = who === 'low' ? { factor: 1, unit: 'year' } : { factor: pay.factor, unit: pay.unit };
     m = model(base, data, { includeLB: sel.includeLB });
     // On a projector screen the whole opening has to fit: a shorter chart in Present mode.
     const compact = document.body.classList.contains('present') && window.innerHeight < 900;
@@ -301,7 +324,7 @@ export function render(root, { store, data }) {
   };
 
   playBtn.addEventListener('click', () => { if (timer) stop(); else play(); });
-  scrub.addEventListener('input', () => { stop(); t = Number(scrub.value); place(); });
+  scrub.addEventListener('input', () => { stop(); t = Math.round(Number(scrub.value)); place(); });
   mine.addEventListener('click', () => { who = 'mine'; draw(true); });
   lowest.addEventListener('click', () => { who = 'low'; draw(true); });
 

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as data from '../site/js/data.js';
-import { monthOffset, model, stateAt, whenText, forecastText } from '../site/js/sections/hero.js';
+import { monthOffset, model, stateAt, whenText, forecastText, payThen } from '../site/js/sections/hero.js';
 
 const near = (a, b, t = 0.01) => assert.ok(Math.abs(a - b) <= t, `${a} ≉ ${b}`);
 
@@ -37,9 +37,19 @@ test('the race: counting local bargaining adds its step on 1 March 2029', () => 
   near(stateAt(m, 33).pay, 111.27);
 });
 
-test('the race: the play head says where it is, and the forecasts are spelled out', () => {
+test('the race: the play head names the month it is in, and the forecasts are spelled out', () => {
   assert.equal(whenText(0, '2026-07', 33), 'Starting line: 1 July 2026');
-  assert.equal(whenText(2.5, '2026-07', 33), 'By September 2026');
+  assert.equal(whenText(2.5, '2026-07', 33), 'In September 2026');
+  assert.equal(whenText(12, '2026-07', 33), 'In June 2027'); // a whole month on the slider: the month just completed
+  assert.equal(whenText(32, '2026-07', 33), 'In February 2029');
   assert.equal(whenText(33, '2026-07', 33), 'By the end of March 2029');
   assert.equal(forecastText(data.INFLATION), '3.4% in 2026, 3.1% in 2027 and 2% in 2028, with 2029 assumed at 2%');
+});
+
+test('the race: pay in euro at any month', () => {
+  const m = model(107727, data, { includeLB: false });
+  assert.equal(m.base, 107727);
+  near(payThen(m, 0), 107727);
+  near(payThen(m, 12), 110980.36); // June 2027: after the 2% of September 2026 and the 1% of April 2027
+  near(payThen(m, 33), 118684.14);
 });

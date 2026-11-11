@@ -110,7 +110,7 @@ body.present .race-wrap { width: 100%; max-width: none; padding: 0 clamp(1.25rem
 body.present .race { margin: 0; }
 @media (min-width: 1000px) {
   body.present .hero.is-current { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center; }
-  body.present .hero-band { padding-right: 1.5rem; }
+  body.present .hero-band { padding: 1.75rem 1.5rem 1.25rem clamp(1.25rem, 4vw, 3.5rem); } /* 1366 by 768 with no scrolling */
   body.present .race-wrap { padding: 1.5rem clamp(1.25rem, 3vw, 3rem) 1.5rem 0; }
   body.present .hero-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.5rem; }
   body.present .hero h1 { font-size: clamp(2.2rem, 1.2rem + 2.6vw, 3.6rem); }
@@ -119,3 +119,9 @@ body.present .race { padding: 1.1rem 1.25rem 1rem; }
 body.present .race h2 { font-size: 1.6rem; }
 body.present .race-sub { display: none; }
 body.present .race-source { font-size: 0.8rem; }
+/* The opening card has to fit a projector screen beside the headline. */
+body.present .race .context-line { display: none; }
+body.present .race-tile { padding: 0.4rem 0.65rem; }
+body.present .race .extras { margin: 0.45rem 0 0.1rem; gap: 0.25rem; }
+body.present .race .extras .switch { font-size: 0.85rem; }
+body.present .race-when { margin: 0.4rem 0 0.3rem; }

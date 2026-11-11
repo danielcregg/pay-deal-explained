@@ -3,10 +3,11 @@
 
 import { payIndexSeries, priceIndexSeries, monthsPricesAhead } from '../pay.js';
 import { resolvePay, figuresFor } from '../selection.js';
-import { pct, monthLabel } from '../format.js';
+import { pct, eur, monthLabel } from '../format.js';
 import { h } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { niceRange, createTooltip } from '../chart.js';
+import { extrasSwitches } from '../switches.js';
 
 export function model(base, steps, inflation, { includeLB, flatRate = null }) {
   const span = { from: inflation.from, to: inflation.to };
@@ -109,16 +110,19 @@ export function render(root, { store, data }) {
   const source = h('p', { class: 'note' },
     'Forecasts: Central Bank of Ireland, as reported by RTÉ: 3.4% in 2026, 3.1% in 2027 and 2.0% in 2028. No forecast was reported for 2029, so this assumes 2.0%. Inflation is currently about 4%. Index: 1 July 2026 = 100; each month shows its end-of-month value.');
   const tbody = h('tbody');
+  const payHead = h('th', { scope: 'col', class: 'r' });
   const details = h('details', { class: 'data' }, h('summary', {}, 'Show the numbers as a table'),
     h('div', { class: 'table-scroll' }, h('table', {},
-      h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Month'), h('th', { scope: 'col', class: 'r' }, 'Your pay'),
-        h('th', { scope: 'col', class: 'r' }, 'Prices'), h('th', { scope: 'col' }, 'Ahead'))),
+      h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Month'), payHead,
+        h('th', { scope: 'col', class: 'r' }, 'Pay index'), h('th', { scope: 'col', class: 'r' }, 'Price index'),
+        h('th', { scope: 'col' }, 'Ahead'))),
       tbody)));
 
   const context = h('p', { class: 'context-line' });
   root.append(h('div', { class: 'plate' },
     context,
     h('fieldset', { class: 'seg' }, h('legend', {}, 'Prices'), pills), rateField,
+    extrasSwitches(store, data, 'pvp'),
     readout, legend, wrap, live, source, details));
 
   const tip = createTooltip(wrap);
@@ -126,12 +130,18 @@ export function render(root, { store, data }) {
   let current = null;
   let lastWidth = -1;
   let m = null;
+  let money = { base: 0, factor: 1, unit: 'year' }; // turns the pay index back into euro
+
+  const hourly = () => money.unit === 'hour';
+  /** The reader's pay in month `i`, in euro: a yearly salary, or an hourly rate. */
+  const payIn = (i) => eur((m.pay[i].value / 100) * money.base * money.factor, { cents: hourly() });
 
   const showAt = (i) => {
     const p = chart.at(i);
     const pay = m.pay[i].value;
     const price = m.price[i].value;
-    const lines = [monthLabel(m.pay[i].month), `Your pay ${one(pay)}`, `Prices ${one(price)}`, price > pay ? 'Prices ahead' : 'Pay ahead'];
+    const lines = [monthLabel(m.pay[i].month), `Your pay ${payIn(i)} ${hourly() ? 'an hour' : 'a year'}`,
+      `Pay index ${one(pay)}`, `Price index ${one(price)}`, price > pay ? 'Prices ahead' : 'Pay ahead'];
     tip.show(lines, p.x, p.y);
     live.textContent = lines.join(', ');
   };
@@ -141,8 +151,9 @@ export function render(root, { store, data }) {
     if (!force && Math.abs(width - lastWidth) < 2) return;
     lastWidth = width;
     const sel = store.get();
-    const base = resolvePay(sel, data.SCALES).base;
-    m = model(base, steps, inflation, { includeLB: sel.includeLB, flatRate: mode.flat ? mode.rate : null });
+    const pay = resolvePay(sel, data.SCALES);
+    money = { base: pay.base, factor: pay.factor, unit: pay.unit };
+    m = model(pay.base, steps, inflation, { includeLB: sel.includeLB, flatRate: mode.flat ? mode.rate : null });
     chart = buildChart(m, width);
     for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();
     wrap.prepend(chart.svg);
@@ -165,8 +176,10 @@ export function render(root, { store, data }) {
     context.textContent = figuresFor(sel, data.SCALES);
     readout.textContent = readoutText(m, mode.flat ? mode.rate : null);
     const ahead = new Set(m.ahead);
+    payHead.textContent = hourly() ? 'Hourly rate' : 'Yearly pay';
     tbody.replaceChildren(...m.pay.map((p, i) => h('tr', {},
       h('td', {}, monthLabel(p.month)),
+      h('td', { class: 'r' }, payIn(i)),
       h('td', { class: 'r' }, one(p.value)),
       h('td', { class: 'r' }, one(m.price[i].value)),
       h('td', {}, ahead.has(p.month) ? 'Prices' : 'Pay'))));
