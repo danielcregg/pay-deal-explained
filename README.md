@@ -4,8 +4,13 @@ An unofficial, neutral explainer of the November 2026 draft Irish public service
 deal, written for lecturers in the technological universities. It uses animated and
 interactive demos so you can see what the draft does to your own pay.
 
-**Live site:** https://danielcregg.is-a.dev/pay-deal-2026/ (the GitHub Pages address,
-danielcregg.github.io/pay-deal-2026, redirects there)
+**Live site:** https://publicpaydeal2026.tech/ (the GitHub Pages addresses,
+danielcregg.github.io/pay-deal-2026 and danielcregg.is-a.dev/pay-deal-2026, redirect there)
+
+The domain is registered at Namify (get.tech). Its DNS has four `A` records for the bare
+domain, pointing at GitHub Pages (185.199.108.153 to 185.199.111.153), and a `CNAME` for
+`www` pointing at `danielcregg.github.io`. The custom domain itself is set in the
+repository's Pages settings, not by a `CNAME` file.
 
 - Static HTML, CSS and JavaScript modules: no build step, no dependencies, no tracking,
   no cookies.
