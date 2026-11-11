@@ -2,7 +2,7 @@
 // arrive together as a lump sum in the month the rise is first paid.
 
 import { applySteps, backPay, owedBackPay } from '../pay.js';
-import { resolvePay, figuresFor, PAY_MONTHS } from '../selection.js';
+import { resolvePay, figuresFor, PAY_MONTHS, owedFor } from '../selection.js';
 import { eur, longDate, monthLabel, splitRounded } from '../format.js';
 import { h } from '../dom.js';
 import { prefersReducedMotion, onFirstView, replayTransition } from '../motion.js';
@@ -13,7 +13,7 @@ export function model(sel, data) {
   const due = backPay(pay.base, data.DEAL.steps, { payMonth: sel.payMonth, includeLB: sel.includeLB });
   const f = pay.annualFactor;
   // The 1% owed since September 2025, when the reader counts it, brings back pay of its own.
-  const owedDef = sel.includeOwed ? data.SCALES.owed ?? null : null;
+  const owedDef = sel.includeOwed ? owedFor(sel, data.SCALES) : null;
   const earlier = owedDef ? owedBackPay(pay.published, owedDef, data.PREVIOUS_DEAL.steps, { payMonth: sel.payMonth }) : null;
   const owed = earlier && {
     pct: owedDef.pct,
@@ -46,10 +46,9 @@ export function render(root, { store, data }) {
   const context = h('p', { class: 'context-line' });
   const hourlyNote = h('p', { class: 'note', hidden: true });
   // The same choice as in section 1, offered here where its back pay shows.
-  const owedDef = data.SCALES.owed ?? null;
   const owedBox = h('input', { id: 'bp-owed', type: 'checkbox' });
-  const owedSwitch = h('label', { class: 'switch bp-owed-switch', for: 'bp-owed', hidden: !owedDef }, owedBox,
-    h('span', {}, owedDef ? `Count the ${owedDef.pct}% owed since ${longDate(owedDef.since)} and its back pay. It is not confirmed yet` : ''));
+  const owedText = h('span');
+  const owedSwitch = h('label', { class: 'switch bp-owed-switch', for: 'bp-owed', hidden: true }, owedBox, owedText);
   const owedOut = h('p', { class: 'bp-owed', hidden: true });
   root.append(h('div', { class: 'plate' },
     context,
@@ -72,6 +71,9 @@ export function render(root, { store, data }) {
     const first = applySteps(pay.base, data.DEAL.steps, { includeLB: sel.includeLB })[0];
     const yearly = first.rise * pay.annualFactor;
     context.textContent = figuresFor(sel, data.SCALES);
+    const owedDef = owedFor(sel, data.SCALES); // only some occupations have one
+    owedSwitch.hidden = !owedDef;
+    owedText.textContent = owedDef ? `Count the ${owedDef.pct}% owed since ${longDate(owedDef.since)} and its back pay. It is not confirmed yet` : '';
     owedBox.checked = sel.includeOwed;
     owedOut.hidden = !m.owed || m.needsHours;
     if (m.owed && !m.needsHours) {

@@ -3,15 +3,15 @@
 // Deliberately no single "pace" figure and no verdict (spec §4, rule 9).
 
 import { finalSalary, payIndexSeries } from '../pay.js';
-import { resolvePay, figuresFor, lowestScalePoint } from '../selection.js';
+import { resolvePay, figuresFor, lowestScalePoint, sectorOf } from '../selection.js';
 import { eur, pct, longDate } from '../format.js';
 import { h } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { niceRange, createTooltip, labelSize, axisRows } from '../chart.js';
 
-export function model(base, data, { includeLB }) {
+export function model(base, data, { includeLB, sector = data.SCALES.sectors[0].id }) {
   const both = [data.PREVIOUS_DEAL, data.DEAL];
-  const lowSalary = lowestScalePoint(data.SCALES);
+  const lowSalary = lowestScalePoint(data.SCALES, sector);
   const deals = both.map((d) => {
     const end = finalSalary(base, d.steps, { includeLB });
     return {
@@ -96,7 +96,7 @@ function buildChart(m, width, text = 12) {
   return { svg, at, hide, monthAt, maxM };
 }
 
-function card(deal, accent, lowSalary, note) {
+function card(deal, accent, low, note) {
   return h('article', { class: `vs-card ${accent}` },
     h('h3', {}, deal.name),
     h('p', { class: 'vs-period' }, `${longDate(deal.start)} to ${longDate(deal.end)}`),
@@ -106,7 +106,7 @@ function card(deal, accent, lowSalary, note) {
       h('div', {}, h('dt', {}, 'Headline'), h('dd', {}, `${deal.headline}%`)),
       h('div', { class: 'vs-yours' }, h('dt', {}, 'For your salary'), h('dd', {}, `+${pct(deal.compoundedPct)}`)),
       h('div', {}, h('dt', {}, 'Minimum payments apply below'), h('dd', {}, eur(deal.threshold))),
-      h('div', {}, h('dt', {}, `For a ${eur(lowSalary)} salary, today’s lowest lecturing point`), h('dd', {}, `+${pct(deal.lowPct)}`)),
+      h('div', {}, h('dt', {}, `For a ${eur(low.salary)} salary, today’s ${low.label}`), h('dd', {}, `+${pct(deal.lowPct)}`)),
       h('div', {}, h('dt', {}, 'Cost'), h('dd', {}, `€${deal.costBn}bn`)),
       h('div', {}, h('dt', {}, 'Review clause'), h('dd', {}, deal.reviewClause))),
     note ? h('p', { class: 'note' }, note) : null);
@@ -151,9 +151,11 @@ export function render(root, { store, data }) {
     lastWidth = width;
     const sel = store.get();
     const base = resolvePay(sel, data.SCALES).base;
-    m = model(base, data, { includeLB: sel.includeLB });
+    const sector = sectorOf(sel, data.SCALES);
+    m = model(base, data, { includeLB: sel.includeLB, sector: sector.id });
+    const low = { salary: m.lowSalary, label: sector.low };
     context.textContent = figuresFor(sel, data.SCALES);
-    cards.replaceChildren(card(m.deals[0], 'prev', m.lowSalary, data.PREVIOUS_DEAL.tuLbNote), card(m.deals[1], 'draft', m.lowSalary));
+    cards.replaceChildren(card(m.deals[0], 'prev', low, sector.id === 'tu' ? data.PREVIOUS_DEAL.tuLbNote : null), card(m.deals[1], 'draft', low));
     lbNote.textContent = sel.includeLB
       ? 'Both deals include their 1% local bargaining as a rise for you.'
       : 'Local bargaining is left out of both deals. Switch it on in section 1 to include it.';

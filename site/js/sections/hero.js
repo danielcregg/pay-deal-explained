@@ -7,7 +7,7 @@
 // the start.
 
 import { applySteps, priceIndexSeries } from '../pay.js';
-import { resolvePay, figuresFor, lowestScalePoint } from '../selection.js';
+import { resolvePay, figuresFor, lowestScalePoint, sectorOf } from '../selection.js';
 import { eur, pct } from '../format.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { h } from '../dom.js';
@@ -176,14 +176,13 @@ function weave() {
 
 export function render(root, { store, data }) {
   const N = data.DEAL.months;
-  const low = lowestScalePoint(data.SCALES);
   const motion = !prefersReducedMotion();
   const band = typeof root.closest === 'function' ? root.closest('.hero')?.querySelector('.hero-band') : null;
   if (band) band.prepend(weave());
 
   const context = h('p', { class: 'context-line' });
   const mine = h('button', { type: 'button', 'aria-pressed': 'true' });
-  const lowest = h('button', { type: 'button', 'aria-pressed': 'false' }, `The lowest lecturing point (${eur(low)})`);
+  const lowest = h('button', { type: 'button', 'aria-pressed': 'false' });
   const picks = h('div', { class: 'race-picks', role: 'group', 'aria-label': 'Whose pay' }, mine, lowest);
   const when = h('p', { class: 'race-when' });
   const payOut = h('b');
@@ -250,7 +249,10 @@ export function render(root, { store, data }) {
     lastWidth = width;
     const sel = store.get();
     const pay = resolvePay(sel, data.SCALES);
-    const sameAsLowest = pay.base === low;
+    const sector = sectorOf(sel, data.SCALES);
+    const low = lowestScalePoint(data.SCALES, sector.id);
+    lowest.textContent = `The ${sector.low} (${eur(low)})`;
+    const sameAsLowest = pay.published === low;
     if (sameAsLowest) who = 'mine';
     const base = who === 'low' ? low : pay.base;
     m = model(base, data, { includeLB: sel.includeLB });

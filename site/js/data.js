@@ -14,7 +14,7 @@ export const SITE = {
   },
   lastUpdated: '2026-11-11',
   includeLBDefault: false,
-  // Whether the 1% owed since 1 September 2025 (see SCALES.owed) is counted from the start.
+  // Whether the 1% owed since 1 September 2025 (see the `owed` entry of a sector in SCALES) is counted from the start.
   // It is unconfirmed for TU lecturers, so it is off; readers can switch it on in section 1.
   includeOwedDefault: false,
   repoUrl: 'https://github.com/danielcregg/pay-deal-2026',
@@ -97,52 +97,65 @@ export const SCALES = {
   effective: '2026-06-01',
   sourceId: 'circular-002-2026',
   hourlyDivisor: 630,
-  // The 1% local bargaining due from 1 September 2025 under the 2024–2026 agreement is not
-  // in these scales. While this entry exists, readers can choose to count it (section 1)
-  // and the page shows pay with and without it. Delete the entry once a circular applies
-  // the 1% and the figures below include it.
-  owed: {
-    pct: 1,
-    since: '2025-09-01',
-    note: 'Local bargaining money is used as each sector negotiates, so neither 1% is certain to reach you as a rise. The 1% due from 1 September 2025 under the last agreement was not in the lecturer pay scales of 1 June 2026. TUI has claimed it for academic staff from that date, and second-level teachers were paid theirs, backdated, under a circular of 1 October 2026. If it is paid, the new rises build on it, which is why some calculations come out about 1% higher.',
-    sourceIds: ['tui-lb-dec2025', 'tui-senior-cycle-1pc'],
-  },
+  // Each occupation: where its scales come from, and what is particular to it.
+  sectors: [
+    {
+      id: 'tu',
+      name: 'Lecturer (technological university or institute of technology)',
+      short: 'TU or IoT lecturer',
+      low: 'lowest lecturing point',
+      effective: '2026-06-01',
+      sourceId: 'circular-002-2026',
+      hourly: true, // hourly-paid Assistant Lecturers: point 1 of the annual scale ÷ hourlyDivisor
+      caveat: null,
+      // The 1% local bargaining due from 1 September 2025 under the 2024–2026 agreement is not
+      // in these scales. While this entry exists, readers can choose to count it (sections 1 and 6)
+      // and the page shows pay with and without it. Delete the entry once a circular applies
+      // the 1% and the figures below include it.
+      owed: {
+        pct: 1,
+        since: '2025-09-01',
+        note: 'Local bargaining money is used as each sector negotiates, so neither 1% is certain to reach you as a rise. The 1% due from 1 September 2025 under the last agreement was not in the lecturer pay scales of 1 June 2026. TUI has claimed it for academic staff from that date, and second-level teachers were paid theirs, backdated, under a circular of 1 October 2026. If it is paid, the new rises build on it, which is why some calculations come out about 1% higher.',
+        sourceIds: ['tui-lb-dec2025', 'tui-senior-cycle-1pc'],
+      },
+    },
+  ],
   grades: [
     {
-      id: 'al-ne', name: 'Assistant Lecturer (joined 2011 or later)', group: 'current', hourly: 75.51,
+      id: 'al-ne', sector: 'tu', name: 'Assistant Lecturer (joined 2011 or later)', group: 'current', hourly: 75.51,
       points: pts([47572, 50099, 52181, 54097, 56109, 57728, 59383, 61045, 62717, 64372]),
     },
     {
-      id: 'al-pre', name: 'Assistant Lecturer (joined before 2011)', group: 'current', hourly: 82.83,
+      id: 'al-pre', sector: 'tu', name: 'Assistant Lecturer (joined before 2011)', group: 'current', hourly: 82.83,
       points: pts([52181, 54097, 56109, 57728, 59383, 61045, 62717, 64372]),
     },
     {
-      id: 'lect', name: 'Lecturer', group: 'current',
+      id: 'lect', sector: 'tu', name: 'Lecturer', group: 'current',
       points: pts([69625, 72831, 84009, 86936, 89894, 92865, 95852, 98817, 101780, 104757, 107727]),
     },
     {
-      id: 'sl1', name: 'Senior Lecturer I (Teaching)', group: 'current',
+      id: 'sl1', sector: 'tu', name: 'Senior Lecturer I (Teaching)', group: 'current',
       points: pts([94736, 97963, 101175, 104409, 107625, 110838, 114068, 117279]),
     },
     {
-      id: 'sl2', name: 'Senior Lecturer II', group: 'current',
+      id: 'sl2', sector: 'tu', name: 'Senior Lecturer II', group: 'current',
       points: pts([97917, 100997, 104070, 107149, 110230, 113304, 116378, 119458, 122529, 125890]),
     },
     {
-      id: 'sl3', name: 'Senior Lecturer III', group: 'current',
+      id: 'sl3', sector: 'tu', name: 'Senior Lecturer III', group: 'current',
       points: pts([105346, 109042, 112741, 116441, 120140, 123838, 127814, 131543, 135494]),
     },
     {
-      id: 'ct', name: 'College Teacher', group: 'legacy',
+      id: 'ct', sector: 'tu', name: 'College Teacher', group: 'legacy',
       points: pts([49046, 50945, 52876, 54847, 56912, 58971, 61050, 63154, 65827, 67975, 70126, 72943, 75760, 77976, 82943, 83943]),
     },
     {
-      id: 'ls1', name: 'Lecturer Scale I', group: 'legacy',
+      id: 'ls1', sector: 'tu', name: 'Lecturer Scale I', group: 'legacy',
       points: pts([61991, 64939, 67351, 69796, 72859, 82064, 83471, 86138, 88849, 91566, 94290]),
     },
     {
       // TUI: "Long Service Increments (Lecturer 2 scale only - appointees before September 1998)".
-      id: 'ls2', name: 'Lecturer 2 (appointed before September 1998, with long service increments)', group: 'legacy',
+      id: 'ls2', sector: 'tu', name: 'Lecturer 2 (appointed before September 1998, with long service increments)', group: 'legacy',
       points: pts([69625, 72831, 84009, 86936, 89894, 92865, 95852, 98817, 101780, 104757, 107727],
         [{ label: 'LSI 1', value: 110594 }, { label: 'LSI 2', value: 113460 }]),
     },

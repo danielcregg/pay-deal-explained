@@ -12,6 +12,7 @@ export const MAX_HOURS = 2000;
 
 export const DEFAULT_SELECTION = Object.freeze({
   touched: false,
+  sector: 'tu',            // an occupation: one of SCALES.sectors
   contract: 'full',        // 'full' | 'part' | 'hourly'
   gradeId: 'lect',         // a grade id, or 'typed'
   pointIndex: 4,
@@ -73,6 +74,15 @@ export function clampFte(input) {
 
 const findGrade = (scales, id) => scales.grades.find((g) => g.id === id);
 
+/** The reader's occupation: its scales' source, caveats and anything particular to it. */
+export const sectorOf = (sel, scales) => scales.sectors.find((s) => s.id === sel.sector) ?? scales.sectors[0];
+
+/** The grades of one occupation. */
+export const gradesIn = (scales, sectorId) => scales.grades.filter((g) => g.sector === sectorId);
+
+/** A rise owed to the reader's occupation but not in its scales yet (TU lecturers' 1% since 2025), or null. */
+export const owedFor = (sel, scales) => sectorOf(sel, scales).owed ?? null;
+
 /**
  * The full-time annual salary the deal is applied to (`base`), and how to turn engine
  * euros into what the reader sees (`factor`) and into their actual annual pay (`annualFactor`).
@@ -81,7 +91,8 @@ export function resolvePay(sel, scales) {
   const isExample = !sel.touched;
   // When the reader counts the 1% owed from the last agreement, it lifts the starting point.
   // `published` is always the figure in today's scale.
-  const lift = sel.includeOwed && scales.owed ? 1 + scales.owed.pct / 100 : 1;
+  const owed = owedFor(sel, scales);
+  const lift = sel.includeOwed && owed ? 1 + owed.pct / 100 : 1;
   if (sel.contract === 'hourly') {
     const grade = findGrade(scales, sel.alScale) ?? findGrade(scales, 'al-ne');
     const hours = Math.max(0, Number(sel.hoursPerYear) || 0);
@@ -106,12 +117,13 @@ export function resolvePay(sel, scales) {
 }
 
 /** The lowest point on the lecturing scales: where the flat minimums count most. */
-export const lowestScalePoint = (scales) => Math.min(...scales.grades.flatMap((g) => g.points.map((p) => p.value)));
+export const lowestScalePoint = (scales, sectorId = scales.sectors[0].id) => Math.min(...gradesIn(scales, sectorId).flatMap((g) => g.points.map((p) => p.value)));
 
 /** The line each demo shows so readers know whose figures they are looking at. */
 export function figuresFor(sel, scales) {
   const pay = resolvePay(sel, scales);
-  const owed = sel.includeOwed && scales.owed ? `, with the ${scales.owed.pct}% owed since ${longDate(scales.owed.since.slice(0, 7))}` : '';
+  const owedDef = owedFor(sel, scales);
+  const owed = sel.includeOwed && owedDef ? `, with the ${owedDef.pct}% owed since ${longDate(owedDef.since.slice(0, 7))}` : '';
   if (pay.isExample) return `Example: ${pay.label}${owed}. Pick your own grade and point in section 1.`;
   const part = sel.contract === 'part' ? `, ${Math.round(sel.fte * 1000) / 10}% of full-time` : '';
   return `Showing: ${pay.label}${part}${owed}.`;
@@ -119,6 +131,8 @@ export function figuresFor(sel, scales) {
 
 function isValid(sel, scales) {
   if (!['full', 'part', 'hourly'].includes(sel.contract)) return false;
+  const sector = scales.sectors.find((s) => s.id === sel.sector);
+  if (!sector || (sel.contract === 'hourly' && !sector.hourly)) return false;
   if (!PAY_MONTHS.includes(sel.payMonth)) return false;
   if (typeof sel.includeLB !== 'boolean' || typeof sel.includeOwed !== 'boolean') return false;
   if (!(typeof sel.fte === 'number' && sel.fte >= 0.01 && sel.fte <= 1)) return false;
@@ -126,7 +140,7 @@ function isValid(sel, scales) {
   if (!(typeof sel.hoursPerYear === 'number' && sel.hoursPerYear >= 0 && sel.hoursPerYear <= MAX_HOURS)) return false;
   if (sel.gradeId === 'typed') return typeof sel.typed === 'number' && sel.typed >= MIN_SALARY && sel.typed <= MAX_SALARY;
   const grade = findGrade(scales, sel.gradeId);
-  return Boolean(grade) && Number.isInteger(sel.pointIndex) && sel.pointIndex >= 0 && sel.pointIndex < grade.points.length;
+  return Boolean(grade) && grade.sector === sel.sector && Number.isInteger(sel.pointIndex) && sel.pointIndex >= 0 && sel.pointIndex < grade.points.length;
 }
 
 /**

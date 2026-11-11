@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as data from '../site/js/data.js';
-import { DEFAULT_SELECTION as D0 } from '../site/js/selection.js';
+import { DEFAULT_SELECTION as D0, owedFor } from '../site/js/selection.js';
 import { owedBackPay } from '../site/js/pay.js';
 import { model } from '../site/js/sections/back-pay.js';
 import { model as yourPay } from '../site/js/sections/your-pay.js';
@@ -20,7 +20,7 @@ test('back pay by pay month, part-time and hourly (Review Focus 2)', () => {
 });
 
 test('back pay for the 1% owed since September 2025 is 1% of the pay in force each month', () => {
-  const owed = data.SCALES.owed;
+  const owed = owedFor(D0, data.SCALES);
   const past = data.PREVIOUS_DEAL.steps;
   const r = owedBackPay(107727, owed, past, { payMonth: '2027-01' });
   assert.equal(r.items.length, 16); // September 2025 to December 2026

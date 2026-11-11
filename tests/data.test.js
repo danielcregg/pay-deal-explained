@@ -36,8 +36,8 @@ test('every minimum breaks even exactly at its deal threshold', () => {
 });
 
 test('TU scales from Circular 002/2026 (1 June 2026)', () => {
-  assert.deepEqual(D.SCALES.grades.map((x) => x.id), ['al-ne', 'al-pre', 'lect', 'sl1', 'sl2', 'sl3', 'ct', 'ls1', 'ls2']);
-  assert.deepEqual(D.SCALES.grades.map((x) => x.group), ['current', 'current', 'current', 'current', 'current', 'current', 'legacy', 'legacy', 'legacy']);
+  assert.deepEqual(D.SCALES.grades.filter((x) => x.sector === 'tu').map((x) => x.id), ['al-ne', 'al-pre', 'lect', 'sl1', 'sl2', 'sl3', 'ct', 'ls1', 'ls2']);
+  assert.deepEqual(D.SCALES.grades.filter((x) => x.sector === 'tu').map((x) => x.group), ['current', 'current', 'current', 'current', 'current', 'current', 'legacy', 'legacy', 'legacy']);
   assert.deepEqual(vals('al-ne'), [47572, 50099, 52181, 54097, 56109, 57728, 59383, 61045, 62717, 64372]);
   assert.deepEqual(vals('al-pre'), [52181, 54097, 56109, 57728, 59383, 61045, 62717, 64372]);
   assert.deepEqual(vals('lect'), [69625, 72831, 84009, 86936, 89894, 92865, 95852, 98817, 101780, 104757, 107727]);

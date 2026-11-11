@@ -26,7 +26,7 @@ test('top of the Lecturer scale, counted three ways (the €119,000 and €121,0
   near(m.scenarios[3].pct, 12.39);
   assert.equal(m.active, 'general');
   assert.match(m.owed.note, /1 June 2026/);
-  const paid = { ...data, SCALES: { ...data.SCALES, owed: undefined } };
+  const paid = { ...data, SCALES: { ...data.SCALES, sectors: data.SCALES.sectors.map((s) => ({ ...s, owed: undefined })) } };
   assert.deepEqual(model(D0, paid).scenarios.map((s) => s.id), ['general', 'lb']);
 });
 

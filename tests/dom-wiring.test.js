@@ -194,3 +194,34 @@ test('back pay: its checkbox for the 1% owed since 2025 and the one in section 1
   assert.equal(six.querySelector('#bp-owed').checked, false);
   assert.equal(six.querySelector('.bp-owed').hidden, true);
 });
+
+test('your pay: choosing another job swaps the grades and hides what does not apply to it', () => {
+  const twoJobs = {
+    ...data,
+    SCALES: {
+      ...data.SCALES,
+      sectors: [...data.SCALES.sectors, { id: 'test', name: 'Test job', short: 'test job', low: 'lowest test point', effective: '2026-06-01', sourceId: 'circular-002-2026', hourly: false, caveat: 'Basic pay only.' }],
+      grades: [...data.SCALES.grades, { id: 'test-a', sector: 'test', name: 'Test grade', group: 'current', points: [{ label: 'Point 1', value: 40000 }, { label: 'Point 2', value: 45000 }] }],
+    },
+  };
+  const root = document.createElement('div');
+  document.body.append(root);
+  const store = createStore({ ...DEFAULT_SELECTION });
+  yourPay.render(root, { store, data: twoJobs });
+  const values = (selector) => root.querySelectorAll(selector).map((o) => o.getAttribute('value'));
+  const owedSwitch = root.querySelector('label.switch-owed');
+  assert.deepEqual(values('#pp-sector option'), ['tu', 'test']);
+  assert.equal(owedSwitch.hidden, false, 'lecturers are offered the 1% owed since 2025');
+  assert.equal(root.querySelector('label.pill-hourly').hidden, false);
+
+  const jobs = root.querySelector('#pp-sector');
+  jobs.value = 'test';
+  jobs.dispatchEvent({ type: 'change', bubbles: true });
+  const s = store.get();
+  assert.deepEqual([s.sector, s.gradeId, s.pointIndex, s.touched], ['test', 'test-a', 0, true]);
+  assert.deepEqual(values('#pp-grade option'), ['test-a', 'typed']);
+  assert.equal(owedSwitch.hidden, true);
+  assert.equal(root.querySelector('label.pill-hourly').hidden, true);
+  assert.equal(root.querySelector('.pay-label').textContent, 'Test grade, point 1');
+  assert.match(root.querySelector('.pay-caveat').textContent, /Basic pay only\.$/);
+});

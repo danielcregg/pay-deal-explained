@@ -25,6 +25,7 @@ input[type="number"] {
 .seg-options { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
 .pill { position: relative; }
+.pill[hidden] { display: none; }
 .pill input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .pill span {
   display: inline-flex;

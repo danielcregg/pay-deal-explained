@@ -2,7 +2,7 @@
 // or hourly, and see what the draft deal adds. The choice then flows into every demo.
 
 import { applySteps, finalSalary, summarise, backPay, owedBackPay } from '../pay.js';
-import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection } from '../selection.js';
+import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradesIn, owedFor } from '../selection.js';
 import { eur, signedEur, pct, longDate, listSteps } from '../format.js';
 import { h } from '../dom.js';
 import { countTo } from '../motion.js';
@@ -23,7 +23,8 @@ export function model(sel, data) {
   // 1% still owed from the last agreement? Each is worked out from today's scale point so
   // the four compare like with like; the owed 1% comes first and the new rises build on it.
   const lbStep = steps.find((s) => s.kind === 'lb');
-  const owed = data.SCALES.owed ?? null;
+  const owed = owedFor(sel, data.SCALES);
+  const sector = sectorOf(sel, data.SCALES);
   const today = pay.published;
   const scenario = (id, start, includeLB) => {
     const end = finalSalary(start, steps, { includeLB });
@@ -68,7 +69,9 @@ export function model(sel, data) {
     explanation: flatSteps.length
       ? `The flat minimum beat the percentage at ${listSteps(flatSteps)}, because your pay was below ${threshold} at the time.`
       : `All the rises are percentages for you: your salary is above ${threshold} at every step.`,
-    caveat: 'Gross pay at your current scale point: before tax, USC, PRSI and pension, and without annual increments.',
+    sector,
+    caveat: 'Gross pay at your current scale point: before tax, USC, PRSI and pension, and without annual increments.'
+      + (sector.caveat ? ` ${sector.caveat}` : ''),
     notes,
   };
 }
@@ -85,21 +88,31 @@ function pill(name, value, text) {
 
 export function render(root, { store, data }) {
   const { SCALES } = data;
-  const current = SCALES.grades.filter((g) => g.group === 'current');
-  const legacy = SCALES.grades.filter((g) => g.group === 'legacy');
 
   // ---- form ----
+  const sectorSelect = h('select', { id: 'pp-sector' }, SCALES.sectors.map((s) => h('option', { value: s.id }, s.name)));
+  const sectorField = h('div', { class: 'field', hidden: SCALES.sectors.length < 2 }, h('label', { for: 'pp-sector' }, 'Your job'), sectorSelect);
+
+  const hourlyPill = pill('pp-contract', 'hourly', 'Hourly-paid');
+  hourlyPill.classList.add('pill-hourly');
   const contract = h('fieldset', { class: 'seg' },
     h('legend', {}, 'Your contract'),
     h('div', { class: 'seg-options' },
       pill('pp-contract', 'full', 'Full-time'),
       pill('pp-contract', 'part', 'Part-time'),
-      pill('pp-contract', 'hourly', 'Hourly-paid')));
+      hourlyPill));
 
-  const gradeSelect = h('select', { id: 'pp-grade' },
-    h('optgroup', { label: 'Current grades' }, current.map((g) => h('option', { value: g.id }, g.name))),
-    h('optgroup', { label: 'Other or legacy scales' }, legacy.map((g) => h('option', { value: g.id }, g.name))),
-    h('optgroup', { label: 'Not listed?' }, h('option', { value: 'typed' }, 'Type my salary')));
+  // The grades on offer follow the job.
+  const gradeSelect = h('select', { id: 'pp-grade' });
+  const fillGrades = (sectorId) => {
+    const option = (g) => h('option', { value: g.id }, g.name);
+    const grades = gradesIn(SCALES, sectorId);
+    const legacy = grades.filter((g) => g.group === 'legacy');
+    gradeSelect.replaceChildren(
+      h('optgroup', { label: legacy.length ? 'Current grades' : 'Grades' }, grades.filter((g) => g.group !== 'legacy').map(option)),
+      legacy.length ? h('optgroup', { label: 'Other or legacy scales' }, legacy.map(option)) : null,
+      h('optgroup', { label: 'Not listed?' }, h('option', { value: 'typed' }, 'Type my salary')));
+  };
   const gradeField = h('div', { class: 'field' }, h('label', { for: 'pp-grade' }, 'Grade'), gradeSelect);
 
   const pointSelect = h('select', { id: 'pp-point' });
@@ -128,14 +141,12 @@ export function render(root, { store, data }) {
   const lbSwitch = h('label', { class: 'switch', for: 'pp-lb' }, lbBox,
     h('span', {}, 'Count local bargaining (1% on 1 March 2029) as a rise for me'));
   const owedBox = h('input', { id: 'pp-owed', type: 'checkbox' });
-  const owedSwitch = h('label', { class: 'switch', for: 'pp-owed', hidden: !SCALES.owed }, owedBox,
-    h('span', {}, SCALES.owed
-      ? `Count the ${SCALES.owed.pct}% local bargaining owed since ${longDate(SCALES.owed.since)}, with its back pay. It is not in the pay scales yet`
-      : ''));
+  const owedText = h('span');
+  const owedSwitch = h('label', { class: 'switch switch-owed', for: 'pp-owed', hidden: true }, owedBox, owedText);
 
   const reset = h('button', { type: 'button', class: 'button-quiet' }, 'Clear my choices');
   const form = h('form', { class: 'plate pay-form', novalidate: true, onsubmit: (e) => e.preventDefault() },
-    contract, gradeField, pointField, typedField, fteField, alScale, hoursField, lbSwitch, owedSwitch,
+    sectorField, contract, gradeField, pointField, typedField, fteField, alScale, hoursField, lbSwitch, owedSwitch,
     h('p', { class: 'privacy' }, 'Your choices stay on this device. ', reset));
 
   // ---- results ----
@@ -178,6 +189,8 @@ export function render(root, { store, data }) {
   const syncForm = (sel) => {
     for (const r of form.querySelectorAll('input[name="pp-contract"]')) r.checked = r.value === sel.contract;
     for (const r of form.querySelectorAll('input[name="pp-alscale"]')) r.checked = r.value === sel.alScale;
+    sectorSelect.value = sel.sector;
+    fillGrades(sel.sector);
     gradeSelect.value = sel.gradeId;
     fillPoints(sel.gradeId);
     if (sel.gradeId !== 'typed') pointSelect.value = String(sel.pointIndex);
@@ -191,6 +204,13 @@ export function render(root, { store, data }) {
 
   const showFields = (sel) => {
     const hourly = sel.contract === 'hourly';
+    // What only some jobs have: hourly-paid contracts, and a rise owed from the last agreement.
+    hourlyPill.hidden = !sectorOf(sel, SCALES).hourly;
+    const owedDef = owedFor(sel, SCALES);
+    owedSwitch.hidden = !owedDef;
+    owedText.textContent = owedDef
+      ? `Count the ${owedDef.pct}% local bargaining owed since ${longDate(owedDef.since)}, with its back pay. It is not in the pay scales yet`
+      : '';
     gradeField.hidden = hourly;
     pointField.hidden = hourly || sel.gradeId === 'typed';
     typedField.hidden = hourly || sel.gradeId !== 'typed';
@@ -271,10 +291,27 @@ export function render(root, { store, data }) {
     else if (t === lbBox) store.set({ includeLB: lbBox.checked });
     else if (t === owedBox) store.set({ includeOwed: owedBox.checked });
     else if (t === pointSelect) set({ pointIndex: Number(pointSelect.value) });
+    else if (t === sectorSelect) {
+      // A new job starts at the first point of its first grade.
+      const sel = store.get();
+      const sector = SCALES.sectors.find((s) => s.id === sectorSelect.value);
+      const first = gradesIn(SCALES, sector.id)[0];
+      fillGrades(sector.id);
+      gradeSelect.value = first.id;
+      fillPoints(first.id);
+      pointSelect.value = '0';
+      set({
+        sector: sector.id,
+        gradeId: first.id,
+        pointIndex: 0,
+        contract: sel.contract === 'hourly' && !sector.hourly ? 'full' : sel.contract,
+        includeOwed: sector.owed ? sel.includeOwed : false,
+      });
+    }
     else if (t === gradeSelect) {
       const sel = store.get();
       if (gradeSelect.value === 'typed') {
-        const base = resolvePay(sel, SCALES).base;
+        const base = resolvePay(sel, SCALES).published;
         typedInput.value = String(base);
         set({ gradeId: 'typed', typed: base });
       } else {
