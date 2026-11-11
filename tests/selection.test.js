@@ -18,7 +18,7 @@ test('FTE is clamped to 1–100% (Review Focus 2)', () => {
 test('saved selections are validated (Review Focus 3)', () => {
   for (const raw of [null, 'not json', '{"gradeId":"nope"}', '{"gradeId":"lect","pointIndex":99}', '{"contract":"weird"}'])
     assert.deepEqual(restoreSelection(raw, SCALES), PAGE_DEFAULT, String(raw));
-  const ok = restoreSelection(JSON.stringify({ ...DEFAULT_SELECTION, touched: true, gradeId: 'al-ne', pointIndex: 0 }), SCALES);
+  const ok = restoreSelection(JSON.stringify({ ...DEFAULT_SELECTION, touched: true, remember: true, gradeId: 'al-ne', pointIndex: 0 }), SCALES);
   assert.deepEqual([ok.gradeId, ok.touched], ['al-ne', true]);
 });
 

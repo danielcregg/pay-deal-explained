@@ -33,6 +33,7 @@ export const DEFAULT_SELECTION = Object.freeze({
   incrementMonth: null,    // 1 to 12: the opening chart then adds a yearly increment in that month
   scenario: INFLATION.defaultScenario, // which inflation path the charts use: one of INFLATION.scenarios
   pointMonth: null,        // 'YYYY-MM': the month in which the point above was chosen, so a later visit reads "the point you are on now" the same way
+  remember: false,         // keep these choices on this device for the next visit: only if the reader asks
 });
 
 /** The inflation path the reader has chosen for the charts (the Central Bank's forecast unless they switch). */
@@ -229,6 +230,7 @@ export function figuresFor(sel, scales) {
 }
 
 function isValid(sel, scales) {
+  if (typeof sel.touched !== 'boolean' || typeof sel.remember !== 'boolean') return false;
   if (!['full', 'part', 'hourly'].includes(sel.contract)) return false;
   const sector = scales.sectors.find((s) => s.id === sel.sector);
   const noJob = sel.sector === ANY_JOB.id; // valid only with a salary on its own
@@ -250,18 +252,17 @@ function isValid(sel, scales) {
 
 /**
  * Rebuild a saved selection, or fall back to the example. Never throws. Only a selection
- * saved after the reader made a choice (`touched: true`, as saveSelection writes it) counts.
+ * the reader asked to keep (`remember: true`) counts: anything else, including what earlier
+ * versions of the page saved without asking, opens the page as it opens for everyone.
  */
 export function restoreSelection(raw, scales) {
   if (!raw) return { ...DEFAULT_SELECTION };
   let parsed;
   try { parsed = JSON.parse(raw); } catch { return { ...DEFAULT_SELECTION }; }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return { ...DEFAULT_SELECTION };
-  if (parsed.touched !== true) return { ...DEFAULT_SELECTION };
-  // Choices saved before jobs existed were all lecturers', so a missing job means that one.
-  const fallback = { ...DEFAULT_SELECTION, sector: 'tu' };
-  const sel = Object.fromEntries(Object.keys(DEFAULT_SELECTION).map((k) => [k, k in parsed ? parsed[k] : fallback[k]]));
-  return isValid(sel, scales) ? { ...sel, touched: true } : { ...DEFAULT_SELECTION };
+  if (parsed.remember !== true) return { ...DEFAULT_SELECTION };
+  const sel = Object.fromEntries(Object.keys(DEFAULT_SELECTION).map((k) => [k, k in parsed ? parsed[k] : DEFAULT_SELECTION[k]]));
+  return isValid(sel, scales) ? sel : { ...DEFAULT_SELECTION };
 }
 
 export function loadSaved() {
@@ -274,4 +275,14 @@ export function saveSelection(sel) {
 
 export function forgetSelection() {
   try { localStorage.removeItem(STORAGE_KEY); } catch { /* storage unavailable: nothing to do */ }
+}
+
+/**
+ * Keep the reader's choices for their next visit if they asked for that, and otherwise make
+ * sure nothing is kept. The page calls this when it opens and after every change, so
+ * unticking the box removes what was saved at once.
+ */
+export function persistSelection(sel) {
+  if (sel.remember) saveSelection(sel);
+  else forgetSelection();
 }

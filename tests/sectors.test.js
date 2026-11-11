@@ -37,13 +37,13 @@ test('sectors: every grade belongs to one, and each sector names its source', ()
   }
 });
 
-test('sectors: the default is the TU lecturer, and choices saved before sectors existed still load', () => {
+test('sectors: the lecturer is first in the list, and a choice saved without being asked to is not brought back', () => {
   assert.equal(D0.sector, 'tu');
   assert.equal(sectorOf(D0, SCALES).id, 'tu');
   assert.equal(SCALES.sectors[0].id, 'tu', 'the lecturer stays first in the list');
   const old = JSON.stringify({ touched: true, contract: 'full', gradeId: 'al-ne', pointIndex: 0, typed: null, fte: 1, alScale: 'al-ne', hoursPerYear: 0, includeLB: false, payMonth: '2027-01' });
   const restored = restoreSelection(old, SCALES);
-  assert.deepEqual([restored.sector, restored.gradeId, restored.touched, restored.includeOwed], ['tu', 'al-ne', true, false]);
+  assert.deepEqual([restored.sector, restored.gradeId, restored.touched], ['any', 'typed', false], 'saved before readers were asked: the page opens generic');
 });
 
 test('sectors: the 1% from September 2025 can be counted by lecturers and gardaí, where it is not in the pay figures', () => {
@@ -115,7 +115,7 @@ test('teachers: no hourly-paid option, and each sector says how the last deal’
   assert.match(sector('primary').lastDealNote, /allowances/);
   assert.match(sector('postprimary').lastDealNote, /0074\/2026/);
   assert.match(sector('tu').lastDealNote, /still being sought by TUI/);
-  const saved = (patch) => JSON.stringify({ ...D0, touched: true, sector: 'primary', gradeId: 'pt-new', pointIndex: 0, ...patch });
+  const saved = (patch) => JSON.stringify({ ...D0, touched: true, remember: true, sector: 'primary', gradeId: 'pt-new', pointIndex: 0, ...patch });
   assert.equal(restoreSelection(saved({}), SCALES).gradeId, 'pt-new');
   assert.equal(restoreSelection(saved({ contract: 'hourly' }), SCALES).touched, false, 'an hourly-paid teacher is not a valid choice');
   assert.equal(restoreSelection(saved({ gradeId: 'lect' }), SCALES).touched, false, 'a grade from another job is not a valid choice');

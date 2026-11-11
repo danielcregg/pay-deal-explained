@@ -155,10 +155,14 @@ export function render(root, { store, data, now = thisMonth() }) {
   const owedText = h('span');
   const owedSwitch = h('label', { class: 'switch switch-owed', for: 'pp-owed', hidden: true }, owedBox, owedText);
 
+  const rememberBox = h('input', { id: 'pp-remember', type: 'checkbox' });
+  const rememberSwitch = h('label', { class: 'switch', for: 'pp-remember' }, rememberBox, h('span', {}, 'Remember my choices on this device'));
   const reset = h('button', { type: 'button', class: 'button-quiet' }, 'Clear my choices');
   const form = h('form', { class: 'plate pay-form', novalidate: true, onsubmit: (e) => e.preventDefault() },
     sectorField, contract, gradeField, pointField, typedField, fteField, alScale, hoursField, lbSwitch, owedSwitch,
-    h('p', { class: 'privacy' }, 'Your choices stay on this device. ', reset));
+    h('div', { class: 'privacy' },
+      h('p', {}, 'Your choices are not saved or sent anywhere unless you tick this box. If you do, they are kept on this device only, for your next visit.'),
+      h('div', { class: 'privacy-row' }, rememberSwitch, reset)));
 
   // ---- results ----
   const badge = h('p', { class: 'example-badge' });
@@ -211,6 +215,7 @@ export function render(root, { store, data, now = thisMonth() }) {
     hoursInput.value = sel.hoursPerYear ? String(sel.hoursPerYear) : '';
     lbBox.checked = sel.includeLB;
     owedBox.checked = sel.includeOwed;
+    rememberBox.checked = sel.remember;
     typedError.textContent = '';
   };
 
@@ -314,6 +319,7 @@ export function render(root, { store, data, now = thisMonth() }) {
     else if (t.name === 'pp-alscale') set({ alScale: t.value });
     else if (t === lbBox) store.set({ includeLB: lbBox.checked });
     else if (t === owedBox) store.set({ includeOwed: owedBox.checked });
+    else if (t === rememberBox) store.set({ remember: rememberBox.checked });
     else if (t === pointSelect) set({ pointIndex: Number(pointSelect.value) });
     else if (t === sectorSelect) {
       // A new job starts at the first point of its first grade; `update` then refills the lists.

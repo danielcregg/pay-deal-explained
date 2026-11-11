@@ -15,8 +15,10 @@ repository's Pages settings, not by a `CNAME` file.
 
 - Static HTML, CSS and JavaScript modules: no build step, no dependencies, no tracking,
   no cookies.
-- Your salary never leaves your browser. Your choices are kept in local storage on your
-  own device.
+- Your salary never leaves your browser. The page opens the same way for everyone, on an
+  example salary. Your choices are kept for a later visit only if you tick "Remember my
+  choices on this device" in chapter 1: they are then held in local storage on your own
+  device, and unticking the box or pressing "Clear my choices" removes them.
 - Not affiliated with any union, employer or Government body. Not financial advice.
 
 ## Run it locally

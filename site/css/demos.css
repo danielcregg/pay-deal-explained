@@ -57,7 +57,11 @@ input[type="number"] {
 }
 
 .pay-form { display: grid; gap: 1.15rem; }
-.privacy { color: var(--muted); font-size: 0.9rem; margin: 0; }
+.privacy { color: var(--muted); font-size: 0.9rem; margin: 0; display: grid; gap: 0.5rem; }
+.privacy p { margin: 0; }
+.privacy-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.25rem; }
+.privacy .switch { font-size: inherit; color: var(--ink); align-items: center; }
+.privacy .switch input { margin: 0; }
 
 .switch[hidden] { display: none; }
 .pay-result { display: grid; gap: 0.9rem; }

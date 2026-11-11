@@ -71,12 +71,12 @@ test('increments: flat sums apply to the point you are on at the time, and local
 
 test('increments: off by default, saved with the other choices, and only a month from 1 to 12 is accepted', () => {
   assert.equal(D0.incrementMonth, null);
-  const saved = (patch) => JSON.stringify({ ...D0, touched: true, ...patch });
+  const saved = (patch) => JSON.stringify({ ...D0, touched: true, remember: true, ...patch });
   assert.equal(restoreSelection(saved({ incrementMonth: 9 }), SCALES).incrementMonth, 9);
   assert.equal(restoreSelection(saved({}), SCALES).incrementMonth, null);
   for (const bad of [0, 13, 2.5, '9', true]) assert.equal(restoreSelection(saved({ incrementMonth: bad }), SCALES).touched, false, String(bad));
-  const old = JSON.stringify({ touched: true, contract: 'full', gradeId: 'lect', pointIndex: 2, typed: null, fte: 1, alScale: 'al-ne', hoursPerYear: 0, includeLB: false, payMonth: '2027-01' });
-  assert.deepEqual([restoreSelection(old, SCALES).pointIndex, restoreSelection(old, SCALES).incrementMonth], [2, null]);
+  const old = JSON.stringify({ touched: true, remember: true, sector: 'tu', contract: 'full', gradeId: 'lect', pointIndex: 2, typed: null, fte: 1, alScale: 'al-ne', hoursPerYear: 0, includeLB: false, payMonth: '2027-01' });
+  assert.deepEqual([restoreSelection(old, SCALES).pointIndex, restoreSelection(old, SCALES).incrementMonth], [2, null], 'a save without the field takes the default');
 });
 
 test('increments: the way up a scale leaves out skipped points and long service increments', () => {
@@ -254,7 +254,7 @@ test('copy: the assumptions say how increments are counted when they are added',
 
 test('increments: the month a point was chosen in is kept, so a later visit reads the same career', () => {
   assert.equal(D0.pointMonth, null);
-  const saved = (patch) => JSON.stringify({ ...D0, touched: true, ...patch });
+  const saved = (patch) => JSON.stringify({ ...D0, touched: true, remember: true, ...patch });
   assert.equal(restoreSelection(saved({ pointMonth: '2026-11' }), SCALES).pointMonth, '2026-11');
   for (const bad of ['2026-13', '2026-1', 'November', 202611]) assert.equal(restoreSelection(saved({ pointMonth: bad }), SCALES).touched, false, String(bad));
   // Lecturer point 4 chosen in November 2026, increment each December.

@@ -42,12 +42,10 @@ test('the default: no job, grade or point, and an example salary at the deal’s
   assert.deepEqual(mineText(DEFAULT_SELECTION, data), { label: 'Example: a salary of €60,000', figure: '€66,103', tail: 'by 2029', go: 'Choose yours' });
 });
 
-test('saved choices: none means the generic page; older ones still load as a lecturer’s', () => {
+test('saved choices: none means the generic page, and a salary with no job can be kept', () => {
   assert.deepEqual(restoreSelection(null, SCALES), { ...DEFAULT_SELECTION });
   assert.deepEqual(restoreSelection('{"touched":false}', SCALES), { ...DEFAULT_SELECTION });
-  const before = JSON.stringify({ touched: true, contract: 'full', gradeId: 'al-ne', pointIndex: 0, typed: null, fte: 1, alScale: 'al-ne', hoursPerYear: 0, includeLB: false, payMonth: '2027-01' });
-  assert.deepEqual([restoreSelection(before, SCALES).sector, restoreSelection(before, SCALES).gradeId], ['tu', 'al-ne'], 'saved before jobs existed');
-  const saved = (patch) => JSON.stringify({ ...DEFAULT_SELECTION, touched: true, ...patch });
+  const saved = (patch) => JSON.stringify({ ...DEFAULT_SELECTION, touched: true, remember: true, ...patch });
   assert.deepEqual([restoreSelection(saved({ typed: 52000 }), SCALES).sector, restoreSelection(saved({ typed: 52000 }), SCALES).typed], ['any', 52000], 'a salary with no job is a valid choice');
   assert.equal(restoreSelection(saved({ gradeId: 'lect', pointIndex: 2 }), SCALES).touched, false, 'a grade needs a job');
   assert.equal(restoreSelection(saved({ contract: 'hourly' }), SCALES).touched, false, 'so does an hourly rate');
