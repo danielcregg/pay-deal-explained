@@ -36,7 +36,7 @@ export function mountMine(el, store, data) {
   if (!el) return;
   const show = () => {
     const t = mineText(store.get(), data);
-    el.replaceChildren(h('span', { class: 'mine-label' }, t.label), ' ', h('b', {}, t.figure), ' ', h('span', {}, t.tail), ' ', h('span', { class: 'mine-go' }, t.go));
+    el.replaceChildren(h('span', { class: 'mine-label' }, t.label), ' ', h('b', {}, t.figure), ' ', h('span', { class: 'mine-tail' }, t.tail), ' ', h('span', { class: 'mine-go' }, t.go));
     el.setAttribute('aria-label', `${t.label}: ${t.figure} ${t.tail}. ${t.go}`);
     el.hidden = false;
   };

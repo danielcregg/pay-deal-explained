@@ -202,12 +202,6 @@ input[type="number"] {
 .pvp-others .note { margin: 0.5rem 0; }
 .race-picks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; }
 .race-more { margin: 0; font-size: 0.9rem; }
-@media (min-width: 1040px) {
-  /* Beside the headline the card is narrower: smaller figures keep the chart on the first screen. */
-  .race h2 { font-size: 1.45rem; }
-  .race-tile { padding: 0.45rem 0.65rem; }
-  .race-tile b { font-size: clamp(1.25rem, 0.6rem + 1.1vw, 1.6rem); }
-}
 .race-picks[hidden], .race .context-line[hidden] { display: none; }
 .race-picks button {
   min-height: 2.5rem;
@@ -229,7 +223,6 @@ input[type="number"] {
 .race-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.5rem; }
 @media (min-width: 640px) { .race-tiles { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr); } } /* room for "2.5% more" on one line */
 .race-tile.euro { background: var(--card); box-shadow: inset 0 0 0 2px var(--ink); }
-@media (max-width: 639px) { .race-tile.euro { grid-column: 1 / -1; } .race-tile { padding: 0.5rem 0.5rem; } .race-tile:not(.euro) b { font-size: 1.05rem; } }
 .race-monthly { display: block; font-size: 0.8rem; color: var(--muted); }
 .extras { display: grid; gap: 0.45rem; margin: 0.7rem 0 0.2rem; }
 .extras .switch { font-size: 0.92rem; }
@@ -242,10 +235,18 @@ input[type="number"] {
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
 }
+/* The rules for one screen width come after the base rules above, or they would lose to them. */
+@media (max-width: 639px) { .race-tile.euro { grid-column: 1 / -1; } .race-tile { padding: 0.5rem 0.5rem; } .race-tile:not(.euro) b { font-size: 1.05rem; } }
 @media (max-width: 380px) {
-  /* Three tiles across a narrow phone: tighter, so "+10.2%" stays on one line. */
+  /* Three tiles across a narrow phone: tighter, so "+10.2%" stays on one line. The euro tile has the full width. */
   .race-tile { padding: 0.5rem 0.4rem; }
-  .race-tile b { font-size: 1rem; }
+  .race-tile:not(.euro) b { font-size: 1rem; }
+}
+@media (min-width: 1040px) {
+  /* Beside the headline the card is narrower: smaller figures stay on one line and keep the chart on the first screen. */
+  .race h2 { font-size: 1.45rem; }
+  .race-tile { padding: 0.45rem 0.65rem; }
+  .race-tile b { font-size: clamp(1.25rem, 0.6rem + 1.1vw, 1.6rem); }
 }
 .race-tile.pay { background: var(--teal-soft); color: var(--teal-ink); }
 .race-tile.price { background: var(--red-soft); color: var(--red-ink); }
@@ -535,6 +536,7 @@ tr.muted td { color: var(--muted); }
 .vs-facts dt { color: var(--muted); font-size: 0.9rem; }
 .vs-facts dd { margin: 0; font-size: 0.95rem; }
 .vs-facts .vs-yours dd { font-weight: 700; font-size: 1.15rem; }
+.vs-like { display: block; font-weight: 400; font-size: 0.9rem; color: var(--muted); }
 .vs-chart h3 { font-size: 1.15rem; }
 .vs-svg { cursor: crosshair; }
 .vs-svg:focus-visible { outline: 3px solid var(--teal); outline-offset: 4px; border-radius: 4px; }

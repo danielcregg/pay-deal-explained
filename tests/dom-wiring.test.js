@@ -84,7 +84,8 @@ test('M3: Esc closes a visible glossary pop-up and is used up; a hidden pop-up d
 // ---- M13: the inline fallback script in index.html, run as written ----
 
 const html = readFileSync(new URL('../site/index.html', import.meta.url), 'utf8');
-const inlineScript = html.match(/<script>([\s\S]*?)<\/script>/)?.[1] ?? '';
+// The page has two inline scripts: a one-line mark in the head, and this fallback.
+const inlineScript = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]).find((s) => s.includes('DOMContentLoaded')) ?? '';
 
 /** A page with three sections; `filled` says which of them the modules rendered. */
 function loadPage(filled) {

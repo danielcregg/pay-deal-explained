@@ -265,8 +265,12 @@ td.r, th.r { text-align: right; }
 .mine-label { max-width: min(20rem, 18vw); overflow: hidden; text-overflow: ellipsis; }
 .mine .mine-go { padding: 0.15rem 0.7rem; border-radius: 999px; background: var(--on-navy); color: var(--navy); font-weight: 650; font-size: 0.8rem; }
 @media (min-width: 1040px) {
-  .mine:not([hidden]) { display: inline-flex; }
+  /* One row: when the chip runs long, its tail is cut short rather than the header wrapping. */
+  .site-header { flex-wrap: nowrap; }
+  .brand, .status-chip, .present-btn, .mine b, .mine .mine-go { flex: none; }
+  .mine:not([hidden]) { display: inline-flex; min-width: 0; }
   .mine:not([hidden]) + .present-btn { margin-left: 0; }
+  .mine-tail { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 }
 
 @media (max-width: 420px) {
@@ -335,6 +339,9 @@ td.r, th.r { text-align: right; }
   .race-wrap { grid-area: race; }
   .hero-facts { grid-area: facts; }
   .hero h1 { font-size: clamp(2rem, 0.9rem + 2.2vw, 2.9rem); }
+  /* No JavaScript, or nothing loaded: no chart, so the headline takes the full width. */
+  html:not(.js) .hero-inner { grid-template-columns: minmax(0, 1fr); grid-template-areas: "text" "facts"; }
+  html:not(.js) .race-wrap { display: none; }
 }
 
 .hero-status {

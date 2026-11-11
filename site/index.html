@@ -14,6 +14,7 @@
   <meta property="og:title" content="Pay Deal Explained">
   <meta property="og:description" content="What the November 2026 draft public service pay deal means for lecturers, teachers, nurses, midwives and gardaí, worked out on your own grade and point.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f766e'/%3E%3Cpath d='M6 24h5v-5h5v-5h5v-5h5' fill='none' stroke='%23fff' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <script>document.documentElement.classList.add('js');</script>
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/demos.css">
   <link rel="stylesheet" href="css/present.css">
@@ -191,6 +192,7 @@
       for (var i = 0; i < mounts.length; i++) if (!mounts[i].firstChild) empty.push(mounts[i]);
       if (!empty.length) return;
       if (empty.length === mounts.length) {
+        document.documentElement.classList.remove('js'); // no chart: the headline takes the full width
         var facts = document.querySelector('noscript');
         var source = facts ? facts.textContent : '';
         var box = document.createElement('div');
