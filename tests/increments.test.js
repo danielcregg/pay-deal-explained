@@ -104,23 +104,34 @@ test('increments: the way up a scale leaves out skipped points and long service 
   assert.deepEqual(careerOf(sel({ sector: 'nurse', gradeId: 'nm-staff-senior', pointIndex: 0 }), SCALES, NOW).values, [59278]);
 });
 
-test('the race with increments: the line starts on the earlier point and the tiles say what is deal and what is increment', () => {
+test('the race with increments: prices are compared with the deal alone, and your own pay is a second line', () => {
   const career = careerOf({ ...D0, touched: true, incrementMonth: 9 }, SCALES, NOW);
   const m = hero.model(89894, data, { includeLB: false, career });
-  assert.equal(m.base, 86936, 'July 2026 was on point 4');
-  assert.equal(m.steps.filter((s) => s.kind === 'increment').length, 3);
-  const end = hero.stateAt(m, 33);
-  near(end.pay, (105601.31 / 86936) * 100, 0.001);
-  near(end.deal, (finalSalary(86936, DEAL.steps, { includeLB: false }) / 86936) * 100, 0.001);
-  assert.equal(end.label, 'Point 7');
-  const june2027 = hero.stateAt(m, 12);
-  assert.equal(june2027.label, 'Point 5');
-  near(hero.payThen(m, 12), 89894 * 1.02 * 1.01, 0.01);
-  assert.equal(hero.stateAt(m, 0).label, 'Point 4');
-  // without a career the model is as before
   const plain = hero.model(89894, data, { includeLB: false });
-  assert.equal(hero.stateAt(plain, 33).label, undefined);
-  near(hero.stateAt(plain, 33).deal, hero.stateAt(plain, 33).pay);
+  // the comparison with prices is exactly the one made without increments
+  assert.equal(m.base, 89894);
+  assert.deepEqual(m.steps, plain.steps);
+  assert.equal(m.steps.filter((s) => s.kind === 'increment').length, 0);
+  for (const t of [0, 3, 12, 20, 33]) {
+    const [a, b] = [hero.stateAt(m, t), hero.stateAt(plain, t)];
+    assert.deepEqual([a.pay, a.price, a.real], [b.pay, b.price, b.real], `month ${t}`);
+  }
+  assert.equal(hero.monthsBehind(m), hero.monthsBehind(plain));
+  // the reader's own pay, with increments, runs beside it
+  assert.equal(m.own.first, 86936, 'July 2026 was on point 4');
+  assert.equal(m.own.steps.filter((s) => s.kind === 'increment').length, 3);
+  const end = hero.stateAt(m, 33);
+  near(end.own, (105601.31 / 86936) * 100, 0.001);
+  near(end.pay, 110.17);
+  assert.equal(end.label, 'Point 7');
+  assert.equal(hero.stateAt(m, 12).label, 'Point 5');
+  assert.equal(hero.stateAt(m, 0).label, 'Point 4');
+  near(hero.payThen(m, 12), 89894 * 1.02 * 1.01, 0.01);
+  near(hero.payThen(m, 33), 105601.31, 0.01);
+  // without a career there is no second line, and pay in euro is the deal on the chosen point
+  assert.equal(plain.own, undefined);
+  assert.deepEqual([hero.stateAt(plain, 33).own, hero.stateAt(plain, 33).label], [undefined, undefined]);
+  near(hero.payThen(plain, 33), 99037.31, 0.01);
 });
 
 function mountRace(selection) {
@@ -148,14 +159,14 @@ test('the race: the pickers set job, grade, point and increment month, and the f
 
   pick('#race-inc', 9);
   assert.deepEqual([store.get().incrementMonth, store.get().touched], [9, true]);
-  assert.deepEqual(tiles().slice(0, 2), ['€105,601', '+21.5%']);
+  assert.deepEqual(tiles().slice(0, 2), ['€105,601', '+10.2%'], 'your pay with increments, and what the deal adds');
   assert.equal(root.querySelector('.race-split').hidden, false);
-  assert.equal(root.querySelector('.race-split').textContent, 'Pay is up +21.5%: +10.2% is the deal on your July 2026 point, +11.3% comes from moving up the scale.');
+  assert.match(root.querySelector('.race-split').textContent, /^With your increments, your own pay is up \+21\.5% \(point 4 to point 7\)\./);
   assert.match(root.querySelector('.race-monthly').textContent, /^about €8,800 a month, on point 7$/);
   const note = root.querySelector('.race-inc-note');
   assert.equal(note.hidden, false);
   assert.match(note.textContent, /one point each September, working from the point you are on now \(November 2026\)/);
-  assert.match(root.querySelector('.race-source').textContent, /Increments are counted/);
+  assert.match(root.querySelector('.race-source').textContent, /Your increments \(one point each September\) are shown but not counted against prices/);
   assert.equal(root.querySelectorAll('.race-inc-mark').length, 3, 'each increment is marked on the line');
   assert.equal(root.querySelector('.race-key-inc').hidden, false, 'and the key says what the mark is');
 
@@ -188,7 +199,7 @@ test('the race: a saved increment month is counted from the start, and the lowes
   const { root, tiles } = mountRace({ touched: true, incrementMonth: 9 });
   assert.equal(root.querySelector('#race-inc').value, '9');
   assert.equal(root.querySelector('.race-inc-note').hidden, false);
-  assert.deepEqual(tiles().slice(0, 2), ['€105,601', '+21.5%']);
+  assert.deepEqual(tiles().slice(0, 2), ['€105,601', '+10.2%']);
   const [, lowest] = root.querySelectorAll('.race-picks button');
   lowest.click();
   assert.deepEqual(tiles().slice(0, 2), ['€53,136', '+11.7%']);
@@ -310,37 +321,53 @@ test('the race: the lowest-point view says increments are not part of it', () =>
   assert.equal(root.querySelector('.race-key-inc').hidden, true);
 });
 
-test('the race: with increments on, the deal on its own is still in view', () => {
+test('the race: with increments on, the tiles still compare the deal with prices, and say so', () => {
   const { root } = mountRace({ touched: true, incrementMonth: 9 });
+  const labels = () => root.querySelectorAll('.race-tile small').map((s) => s.textContent);
+  const tiles = () => root.querySelectorAll('.race-tile b').map((b) => b.textContent);
+  assert.deepEqual(tiles(), ['€105,601', '+10.2%', '+7.5%', '2.5% more']);
+  assert.deepEqual(labels(), ['Yearly pay, before tax', 'The deal adds', 'Prices are up', 'So pay buys']);
   const real = root.querySelector('.race-tile.real');
-  assert.equal(real.querySelector('b').textContent, '13.0% more');
-  assert.deepEqual([real.querySelector('.race-real-deal').hidden, real.querySelector('.race-real-deal').textContent], [false, 'the deal alone: 2.5% more']);
-  assert.match(root.querySelector('.race-source').textContent, /Increments are counted: one point each September; the rest of the page shows the deal on its own\./);
-  assert.match(root.querySelector('svg').getAttribute('aria-label'), /pay is up 21\.5% with your increments \(10\.2% from the deal alone\)/);
+  assert.deepEqual([real.querySelector('.race-real-note').hidden, real.querySelector('.race-real-note').textContent], [false, 'increments not counted']);
+  assert.equal(root.querySelector('.race-split').textContent,
+    'With your increments, your own pay is up +21.5% (point 4 to point 7). Increments are normal progression, so they are not counted against prices.');
+  assert.equal(root.querySelector('.race-legend li').textContent, 'Prices are ahead of the deal’s rises in 7 of the 33 months');
+  assert.match(root.querySelector('.race-legend').textContent, /Your pay with increments, not counted against prices/);
+  assert.match(root.querySelector('.race-source').textContent, /Your increments \(one point each September\) are shown but not counted against prices; the rest of the page shows the deal on its own\./);
+  const label = root.querySelector('svg').getAttribute('aria-label');
+  assert.match(label, /By the end, the deal’s rises add 10\.2% and prices are up 7\.5%\./);
+  assert.match(label, /With your increments, your own pay is up 21\.5%, which is not counted against prices\.$/);
+  assert.equal(root.querySelectorAll('path.line-own').length, 1, 'a second line for the reader’s own pay');
   assert.equal(mineText({ ...D0, touched: true, incrementMonth: 9 }, data).tail, 'by 2029, before increments');
   assert.equal(mineText({ ...D0, touched: true, incrementMonth: 9, pointIndex: 10 }, data).tail, 'by 2029', 'nothing to add at the top');
+
   const plain = mountRace({ touched: true });
-  assert.equal(plain.root.querySelector('.race-real-deal').hidden, true);
+  assert.deepEqual(plain.root.querySelectorAll('.race-tile small').map((s) => s.textContent), ['Yearly pay, before tax', 'Pay is up', 'Prices are up', 'So pay buys']);
+  assert.equal(plain.root.querySelector('.race-real-note').hidden, true);
+  assert.equal(plain.root.querySelectorAll('path.line-own').length, 0);
+  assert.equal(plain.root.querySelector('.race-legend li').textContent, 'Prices are ahead of pay in 7 of the 33 months');
   assert.doesNotMatch(plain.root.querySelector('svg').getAttribute('aria-label'), /increments/);
 });
 
-test('the race: the two parts of the rise always add up to the total shown', () => {
-  // Lecturer point 1, January increment, end of April 2027: +7.76% in all, +3.02% from the deal.
+test('the race: the line about your own pay follows the slider', () => {
+  // Lecturer point 1, January increment: point 1 until December 2026, point 2 from January 2027.
   const { root } = mountRace({ touched: true, pointIndex: 0, incrementMonth: 1 });
   const scrub = root.querySelector('input.race-scrub');
-  scrub.value = '10';
-  scrub.dispatchEvent({ type: 'input', bubbles: true });
-  assert.equal(root.querySelector('.race-split').textContent, 'Pay is up +7.8%: +3.0% is the deal on your July 2026 point, +4.8% comes from moving up the scale.');
+  const at = (t) => { scrub.value = String(t); scrub.dispatchEvent({ type: 'input', bubbles: true }); return root.querySelector('.race-split').textContent; };
+  assert.match(at(4), /^With your increments, your own pay is up \+2\.0% \(still on point 1\)\. /);
+  assert.match(at(10), /^With your increments, your own pay is up \+7\.8% \(point 1 to point 2\)\. /);
+  assert.deepEqual(root.querySelectorAll('.race-tile b').map((b) => b.textContent).slice(1, 3), ['+3.0%', '+2.7%'], 'the deal and prices by the end of April 2027');
 });
 
-test('the race: the deal alone is the deal on the point held in July 2026, flat sums and all', () => {
-  // Assistant Lecturer point 1 (€47,572), January increment: the flat sums make the deal worth more on a lower point.
+test('the race: the deal compared with prices is the deal on the point you chose, flat sums and all', () => {
+  // Assistant Lecturer point 1 (€47,572), January increment: the flat sums make the deal worth 11.7% on this point.
   const career = careerOf({ ...D0, touched: true, gradeId: 'al-ne', pointIndex: 0, incrementMonth: 1 }, SCALES, NOW);
   const m = hero.model(47572, data, { includeLB: false, career });
-  near(hero.stateAt(m, 33).deal, (finalSalary(47572, DEAL.steps, { includeLB: false }) / 47572) * 100, 1e-9);
-  near(hero.stateAt(m, 33).deal, 111.696, 0.001);
-  near(hero.stateAt(m, 3).deal, ((47572 + 1200) / 47572) * 100, 1e-9); // September 2026, before any increment
-  assert.ok(hero.stateAt(m, 33).pay > hero.stateAt(m, 33).deal);
+  near(hero.stateAt(m, 33).pay, (finalSalary(47572, DEAL.steps, { includeLB: false }) / 47572) * 100, 1e-9);
+  near(hero.stateAt(m, 33).pay, 111.696, 0.001);
+  near(hero.stateAt(m, 3).pay, ((47572 + 1200) / 47572) * 100, 1e-9);
+  assert.ok(hero.stateAt(m, 33).own > hero.stateAt(m, 33).pay, 'own pay, with three increments, is up by more');
+  assert.equal(hero.stateAt(m, 33).label, 'Point 4');
 });
 
 test('the race: a move between two points on the same figure is not marked, and the key is not shown', () => {
@@ -348,7 +375,7 @@ test('the race: a move between two points on the same figure is not marked, and 
   const { root } = mountRace({ touched: true, sector: 'primary', gradeId: 'pt-new', pointIndex: 19, incrementMonth: 9 });
   assert.equal(root.querySelectorAll('.race-inc-mark').length, 0);
   assert.equal(root.querySelector('.race-key-inc').hidden, true);
-  assert.match(root.querySelector('.race-split').textContent, /\+0\.0% comes from moving up the scale\.$/);
+  assert.match(root.querySelector('.race-split').textContent, /^With your increments, your own pay is up \+10\.2% \(point 19 to point 22\)\./, 'the same rise as the deal: these moves add nothing');
 });
 
 test('the race: an hourly-paid reader who picks a grade starts on its first point, as a salary', () => {

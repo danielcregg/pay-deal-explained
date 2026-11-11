@@ -81,10 +81,10 @@ test('the chart counts the months when prices are ahead of pay, as chapter 2 doe
   assert.equal(root.querySelector('.race-legend').textContent, 'Prices are ahead of pay in 7 of the 33 months');
   store.set({ includeLB: true });
   assert.equal(hero.monthsBehind(hero.model(89894, data, { includeLB: true })), 7, 'the 2029 1% comes too late to change it');
-  // with a September increment the reader is ahead from September 2026 on
+  // increments are normal progression: adding them does not change the count
   const career = careerOf({ ...D0, touched: true, incrementMonth: 9 }, data.SCALES, NOW);
-  assert.equal(hero.monthsBehind(hero.model(89894, data, { includeLB: false, career })), 2);
+  assert.equal(hero.monthsBehind(hero.model(89894, data, { includeLB: false, career })), 7);
   store.set({ touched: true, incrementMonth: 9 });
-  assert.match(root.querySelector('.race-legend').textContent, /^Prices are ahead of pay in 2 of the 33 months/);
-  assert.match(root.querySelector('svg').getAttribute('aria-label'), /Prices are ahead of pay in 2 of the 33 months\.$/);
+  assert.match(root.querySelector('.race-legend').textContent, /^Prices are ahead of the deal’s rises in 7 of the 33 months/);
+  assert.match(root.querySelector('svg').getAttribute('aria-label'), /Prices are ahead of the deal’s rises in 7 of the 33 months\./);
 });

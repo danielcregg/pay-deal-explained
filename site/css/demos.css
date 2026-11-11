@@ -185,7 +185,7 @@ input[type="number"] {
 .race-hint { color: var(--muted); font-size: 0.85rem; }
 .race-legend { margin: 0.4rem 0 0; }
 .race-key-inc[hidden] { display: none; }
-.race-key-mark { color: var(--mark-pct); }
+.race-key-mark { color: var(--ink); }
 .race-options { display: grid; gap: 0.55rem; margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--line); }
 .race-options .extras { margin: 0; }
 .prices-seg { gap: 0.3rem; }
@@ -215,9 +215,9 @@ input[type="number"] {
   cursor: pointer;
 }
 .race-picks button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-.race-split { margin: -0.15rem 0 0.4rem; font-size: 0.88rem; font-weight: 600; color: var(--teal-ink); }
+.race-split { margin: -0.15rem 0 0.4rem; font-size: 0.88rem; color: var(--muted); }
 .race-split[hidden] { display: none; }
-.race-inc-mark { fill: var(--card); stroke: var(--mark-pct); stroke-width: 2; }
+.race-inc-mark { fill: var(--card); stroke: var(--ink); stroke-width: 2; }
 .race-when { font-weight: 650; margin: 0; }
 .race-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.5rem; }
 @media (min-width: 640px) { .race-tiles { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr); } } /* room for "2.5% more" on one line */
@@ -244,8 +244,13 @@ input[type="number"] {
 .race-tile.price { background: var(--red-soft); color: var(--red-ink); }
 .race-tile.real { background: var(--navy); color: var(--on-navy); }
 .race-tile.real b { color: var(--gold); }
-.race-real-deal { display: block; font-size: 0.78rem; line-height: 1.3; color: var(--on-navy-muted); }
-.race-real-deal[hidden] { display: none; }
+.race-real-note { display: block; font-size: 0.78rem; line-height: 1.3; color: var(--on-navy-muted); }
+.race-real-note[hidden] { display: none; }
+.line-own { fill: none; stroke: var(--ink); stroke-width: 2; stroke-dasharray: 5 4; stroke-linejoin: round; }
+.dot-own { fill: var(--ink); stroke: var(--card); stroke-width: 2; }
+.chart-svg .race-label-own { fill: var(--ink); }
+.swatch.line.own { background: none; border-top: 2px dashed var(--ink); height: 0; }
+.race-key-own[hidden] { display: none; }
 .race-svg { touch-action: pan-y; cursor: ew-resize; }
 .race-pay-ahead { fill: var(--teal-soft); }
 .race-price-ahead { fill: var(--red-soft); }
