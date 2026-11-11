@@ -91,13 +91,16 @@ test('teachers: the two sectors keep a steady gap, which a mistyped figure would
   });
 });
 
-test('teachers: the low point is where new teachers start, and it reproduces the published example', () => {
+test('teachers: the low point is where new teachers start, and the published examples are accounted for', () => {
   assert.deepEqual([lowestScalePoint(SCALES, 'primary'), lowestScalePoint(SCALES, 'postprimary')], [45833, 47886]);
   assert.match(sector('primary').low, /new primary teachers/);
   const published = (role) => DEAL.publishedExamples.find((e) => e.role === role).pct;
   assert.equal(Math.round(risePct(45833, DEAL.steps, true) * 10) / 10, published('Primary teacher'));
-  // The reported secondary figure matches the scale before Circular 0074/2026 added the 1%.
+  // The reported secondary figure matches the scale before Circular 0074/2026 added the 1%
+  // (€47,417 then); on today's scale the same sum gives 12.7%, and the page says so.
   assert.equal(Math.round(risePct(47417, DEAL.steps, true) * 10) / 10, published('Secondary teacher'));
+  assert.equal(Math.round(risePct(lowestScalePoint(SCALES, 'postprimary'), DEAL.steps, true) * 10) / 10, 12.7);
+  assert.match(sector('postprimary').exampleNote, /12\.7%/);
 });
 
 test('teachers: no hourly-paid option, and each sector says how the last deal’s 1% was used', () => {
@@ -139,7 +142,9 @@ test('nurses and midwives: the scales match the HSE consolidated scales of 1 Jun
     assert.deepEqual([last.label, last.lsi], ['Long service increment', true], id);
   }
   for (const id of ['cnm1', 'cnm2']) assert.equal(grade(id).points[0].skipped, true, `${id}: point 1 is skipped since September 2025`);
-  assert.equal(lowestScalePoint(SCALES, 'nurse'), 38166);
+  assert.equal(lowestScalePoint(SCALES, 'nurse'), 44832, 'where new nurses and midwives start, not a scale closed to new staff');
+  assert.match(sector('nurse').low, /new nurses and midwives/);
+  assert.equal(grade('nm-staff').points[1].skipped, true, 'staff nurses skip point 2 (Circular 10/2026)');
   assert.equal(sector('nurse').owed ?? null, null);
 });
 

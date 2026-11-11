@@ -72,7 +72,7 @@ test('glossary, timeline and beyond-pay content is complete', () => {
   const dates = D.TIMELINE.map((e) => e.date);
   assert.deepEqual([...dates].sort(), dates);
   for (const d of ['2026-06-30', '2026-09-30', '2026-10-14', '2026-10-21', '2026-11-08', '2026-11-11', '2026-12-07']) assert.ok(dates.includes(d), d);
-  assert.deepEqual(D.BEYOND_PAY.map((b) => b.id), ['local-bargaining', 'review-clause', 'ai-hybrid', 'education', 'reform']);
+  assert.deepEqual(D.BEYOND_PAY.map((b) => b.id), ['local-bargaining', 'review-clause', 'ai-hybrid', 'education', 'reform', 'coverage']);
   for (const b of D.BEYOND_PAY) assert.ok(['known', 'reported', 'not-yet-published'].includes(b.status));
 });
 

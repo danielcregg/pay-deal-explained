@@ -21,7 +21,7 @@ test('F1: the main result says gross and no increments', () => {
 });
 
 test('F2: figures outside section 1 say whose they are', () => {
-  assert.equal(figuresFor(D0, data.SCALES), 'Example: Lecturer, point 5. Pick your own grade and point in section 1.');
+  assert.equal(figuresFor(D0, data.SCALES), 'Example: Lecturer, point 5. Pick your own job, grade and point at the top of the page.');
   assert.equal(figuresFor({ ...D0, touched: true, gradeId: 'al-ne', pointIndex: 0 }, data.SCALES), 'Showing: Assistant Lecturer (joined 2011 or later), point 1.');
   assert.equal(figuresFor({ ...D0, touched: true, contract: 'part', fte: 0.5 }, data.SCALES), 'Showing: Lecturer, point 5, 50% of full-time.');
 });

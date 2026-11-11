@@ -79,7 +79,7 @@ export function model(sel, data) {
       : `All the rises are percentages for you: your salary is above ${threshold} at every step.`,
     sector,
     caveat: 'Gross pay at your current scale point: before tax, USC, PRSI and pension, and without annual increments.'
-      + (sector.caveat ? ` ${sector.caveat}` : ''),
+      + (sector.caveat && sel.gradeId !== 'typed' ? ` ${sector.caveat}` : ''), // a typed salary is not from the job's scale
     notes,
   };
 }
@@ -160,7 +160,7 @@ export function render(root, { store, data }) {
     h('p', { class: 'privacy' }, 'Your choices stay on this device. ', reset));
 
   // ---- results ----
-  const badge = h('p', { class: 'example-badge' }, 'Example: Lecturer, point 5. Pick your own grade and point.');
+  const badge = h('p', { class: 'example-badge' }, 'Example: Lecturer, point 5. Pick your own job, grade and point.');
   const label = h('p', { class: 'pay-label' });
   const from = h('span', { class: 'from' });
   const to = h('span', { class: 'to' });

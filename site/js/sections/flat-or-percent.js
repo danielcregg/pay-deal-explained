@@ -94,14 +94,15 @@ export function render(root, { store, data }) {
   })();
   const maxPct = Math.max(...exampleRows.map((r) => r.pct));
   const who = h('p', { class: 'note fp-who' });
+  const exampleNote = h('p', { class: 'note fp-example-note', hidden: true });
   const examples = h('div', { class: 'plate examples' },
     h('h3', {}, 'Rises in starting pay, highest first'),
-    h('p', { class: 'note' }, 'As reported on 11 November for other grades, alongside TU starting pay worked out on this site. All include local bargaining as a 1% rise, as the reported figures do.'),
+    h('p', { class: 'note' }, 'As reported on 11 November, alongside lecturer starting pay worked out on this site. All include local bargaining as a 1% rise, as the reported figures do.'),
     h('ul', { class: 'hbars' }, exampleRows.map((r) => h('li', { class: r.ours ? 'ours' : '' },
       h('span', { class: 'hb-label' }, r.role),
       h('span', { class: 'hb-track' }, h('span', { class: 'hb-bar', style: `width:${((r.pct / maxPct) * 100).toFixed(1)}%` })),
       h('span', { class: 'hb-value' }, pct(r.pct))))),
-    who);
+    exampleNote, who);
 
   root.append(
     h('div', { class: 'plate fp' },
@@ -131,7 +132,10 @@ export function render(root, { store, data }) {
   let lastBase = null;
   const syncToSelection = () => {
     const sel = store.get();
-    who.textContent = flatNote(sectorOf(sel, data.SCALES), data);
+    const sector = sectorOf(sel, data.SCALES);
+    who.textContent = flatNote(sector, data);
+    exampleNote.hidden = !sector.exampleNote;
+    exampleNote.textContent = sector.exampleNote ?? '';
     const base = resolvePay(sel, data.SCALES).base;
     if (base !== lastBase) {
       lastBase = base;

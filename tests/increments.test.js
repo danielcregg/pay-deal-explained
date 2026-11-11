@@ -88,7 +88,7 @@ test('increments: the way up a scale leaves out skipped points and long service 
   assert.deepEqual([teacher.pos, teacher.values[teacher.pos - 1], teacher.values[teacher.pos]], [3, 49409, 51510]); // point 3, then point 5
 
   const nurse = careerOf(sel({ sector: 'nurse', gradeId: 'nm-staff', pointIndex: 11 }), SCALES, NOW);
-  assert.deepEqual([nurse.values.length, nurse.pos], [12, 11], 'the long service increment is not on the way up');
+  assert.deepEqual([nurse.values.length, nurse.pos, nurse.values[0], nurse.values[1]], [11, 10, 38166, 41175], 'the long service increment is not on the way up, and point 2 is skipped');
   const onLsi = careerOf(sel({ sector: 'nurse', gradeId: 'nm-staff', pointIndex: 12 }), SCALES, NOW);
   assert.deepEqual([onLsi.values, onLsi.pos], [[56592], 0], 'on it already: nowhere further to go');
   const manager = careerOf(sel({ sector: 'nurse', gradeId: 'cnm1', pointIndex: 1 }), SCALES, NOW);

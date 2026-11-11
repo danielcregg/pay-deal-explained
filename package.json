@@ -2,7 +2,7 @@
   "name": "pay-deal-2026",
   "private": true,
   "type": "module",
-  "description": "Unofficial, neutral explainer of the November 2026 draft public service pay deal, for TU lecturers",
+  "description": "Unofficial, neutral explainer of the November 2026 draft public service pay deal, for lecturers, teachers, nurses, midwives and gardaí",
   "engines": {
     "node": ">=22"
   },

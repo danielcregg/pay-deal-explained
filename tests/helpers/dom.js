@@ -94,6 +94,20 @@ export class Element extends Node {
     };
   }
 
+  /**
+   * Form values. An input starts from its `value` attribute. A select's value is one of
+   * its options: the one set, or the first when that option is not (or no longer) there.
+   */
+  get value() {
+    if (this.localName === 'select') {
+      const values = this.querySelectorAll('option').map((o) => o.getAttribute('value') ?? o.textContent);
+      if (this.formValue !== undefined && values.includes(this.formValue)) return this.formValue;
+      return values[0] ?? '';
+    }
+    return this.formValue ?? this.getAttribute('value') ?? '';
+  }
+  set value(v) { this.formValue = String(v); }
+
   get children() { return this.childNodes.filter((n) => n instanceof Element); }
   insertBefore(node, ref) {
     const n = node instanceof Node ? node : new Text(node);

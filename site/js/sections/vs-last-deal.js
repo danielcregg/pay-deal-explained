@@ -20,6 +20,8 @@ export function model(base, data, { includeLB, includePrevLB = includeLB, sector
       id: d.id, name: d.name, start: d.start, end: d.end, months: d.months, stepCount: d.steps.length,
       headline: d.headlinePct, compoundedPct: (end / base - 1) * 100, endSalary: end,
       threshold: d.threshold, lowPct: (finalSalary(lowSalary, d.steps, { includeLB: counts(d) }) / lowSalary - 1) * 100,
+      // With this deal's own 1% counted, for when the other deal's is and this one's is not.
+      withLBPct: (finalSalary(base, d.steps, { includeLB: true }) / base - 1) * 100,
       costBn: d.costBn, reviewClause: d.reviewClause,
     };
   });
@@ -98,7 +100,7 @@ function buildChart(m, width, text = 12) {
   return { svg, at, hide, monthAt, maxM };
 }
 
-function card(deal, accent, low, note) {
+function card(deal, accent, low, note, likeForLike = false) {
   return h('article', { class: `vs-card ${accent}` },
     h('h3', {}, deal.name),
     h('p', { class: 'vs-period' }, `${longDate(deal.start)} to ${longDate(deal.end)}`),
@@ -106,7 +108,8 @@ function card(deal, accent, low, note) {
       h('div', {}, h('dt', {}, 'Length'), h('dd', {}, `${deal.months} months`)),
       h('div', {}, h('dt', {}, 'Pay rises'), h('dd', {}, `${deal.stepCount}, including local bargaining`)),
       h('div', {}, h('dt', {}, 'Headline'), h('dd', {}, `${deal.headline}%`)),
-      h('div', { class: 'vs-yours' }, h('dt', {}, 'For your salary'), h('dd', {}, `+${pct(deal.compoundedPct)}`)),
+      h('div', { class: 'vs-yours' }, h('dt', {}, 'For your salary'), h('dd', {}, `+${pct(deal.compoundedPct)}`,
+        likeForLike ? h('span', { class: 'vs-like' }, `, or +${pct(deal.withLBPct)} counting its 1% local bargaining too, as the 2024–26 figure does`) : null)),
       h('div', {}, h('dt', {}, 'Minimum payments apply below'), h('dd', {}, eur(deal.threshold))),
       h('div', {}, h('dt', {}, `For a ${eur(low.salary)} salary, today’s ${low.label}`), h('dd', {}, `+${pct(deal.lowPct)}`)),
       h('div', {}, h('dt', {}, 'Cost'), h('dd', {}, `€${deal.costBn}bn`)),
@@ -160,7 +163,7 @@ export function render(root, { store, data }) {
     m = model(base, data, { includeLB: sel.includeLB, includePrevLB, sector: sector.id });
     const low = { salary: m.lowSalary, label: sector.low };
     context.textContent = figuresFor({ ...sel, includeOwed: false }, data.SCALES);
-    cards.replaceChildren(card(m.deals[0], 'prev', low, sector.lastDealNote ?? null), card(m.deals[1], 'draft', low));
+    cards.replaceChildren(card(m.deals[0], 'prev', low, sector.lastDealNote ?? null), card(m.deals[1], 'draft', low, null, Boolean(sector.lastDealLB) && !sel.includeLB));
     const said = (on) => (on ? 'counted' : 'left out');
     lbNote.textContent = sector.owed
       ? `Each deal has a 1% for local bargaining, counted by its own switch in section 1: the 2024–26 deal’s, from 1 September 2025, is ${said(includePrevLB)}; the draft’s, on 1 March 2029, is ${said(sel.includeLB)}.`

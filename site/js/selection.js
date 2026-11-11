@@ -125,15 +125,15 @@ export function resolvePay(sel, scales) {
   return { base: point.value * lift, published: point.value, factor: fte, annualFactor: fte, unit: 'year', label, isExample };
 }
 
-/** The changes to make when the reader picks another job: its first grade and point, and nothing the job does not have. */
+/** The changes to make when the reader picks another job: its first grade and point (a typed salary stays), and nothing the job does not have. */
 export function sectorPatch(sel, scales, sectorId) {
   const sector = scales.sectors.find((s) => s.id === sectorId);
   return {
     sector: sector.id,
-    gradeId: gradesIn(scales, sector.id)[0].id,
+    gradeId: sel.gradeId === 'typed' ? 'typed' : gradesIn(scales, sector.id)[0].id, // a typed salary is the reader's own: keep it
     pointIndex: 0,
     contract: sel.contract === 'hourly' && !sector.hourly ? 'full' : sel.contract,
-    includeOwed: sector.owed ? sel.includeOwed : false,
+    includeOwed: false, // counting the 1% from 2025 in one job says nothing about another
   };
 }
 
@@ -183,7 +183,7 @@ export function figuresFor(sel, scales) {
   const pay = resolvePay(sel, scales);
   const owedDef = owedFor(sel, scales);
   const owed = sel.includeOwed && owedDef ? `, with the ${owedDef.pct}% from ${longDate(owedDef.since.slice(0, 7))}` : '';
-  if (pay.isExample) return `Example: ${pay.label}${owed}. Pick your own grade and point in section 1.`;
+  if (pay.isExample) return `Example: ${pay.label}${owed}. Pick your own job, grade and point at the top of the page.`;
   const part = sel.contract === 'part' ? `, ${Math.round(sel.fte * 1000) / 10}% of full-time` : '';
   return `Showing: ${pay.label}${part}${owed}.`;
 }

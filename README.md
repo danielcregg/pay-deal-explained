@@ -129,7 +129,7 @@ has a switch to count it and shows pay with and without it.
      the sector's `effective` date and source.
   2. Delete the sector's `owed` entry and set its `lastDealLB` to `true`. The switch
      and the extra column disappear for that job.
-  3. Update `PREVIOUS_DEAL.tuLbNote`, and the matching sentence in `ASSUMPTIONS`.
+  3. Update the sector’s `lastDealNote`, and the matching sentence in `ASSUMPTIONS`.
   4. Update the reference values in the tests, then run `npm test`.
 
 ## How it is organised
