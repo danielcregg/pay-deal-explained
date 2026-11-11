@@ -4,13 +4,17 @@
 import * as data from './data.js';
 import { createStore } from './state.js';
 import { longDate } from './format.js';
+import { restoreSelection, loadSaved, saveSelection } from './selection.js';
 import * as hero from './sections/hero.js';
+import * as yourPay from './sections/your-pay.js';
 
 const SECTIONS = [
   ['top', hero],
+  ['your-pay', yourPay],
 ];
 
-const store = createStore({});
+const store = createStore(restoreSelection(loadSaved(), data.SCALES));
+store.subscribe((sel) => { if (sel.touched) saveSelection(sel); });
 const ctx = { store, data };
 
 function bindText() {
