@@ -99,6 +99,9 @@ export function resolvePay(sel, scales) {
   return { base: point.value, factor: fte, annualFactor: fte, unit: 'year', label, isExample };
 }
 
+/** The lowest point on the lecturing scales: where the flat minimums count most. */
+export const lowestScalePoint = (scales) => Math.min(...scales.grades.flatMap((g) => g.points.map((p) => p.value)));
+
 /** The line each demo shows so readers know whose figures they are looking at. */
 export function figuresFor(sel, scales) {
   const pay = resolvePay(sel, scales);

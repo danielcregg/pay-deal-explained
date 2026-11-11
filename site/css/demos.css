@@ -152,6 +152,62 @@ input[type="number"] {
   box-shadow: inset 0 0 0 1px var(--mark-pct);
 }
 
+/* ---------- the opening: pay against prices, month by month ---------- */
+
+.race h2 { font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem); margin-bottom: 0.25rem; }
+.race-sub { color: var(--muted); margin: 0 0 0.5rem; }
+.race .context-line { margin-bottom: 0.25rem; }
+.race-picks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.6rem 0 0.25rem; }
+.race-picks[hidden], .race .context-line[hidden] { display: none; }
+.race-picks button {
+  min-height: 2.5rem;
+  padding: 0.35rem 0.9rem;
+  border: 1.5px solid var(--field-border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.race-picks button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.race-when { font-weight: 650; margin: 0.6rem 0 0.4rem; }
+.race-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.5rem; }
+.race-tile { border-radius: 12px; padding: 0.55rem 0.75rem; }
+.race-tile small { display: block; font-size: 0.8rem; font-weight: 650; }
+.race-tile b {
+  display: block;
+  font-size: clamp(1.1rem, 0.75rem + 1.9vw, 1.9rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.race-tile.pay { background: var(--teal-soft); color: var(--teal-ink); }
+.race-tile.price { background: var(--red-soft); color: var(--red-ink); }
+.race-tile.real { background: var(--navy); color: var(--on-navy); }
+.race-tile.real b { color: var(--gold); }
+.race-svg { touch-action: pan-y; cursor: ew-resize; }
+.race-pay-ahead { fill: var(--teal-soft); }
+.race-price-ahead { fill: var(--red-soft); }
+.race-head { stroke: var(--ink); stroke-width: 1.5; }
+.chart-svg .race-label-pay { fill: var(--teal-ink); }
+.chart-svg .race-label-price { fill: var(--red-ink); }
+.race-controls { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.4rem; }
+.race-play {
+  flex: none;
+  width: 2.9rem;
+  height: 2.9rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.race-scrub { flex: 1; min-width: 0; height: 2rem; accent-color: var(--mark-pct); }
+.race-source { margin: 0.6rem 0 0; max-width: none; }
+
 .chart-wrap { position: relative; }
 .chart-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .chart-svg .grid { stroke: var(--grid); stroke-width: 1; }
@@ -163,6 +219,7 @@ input[type="number"] {
 .bar-flat { fill: var(--mark-flat); }
 .bar-earlier { fill: var(--mark-earlier); stroke: var(--mark-earlier-edge); stroke-width: 1; }
 .bar-possible { fill: url(#hatch-stairs); }
+.hatch-line { stroke: var(--mark-pct); stroke-width: 2; }
 .bar-lb { fill: url(#lb-stairs); }
 .lb-ground { fill: var(--mark-pct); }
 .lb-stripe { stroke: color-mix(in srgb, var(--mark-pct) 40%, var(--card)); stroke-width: 2; }

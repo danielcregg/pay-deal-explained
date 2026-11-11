@@ -8,6 +8,7 @@ import * as data from '../site/js/data.js';
 import { createStore } from '../site/js/state.js';
 import { DEFAULT_SELECTION } from '../site/js/selection.js';
 import * as staircase from '../site/js/sections/staircase.js';
+import * as hero from '../site/js/sections/hero.js';
 import { enhanceTerms } from '../site/js/sections/glossary.js';
 import { presentKeyAction } from '../site/js/present.js';
 
@@ -123,4 +124,28 @@ test('M13: one section that failed to render gets a note, without the page-wide 
   const { box, notes } = loadPage([true, false, true]);
   assert.equal(box, null);
   assert.deepEqual(notes, [0, 1, 0]);
+});
+
+test('the race: the tiles show the end state, follow the slider, and the chips switch salary', () => {
+  const root = document.createElement('div');
+  document.body.append(root);
+  const store = createStore({ ...DEFAULT_SELECTION });
+  hero.render(root, { store, data });
+  const tiles = () => root.querySelectorAll('.race-tile b').map((b) => b.textContent);
+  const scrubTo = (value) => { const s = root.querySelector('input.race-scrub'); s.value = String(value); s.dispatchEvent({ type: 'input', bubbles: true }); };
+  assert.deepEqual(tiles(), ['+10.2%', '+7.5%', '2.5% more']);
+
+  scrubTo(15.5);
+  assert.equal(root.querySelector('.race-when').textContent, 'By October 2027');
+  assert.equal(tiles()[0], '+4.1%');
+  assert.match(tiles()[2], /less$/);
+
+  const [mine, lowest] = root.querySelectorAll('.race-picks button');
+  assert.equal(mine.textContent, 'Example: Lecturer, point 5');
+  lowest.click();
+  scrubTo(33);
+  assert.equal(tiles()[0], '+11.7%');
+
+  store.set({ touched: true, gradeId: 'al-ne', pointIndex: 0 }); // the reader is on the lowest point already
+  assert.equal(root.querySelector('.race-picks').hidden, true);
 });

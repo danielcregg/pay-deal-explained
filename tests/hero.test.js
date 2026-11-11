@@ -1,17 +1,45 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { axisLabels } from '../site/js/sections/hero.js';
+import * as data from '../site/js/data.js';
+import { monthOffset, model, stateAt, whenText, forecastText } from '../site/js/sections/hero.js';
 
-test('ruler axis labels do not overlap on a phone or a desktop', () => {
-  for (const W of [288, 960]) {
-    const labels = axisLabels(W, 33);
-    const boxes = labels.map((l) => {
-      const w = l.text.length * 7; // generous width estimate for 12px text
-      const left = l.anchor === 'start' ? l.x : l.x - w / 2;
-      return [left, left + w];
-    });
-    for (let i = 1; i < boxes.length; i++) {
-      assert.ok(boxes[i][0] >= boxes[i - 1][1], `${W}px: "${labels[i - 1].text}" overlaps "${labels[i].text}"`);
-    }
-  }
+const near = (a, b, t = 0.01) => assert.ok(Math.abs(a - b) <= t, `${a} ≉ ${b}`);
+
+test('months into the deal', () => {
+  assert.equal(monthOffset('2026-09-01', '2026-07'), 2);
+  near(monthOffset('2029-03-02', '2026-07'), 32 + 1 / 31, 1e-9);
+});
+
+test('the race: pay steps against the price curve, for a salary of €60,000 or more', () => {
+  const m = model(89894, data, { includeLB: false });
+  assert.equal(m.months, 33);
+  assert.equal(m.steps.length, 8); // local bargaining is not counted
+  assert.deepEqual(m.steps.slice(0, 3).map((s) => s.at), [2, 9, 13]);
+  assert.equal(m.price.length, 34); // 1 July 2026, then the end of each month
+  const start = stateAt(m, 0);
+  assert.deepEqual([start.pay, start.price, start.real], [100, 100, 0]);
+  const autumn = stateAt(m, 15.5); // three rises in, before the 1.5%
+  near(autumn.pay, 104.05);
+  assert.ok(autumn.price > autumn.pay, 'prices are ahead in October 2027');
+  const end = stateAt(m, 33);
+  near(end.pay, 110.17); near(end.price, 107.47); near(end.real, 2.52);
+});
+
+test('the race: the flat minimums lift the lowest lecturing point further', () => {
+  const m = model(47572, data, { includeLB: false });
+  near(stateAt(m, 33).pay, 111.70);
+  assert.equal(m.steps[0].flat, true);
+});
+
+test('the race: counting local bargaining adds its step on 1 March 2029', () => {
+  const m = model(89894, data, { includeLB: true });
+  assert.equal(m.steps.length, 9);
+  near(stateAt(m, 33).pay, 111.27);
+});
+
+test('the race: the play head says where it is, and the forecasts are spelled out', () => {
+  assert.equal(whenText(0, '2026-07', 33), 'Starting line: 1 July 2026');
+  assert.equal(whenText(2.5, '2026-07', 33), 'By September 2026');
+  assert.equal(whenText(33, '2026-07', 33), 'By the end of March 2029');
+  assert.equal(forecastText(data.INFLATION), '3.4% in 2026, 3.1% in 2027 and 2% in 2028, with 2029 assumed at 2%');
 });

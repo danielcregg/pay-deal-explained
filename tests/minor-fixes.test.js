@@ -78,7 +78,7 @@ test('M2: Present mode is high contrast, with chart text big enough for a projec
     for (const cap of ['--mark-pct', '--mark-flat']) assert.ok(contrast(t['--mark-earlier'], t[cap]) >= 2, `${mode}: --mark-earlier vs ${cap}`);
   }
   const px = (cls) => Math.max(0, ...[...present.matchAll(new RegExp(`body\\.present[^{}]*\\.${cls}\\b[^{}]*\\{[^}]*font-size:\\s*(\\d+)px`, 'g'))].map((m) => Number(m[1])));
-  for (const cls of ['value-label', 'end-label', 'ruler-year', 'ruler-pct']) assert.ok(px(cls) >= 16, `${cls}: ${px(cls)}px in Present mode`);
+  for (const cls of ['value-label', 'end-label']) assert.ok(px(cls) >= 16, `${cls}: ${px(cls)}px in Present mode`);
   // Axis labels take their size from --chart-text, which the charts also read to space their rows.
   assert.equal(base.light['--chart-text'], '12px');
   assert.ok(parseFloat(own['--chart-text']) >= 16, `--chart-text in Present mode: ${own['--chart-text']}`);

@@ -3,14 +3,11 @@
 // Deliberately no single "pace" figure and no verdict (spec §4, rule 9).
 
 import { finalSalary, payIndexSeries } from '../pay.js';
-import { resolvePay, figuresFor } from '../selection.js';
+import { resolvePay, figuresFor, lowestScalePoint } from '../selection.js';
 import { eur, pct, longDate } from '../format.js';
 import { h } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { niceRange, createTooltip, labelSize, axisRows } from '../chart.js';
-
-/** The lowest point on the lecturing scales: where the flat minimums count most. */
-export const lowestScalePoint = (scales) => Math.min(...scales.grades.flatMap((g) => g.points.map((p) => p.value)));
 
 export function model(base, data, { includeLB }) {
   const both = [data.PREVIOUS_DEAL, data.DEAL];
