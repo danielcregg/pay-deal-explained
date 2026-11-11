@@ -21,7 +21,10 @@
   <a class="skip-link" href="#your-pay">Skip to the pay calculator</a>
 
   <header class="site-header">
-    <a class="site-name" href="#top">Pay Deal Explained</a>
+    <div class="brand">
+      <a class="site-name" href="#top">Pay Deal Explained</a>
+      <span class="header-updated">Updated <time datetime="2026-11-11" data-bind="updated-short">11 Nov 2026</time></span>
+    </div>
     <span class="status-chip" data-bind="status-chip">Draft · ballot results due w/c 7 Dec</span>
     <button class="present-btn" type="button" data-action="present" hidden>▶ Present</button>
   </header>
@@ -171,5 +174,33 @@
     <p>An unofficial and independent explainer. Not affiliated with any union, university or Government body. Not financial advice.</p>
     <p>Last updated <span data-bind="last-updated">11 November 2026</span>. <a href="#sources">Sources and assumptions</a>.</p>
   </footer>
+
+  <script>
+    // If the page's modules did not run (a dropped connection or an old browser), say so
+    // and show the key facts from the <noscript> block instead of leaving the demos blank.
+    // Module scripts run before DOMContentLoaded, and main.js marks the page first thing.
+    document.addEventListener('DOMContentLoaded', function () {
+      if (document.documentElement.hasAttribute('data-started')) return;
+      var facts = document.querySelector('noscript');
+      var box = document.createElement('div');
+      box.className = 'noscript load-failed';
+      box.innerHTML = facts ? facts.textContent : '';
+      var message = document.createElement('p');
+      message.setAttribute('role', 'alert');
+      message.textContent = 'The calculator and demos did not load. Reload the page to try again, or open it in an up-to-date browser.';
+      var hint = box.querySelector('p:last-child');
+      if (hint) hint.remove();
+      box.insertBefore(message, box.firstChild);
+      document.querySelector('main').insertBefore(box, document.getElementById('your-pay'));
+      var mounts = document.querySelectorAll('.chapter-body[data-mount]');
+      for (var i = 0; i < mounts.length; i++) {
+        if (mounts[i].firstChild) continue;
+        var note = document.createElement('p');
+        note.className = 'note';
+        note.textContent = 'This part of the page did not load. Reload the page to try again.';
+        mounts[i].appendChild(note);
+      }
+    });
+  </script>
 </body>
 </html>

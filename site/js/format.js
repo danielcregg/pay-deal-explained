@@ -34,6 +34,12 @@ export function longDate(iso) {
   return `${d} ${MONTHS[m - 1]} ${y}`;
 }
 
+/** '2026-11-11' → '11 Nov 2026'. */
+export function shortDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return `${d} ${MONTHS[m - 1].slice(0, 3)} ${y}`;
+}
+
 /** '2026-09' → 'Sep 2026'. */
 export function monthLabel(ym) {
   const [y, m] = ym.split('-').map(Number);

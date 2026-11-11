@@ -209,6 +209,14 @@ td.r, th.r { text-align: right; }
   cursor: pointer;
 }
 
+/* The date sits under the site name, so it adds no width and fits the row's height. */
+.brand { display: flex; flex-direction: column; line-height: 1.25; }
+.header-updated {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 @media (max-width: 420px) {
   .status-chip { order: 3; }
 }
@@ -428,6 +436,7 @@ details.data summary {
   margin: 0 auto 2rem;
   padding: 0 var(--gutter);
 }
+.load-failed [role="alert"] { font-weight: 650; }
 
 /* ---------- print: always show final states ---------- */
 

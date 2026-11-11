@@ -1,9 +1,35 @@
 // Regression tests for the 14 minor issues deferred by the final review (M1–M14).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SCALES } from '../site/js/data.js';
+import { readFileSync } from 'node:fs';
+import { SCALES, SITE } from '../site/js/data.js';
 import { DEFAULT_SELECTION, parseSalary, clampHours, restoreSelection } from '../site/js/selection.js';
 import { createStore } from '../site/js/state.js';
+import { longDate, shortDate } from '../site/js/format.js';
+
+const read = (p) => readFileSync(new URL(`../site/${p}`, import.meta.url), 'utf8');
+const html = read('index.html');
+const attr = (tag, name) => tag.match(new RegExp(`${name}="([^"]*)"`))?.[1];
+
+test('M1: the header shows the last-updated date, and every written copy matches data.js', () => {
+  assert.equal(shortDate('2026-11-11'), '11 Nov 2026');
+  const header = html.split('<header')[1].split('</header>')[0];
+  const time = header.match(/<time[^>]*data-bind="updated-short"[^>]*>([^<]*)<\/time>/);
+  assert.ok(time, 'a <time data-bind="updated-short"> in the header');
+  assert.equal(time[1], shortDate(SITE.lastUpdated));
+  assert.equal(attr(time[0], 'datetime'), SITE.lastUpdated);
+  const footer = html.split('<footer')[1].split('</footer>')[0];
+  assert.equal(footer.match(/data-bind="last-updated">([^<]*)</)?.[1], longDate(SITE.lastUpdated));
+});
+
+test('M13: if the modules fail to load, the page says so instead of leaving the demos blank', () => {
+  const inline = html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(inline, 'an inline (non-module) fallback script');
+  assert.match(inline[1], /DOMContentLoaded/);
+  assert.match(inline[1], /data-started/);
+  assert.match(inline[1], /did not load/);
+  assert.match(read('js/main.js'), /document\.documentElement\.setAttribute\('data-started', ''\)/);
+});
 
 test('M4: a typed salary has a plausibility floor, and 58.000 means €58,000', () => {
   assert.deepEqual(parseSalary('58.000'), { ok: true, value: 58000 });

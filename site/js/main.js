@@ -3,7 +3,7 @@
 
 import * as data from './data.js';
 import { createStore } from './state.js';
-import { longDate } from './format.js';
+import { longDate, shortDate } from './format.js';
 import { restoreSelection, loadSaved, saveSelection } from './selection.js';
 import { initPresent } from './present.js';
 import * as hero from './sections/hero.js';
@@ -34,6 +34,9 @@ const SECTIONS = [
   ['sources', sources],
 ];
 
+// The modules loaded: tell the fallback script in index.html not to step in.
+document.documentElement.setAttribute('data-started', '');
+
 const store = createStore(restoreSelection(loadSaved(), data.SCALES));
 store.subscribe((sel) => { if (sel.touched) saveSelection(sel); });
 const ctx = { store, data };
@@ -43,9 +46,11 @@ function bindText() {
     'status-chip': data.SITE.status.chip,
     'status-line': data.SITE.status.line,
     'last-updated': longDate(data.SITE.lastUpdated),
+    'updated-short': shortDate(data.SITE.lastUpdated),
   };
   for (const el of document.querySelectorAll('[data-bind]')) {
     if (el.dataset.bind in values) el.textContent = values[el.dataset.bind];
+    if (el.dataset.bind === 'updated-short') el.setAttribute('datetime', data.SITE.lastUpdated);
   }
 }
 

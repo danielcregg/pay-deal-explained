@@ -52,11 +52,14 @@ Every fact lives in [`site/js/data.js`](site/js/data.js).
    - `line`, the full sentence
 2. Also in `site/js/data.js`, set `SITE.lastUpdated` to today's date (`YYYY-MM-DD`).
 3. Add an event to `TIMELINE`.
-4. In `site/index.html`, make the same change to the two copies of the status sentence:
-   - the hero's `data-bind="status-line"` text
-   - the `<noscript>` block
+4. In `site/index.html`, make the same changes to the copies written into the page:
+   - the hero's `data-bind="status-line"` text and the `<noscript>` block: the status
+     sentence
+   - the header's `data-bind="updated-short"` date (for example `11 Nov 2026`) and its
+     `datetime` attribute
+   - the footer's `data-bind="last-updated"` date (for example `11 November 2026`)
 
-   `npm test` fails until the `<noscript>` copy matches.
+   `npm test` fails until the `<noscript>` sentence and both dates match.
 5. Run `npm test`, then commit and push to `main`. The site redeploys in a minute or two.
 
 ### When the official text is published
