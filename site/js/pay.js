@@ -110,7 +110,7 @@ export function careerEvents(values, steps, { pos, incrementMonth, now, from, to
   const dates = [
     ...rises.map((s, i) => ({ date: s.date, kind: s.kind, done: i + 1 })),
     ...monthsBetween(from, to).slice(1).filter((ym) => Number(ym.slice(5)) === incrementMonth).map((ym) => ({ date: `${ym}-01`, kind: 'increment' })),
-  ].sort((a, b) => (a.date === b.date ? (a.kind === 'increment' ? -1 : 1) : a.date < b.date ? -1 : 1));
+  ].sort((a, b) => (a.date !== b.date ? (a.date < b.date ? -1 : 1) : (a.done ?? 0) - (b.done ?? 0))); // same day: the increment, then the rises in their own order
   let at = where(from);
   let done = 0;
   let salary = ladder[at][0];

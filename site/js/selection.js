@@ -23,8 +23,14 @@ export const DEFAULT_SELECTION = Object.freeze({
   includeLB: SITE.includeLBDefault,
   includeOwed: SITE.includeOwedDefault, // count the 1% from September 2025 (the sector's `owed` entry)
   payMonth: '2027-01',
-  incrementMonth: null,    // 1 to 12: the opening chart then adds a yearly increment in that month (its Advanced panel)
+  incrementMonth: null,    // 1 to 12: the opening chart then adds a yearly increment in that month
+  pointMonth: null,        // 'YYYY-MM': the month in which the point above was chosen, so a later visit reads "the point you are on now" the same way
 });
+
+/** The month we are in, as 'YYYY-MM'. */
+export function thisMonth(today = new Date()) {
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+}
 
 /**
  * Lenient parsing of a typed salary. Strips € and spaces, and reads both ways of writing
@@ -140,14 +146,17 @@ export function sectorPatch(sel, scales, sectorId) {
 /** The changes to make when the reader picks another grade: the same point number, where the new scale has one. */
 export function gradePatch(sel, scales, gradeId) {
   const grade = findGrade(scales, gradeId);
-  return { gradeId: grade.id, pointIndex: Math.min(sel.gradeId === 'typed' ? 0 : sel.pointIndex, grade.points.length - 1) };
+  // A typed salary or an hourly rate has no point of its own to carry over.
+  const fresh = sel.gradeId === 'typed' || sel.contract === 'hourly';
+  return { gradeId: grade.id, pointIndex: fresh ? 0 : Math.min(sel.pointIndex, grade.points.length - 1) };
 }
 
 /**
  * The reader's way up their scale, for the opening chart when it counts increments: the
  * points they can stand on (skipped points and long service increments are left out),
- * where they stand in the month `now`, and the month their increment falls in. Null when
- * no month is chosen or there is no scale to climb (an hourly rate, a typed salary).
+ * where they stood in the month the point was chosen (or `now`, for a choice saved without
+ * one), and the month their increment falls in. Null when no month is chosen or there is
+ * no scale to climb (an hourly rate, a typed salary).
  */
 export function careerOf(sel, scales, now) {
   if (!sel.incrementMonth) return null;
@@ -163,7 +172,9 @@ export function careerOf(sel, scales, now) {
     labels: steps.map((p) => p.label),
     pos: steps.indexOf(own),
     incrementMonth: sel.incrementMonth,
-    now,
+    now: sel.pointMonth ?? now,
+    skips: grade.points.some((p) => p.skipped), // points on this scale that are passed over
+    lsiAbove: !own.lsi && grade.points.some((p) => p.lsi), // a long service increment beyond the top, which is not climbed to
   };
 }
 
@@ -195,6 +206,7 @@ function isValid(sel, scales) {
   if (!PAY_MONTHS.includes(sel.payMonth)) return false;
   if (typeof sel.includeLB !== 'boolean' || typeof sel.includeOwed !== 'boolean') return false;
   if (sel.incrementMonth !== null && !(Number.isInteger(sel.incrementMonth) && sel.incrementMonth >= 1 && sel.incrementMonth <= 12)) return false;
+  if (sel.pointMonth !== null && !(typeof sel.pointMonth === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(sel.pointMonth))) return false;
   if (!(typeof sel.fte === 'number' && sel.fte >= 0.01 && sel.fte <= 1)) return false;
   if (!['al-ne', 'al-pre'].includes(sel.alScale)) return false;
   if (!(typeof sel.hoursPerYear === 'number' && sel.hoursPerYear >= 0 && sel.hoursPerYear <= MAX_HOURS)) return false;

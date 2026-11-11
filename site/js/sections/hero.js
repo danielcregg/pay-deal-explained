@@ -9,7 +9,7 @@
 // the start.
 
 import { applySteps, priceIndexSeries, careerEvents, positionIn } from '../pay.js';
-import { resolvePay, figuresFor, lowestScalePoint, sectorOf, gradesIn, gradeOf, careerOf, sectorPatch, gradePatch } from '../selection.js';
+import { resolvePay, figuresFor, lowestScalePoint, sectorOf, gradesIn, gradeOf, careerOf, sectorPatch, gradePatch, thisMonth } from '../selection.js';
 import { eur, pct } from '../format.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { h } from '../dom.js';
@@ -26,13 +26,6 @@ export function monthOffset(date, startYm) {
   const [sy, sm] = startYm.split('-').map(Number);
   const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
   return (y - sy) * 12 + (m - sm) + (d - 1) / daysInMonth;
-}
-
-/** The month we are in, as 'YYYY-MM', kept inside the agreement: "the point you are on now" is read against it. */
-export function currentMonth(data, today = new Date()) {
-  const ym = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-  const [from, to] = [data.DEAL.start.slice(0, 7), data.DEAL.end.slice(0, 7)];
-  return ym < from ? from : ym > to ? to : ym;
 }
 
 /**
@@ -200,6 +193,27 @@ function buildChart(m, width, text, compact) {
   return { svg, place, timeAt };
 }
 
+/** What the line under the pickers says once an increment month is chosen: what is added, or why nothing is. */
+function incrementNote({ sel, career, climbs, who, now }) {
+  if (!sel.incrementMonth) return '';
+  if (who === 'low') return 'Increments are not added to this comparison: it follows one scale point.';
+  if (!career) {
+    return sel.contract === 'hourly'
+      ? 'Increments need a grade and scale point. Choosing a grade above switches you from an hourly rate to a salary.'
+      : 'Increments need a grade and scale point: choose them above.';
+  }
+  if (!climbs) {
+    if (career.pos < career.values.length - 1) return 'No increment falls between July 2026 and March 2029 for the point and month you chose.';
+    return 'You are at the top of this scale, so no increments are added. The chart takes you to have been on this point since before July 2026.'
+      + (career.lsiAbove ? ' The long service increment above it is not added, because it depends on your years at the top.' : '');
+  }
+  const [year, month] = career.now.split('-').map(Number);
+  return `The chart adds one point each ${MONTHS[sel.incrementMonth - 1]}${career.skips ? ' (skipped points are passed over)' : ''}, `
+    + `working from the point you ${career.now === now ? 'are on now' : 'gave'} (${MONTHS[month - 1]} ${year}), up to the top of the scale. `
+    + 'Long service increments and promotions are not included.'
+    + (sel.incrementMonth === month ? ' This month’s increment is taken as already paid, so choose the point you are on after it.' : '');
+}
+
 /** The four key figures count up once. Their final text is already in the page. */
 function countUp(el) {
   const target = Number(el.dataset.count);
@@ -227,7 +241,7 @@ function weave() {
   return svgEl('svg', { class: 'hero-weave', viewBox: '0 0 1200 600', preserveAspectRatio: 'xMidYMid slice', 'aria-hidden': 'true' }, lines);
 }
 
-export function render(root, { store, data, now = currentMonth(data) }) {
+export function render(root, { store, data, now = thisMonth() }) {
   const N = data.DEAL.months;
   const { SCALES } = data;
   const motion = !prefersReducedMotion();
@@ -247,7 +261,7 @@ export function render(root, { store, data, now = currentMonth(data) }) {
     field('race-point', 'Point you are on now', pointSelect),
     field('race-inc', 'Increment month', incSelect));
   const context = h('p', { class: 'context-line' });
-  const incNote = h('p', { class: 'race-inc-note note', hidden: true });
+  const incNote = h('p', { class: 'race-inc-note note', hidden: true, 'aria-live': 'polite' });
 
   const listed = { grades: null, points: null }; // what the two lists hold at the moment
   const syncPicker = (sel) => {
@@ -269,7 +283,8 @@ export function render(root, { store, data, now = currentMonth(data) }) {
     pointSelect.disabled = !grade;
     incSelect.value = sel.incrementMonth ? String(sel.incrementMonth) : '';
   };
-  const choose = (patch) => store.set({ ...patch, touched: true });
+  // The month goes with the choice, so "the point you are on now" means the same on a later visit.
+  const choose = (patch) => store.set({ ...patch, touched: true, pointMonth: now });
   jobSelect.addEventListener('change', () => choose(sectorPatch(store.get(), SCALES, jobSelect.value)));
   gradeSelect.addEventListener('change', () => {
     if (!gradeSelect.value) return;
@@ -288,11 +303,12 @@ export function render(root, { store, data, now = currentMonth(data) }) {
   const split = h('p', { class: 'race-split', hidden: true }); // deal and increments apart, when both are counted
   const priceOut = h('b');
   const realOut = h('b');
+  const realDeal = h('span', { class: 'race-real-deal', hidden: true }); // the deal alone, when increments are counted
   const tiles = h('div', { class: 'race-tiles' },
     h('div', { class: 'race-tile euro' }, euroLabel, euroOut, monthly),
     h('div', { class: 'race-tile pay' }, h('small', {}, 'Pay is up'), payOut),
     h('div', { class: 'race-tile price' }, h('small', {}, 'Prices are up'), priceOut),
-    h('div', { class: 'race-tile real' }, h('small', {}, 'So pay buys'), realOut));
+    h('div', { class: 'race-tile real' }, h('small', {}, 'So pay buys'), realOut, realDeal));
   const wrap = h('div', { class: 'chart-wrap' });
   const playBtn = h('button', { type: 'button', class: 'race-play', 'aria-label': 'Play' }, '▶');
   const scrub = h('input', { type: 'range', class: 'race-scrub', min: 0, max: N, step: 1, value: N, 'aria-label': 'Month, from July 2026 to March 2029' });
@@ -339,8 +355,15 @@ export function render(root, { store, data, now = currentMonth(data) }) {
     // With increments counted, say which point the figure is for and how much is the deal's doing.
     const onPoint = m.deal && s.label ? `, on ${s.label[0].toLowerCase()}${s.label.slice(1)}` : '';
     monthly.textContent = hourly ? '' : `about ${eur(euro / 12)} a month${onPoint}`; // one line in the tile
+    // The two parts are rounded so that they add up to the total shown.
+    const tenth = (n) => Math.round(n * 10) / 10;
     split.hidden = !m.deal;
-    split.textContent = m.deal ? `Pay is up ${signed(s.pay - 100)}: ${signed(s.deal - 100)} from the deal, ${signed(s.pay - s.deal)} from increments.` : '';
+    split.textContent = m.deal
+      ? `Pay is up ${signed(s.pay - 100)}: ${signed(s.deal - 100)} is the deal on your July 2026 point, ${signed(tenth(s.pay - 100) - tenth(s.deal - 100))} comes from moving up the scale.`
+      : '';
+    const dealReal = (s.deal / s.price - 1) * 100;
+    realDeal.hidden = !m.deal;
+    realDeal.textContent = m.deal ? `the deal alone: ${pct(Math.abs(dealReal))} ${dealReal >= 0 ? 'more' : 'less'}` : '';
     payOut.textContent = signed(s.pay - 100);
     priceOut.textContent = signed(s.price - 100);
     realOut.textContent = `${pct(Math.abs(s.real))} ${s.real >= 0 ? 'more' : 'less'}`;
@@ -391,16 +414,8 @@ export function render(root, { store, data, now = currentMonth(data) }) {
     const counting = climbs && who === 'mine';
     m = model(base, data, { includeLB: sel.includeLB, career: counting ? career : null });
     const incMonth = sel.incrementMonth ? MONTHS[sel.incrementMonth - 1] : '';
-    const [nowYear, nowMonth] = now.split('-').map(Number);
     incNote.hidden = !sel.incrementMonth;
-    incNote.textContent = !sel.incrementMonth
-      ? ''
-      : !career
-        ? 'Increments need a grade and scale point: choose them above.'
-        : !climbs
-          ? 'You are at the top of this scale, so there are no increments to add between July 2026 and March 2029.'
-          : `The chart adds one point each ${incMonth}, counting from the point you are on now (${MONTHS[nowMonth - 1]} ${nowYear}), up to the top of the scale. Long service increments and promotions are not included. The rest of the page shows the deal on its own.`
-            + (sel.incrementMonth === nowMonth ? ' This month’s increment is taken as already paid, so choose the point you are on after it.' : '');
+    incNote.textContent = incrementNote({ sel, career, climbs, who, now });
     // On a projector screen the whole opening has to fit: a shorter chart in Present mode.
     const compact = document.body.classList.contains('present') && window.innerHeight < 900;
     chart = buildChart(m, width, labelSize(wrap), compact);
@@ -416,16 +431,17 @@ export function render(root, { store, data, now = currentMonth(data) }) {
     context.hidden = who === 'low' || plain;
     const end = stateAt(m, N);
     const behind = monthsBehind(m);
+    const marked = m.steps.some((s) => s.kind === 'increment' && s.after > s.before);
     aheadText.textContent = behind === 0
       ? `Prices are never ahead of pay in these ${N} months`
       : `Prices are ahead of pay in ${behind} of the ${N} months`;
-    incKey.hidden = !counting;
-    incKey.replaceChildren(...(counting ? [h('span', { class: 'race-key-mark', 'aria-hidden': 'true' }, '◆'), 'Your increment'] : []));
-    chart.svg.setAttribute('aria-label', `Pay and prices from July 2026 to March 2029. By the end, pay is up ${pct(end.pay - 100)} and prices are up ${pct(end.price - 100)}. ${aheadText.textContent}.`);
+    incKey.hidden = !marked;
+    incKey.replaceChildren(...(marked ? [h('span', { class: 'race-key-mark', 'aria-hidden': 'true' }, '◆'), 'Your increment'] : []));
+    chart.svg.setAttribute('aria-label', `Pay and prices from July 2026 to March 2029. By the end, pay is up ${pct(end.pay - 100)}${m.deal ? ` with your increments (${pct(end.deal - 100)} from the deal alone)` : ''} and prices are up ${pct(end.price - 100)}. ${aheadText.textContent}.`);
     source.replaceChildren(
       `Prices follow the Central Bank’s forecasts as reported by RTÉ: ${forecastText(data.INFLATION)}. `
       + `Gross pay; local bargaining is ${sel.includeLB ? 'counted' : 'not counted'}. `
-      + (counting ? `Increments are counted: one point each ${incMonth}. ` : '')
+      + (counting ? `Increments are counted: one point each ${incMonth}; the rest of the page shows the deal on its own. ` : '')
       + 'A projection, not a promise. ',
       h('a', { href: '#pay-vs-prices' }, 'Try your own inflation figure'));
 

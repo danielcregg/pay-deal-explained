@@ -2,7 +2,7 @@
 // or hourly, and see what the draft deal adds. The choice then flows into every demo.
 
 import { applySteps, finalSalary, summarise, backPay, owedBackPay } from '../pay.js';
-import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradesIn, gradeOf, owedFor, sectorPatch, gradePatch } from '../selection.js';
+import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradesIn, gradeOf, owedFor, sectorPatch, gradePatch, thisMonth } from '../selection.js';
 import { eur, signedEur, pct, longDate, listSteps } from '../format.js';
 import { h } from '../dom.js';
 import { countTo } from '../motion.js';
@@ -94,7 +94,7 @@ function pill(name, value, text) {
     h('span', {}, text));
 }
 
-export function render(root, { store, data }) {
+export function render(root, { store, data, now = thisMonth() }) {
   const { SCALES } = data;
 
   // ---- form ----
@@ -303,7 +303,8 @@ export function render(root, { store, data }) {
   };
 
   // ---- events ----
-  const set = (patch) => store.set({ ...patch, touched: true });
+  // The month goes with the choice: "the point you are on" is then read the same way on a later visit.
+  const set = (patch) => store.set({ ...patch, touched: true, pointMonth: now });
   form.addEventListener('change', (e) => {
     const t = e.target;
     if (t.name === 'pp-contract') set({ contract: t.value });

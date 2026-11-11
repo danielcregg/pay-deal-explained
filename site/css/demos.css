@@ -239,6 +239,8 @@ input[type="number"] {
 .race-tile.price { background: var(--red-soft); color: var(--red-ink); }
 .race-tile.real { background: var(--navy); color: var(--on-navy); }
 .race-tile.real b { color: var(--gold); }
+.race-real-deal { display: block; font-size: 0.78rem; line-height: 1.3; color: var(--on-navy-muted); }
+.race-real-deal[hidden] { display: none; }
 .race-svg { touch-action: pan-y; cursor: ew-resize; }
 .race-pay-ahead { fill: var(--teal-soft); }
 .race-price-ahead { fill: var(--red-soft); }

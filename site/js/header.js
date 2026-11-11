@@ -3,11 +3,17 @@
 // (base.css: html { scroll-padding-top: calc(var(--header-h) + …) }).
 
 import { finalSalary } from './pay.js';
-import { resolvePay, owedFor } from './selection.js';
+import { resolvePay, owedFor, careerOf } from './selection.js';
 import { eur } from './format.js';
 import { h } from './dom.js';
 
 /** What the header chip says: the chosen pay and where it ends up, or an invitation to choose. */
+/** Whether the opening chart is adding increments for this reader: the chip's figure is then the deal alone. */
+function addsIncrements(sel, scales) {
+  const career = careerOf(sel, scales, sel.pointMonth ?? '2026-07');
+  return Boolean(career) && career.pos < career.values.length - 1;
+}
+
 export function mineText(sel, data) {
   const pay = resolvePay(sel, data.SCALES);
   const hourly = pay.unit === 'hour';
@@ -20,7 +26,7 @@ export function mineText(sel, data) {
       if (owed && sel.includeLB) return ', with both 1%s';
       if (owed) return ', with the 2025 1%';
       return sel.includeLB ? ', with the 2029 1%' : '';
-    })(),
+    })() + (addsIncrements(sel, data.SCALES) ? ', before increments' : ''),
     go: pay.isExample ? 'Choose yours' : 'Change',
   };
 }

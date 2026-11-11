@@ -370,7 +370,7 @@ export const GLOSSARY = [
   { id: 'ratification', term: 'Ratification', text: 'Formal acceptance of the deal by the unions after their members have voted. Until then, it is a draft.' },
   { id: 'wrc', term: 'WRC', text: 'The Workplace Relations Commission, the State body that hosted the talks where the draft deal was agreed.' },
   { id: 'ictu-psc', term: 'ICTU Public Services Committee', text: 'The committee of the Irish Congress of Trade Unions that brings the public service unions together to negotiate pay agreements and decide on them.' },
-  { id: 'increment', term: 'Increment', text: 'The yearly step up your pay scale for service. Increments are separate from this deal and are not included in the figures on this site, unless you add your increment month to the opening chart.' },
+  { id: 'increment', term: 'Increment', text: 'The yearly step up your pay scale for service. Increments are separate from this deal and are not included in the figures on this site. The one exception is the opening chart, if you add your increment month to it.' },
   { id: 'scale-point', term: 'Scale point', text: 'One step on your grade’s pay scale. The figures here are each scale’s point values for 1 June 2026; for gardaí they are worked out from the last published table.' },
 ];
 
