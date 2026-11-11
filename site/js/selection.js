@@ -1,7 +1,7 @@
 // The reader's selection (grade, point, contract, switches): parsing, validation,
 // resolving it to the full-time salary the deal is applied to, and local storage.
 
-import { SITE } from './data.js';
+import { SITE, INFLATION } from './data.js';
 import { longDate } from './format.js';
 
 export const STORAGE_KEY = 'pde:selection:v1';
@@ -24,8 +24,13 @@ export const DEFAULT_SELECTION = Object.freeze({
   includeOwed: SITE.includeOwedDefault, // count the 1% from September 2025 (the sector's `owed` entry)
   payMonth: '2027-01',
   incrementMonth: null,    // 1 to 12: the opening chart then adds a yearly increment in that month
+  scenario: INFLATION.defaultScenario, // which inflation path the charts use: one of INFLATION.scenarios
   pointMonth: null,        // 'YYYY-MM': the month in which the point above was chosen, so a later visit reads "the point you are on now" the same way
 });
+
+/** The inflation path the reader has chosen for the charts (the Central Bank's forecast unless they switch). */
+export const scenarioOf = (sel, inflation) => inflation.scenarios.find((s) => s.id === sel.scenario)
+  ?? inflation.scenarios.find((s) => s.id === inflation.defaultScenario);
 
 /** The month we are in, as 'YYYY-MM'. */
 export function thisMonth(today = new Date()) {
@@ -206,6 +211,7 @@ function isValid(sel, scales) {
   if (!PAY_MONTHS.includes(sel.payMonth)) return false;
   if (typeof sel.includeLB !== 'boolean' || typeof sel.includeOwed !== 'boolean') return false;
   if (sel.incrementMonth !== null && !(Number.isInteger(sel.incrementMonth) && sel.incrementMonth >= 1 && sel.incrementMonth <= 12)) return false;
+  if (!INFLATION.scenarios.some((s) => s.id === sel.scenario)) return false;
   if (sel.pointMonth !== null && !(typeof sel.pointMonth === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(sel.pointMonth))) return false;
   if (!(typeof sel.fte === 'number' && sel.fte >= 0.01 && sel.fte <= 1)) return false;
   if (!['al-ne', 'al-pre'].includes(sel.alScale)) return false;

@@ -72,7 +72,7 @@ test('copy: the 1% from 2025 is never stated as settled, and the 2029 assumption
   for (const file of ['js/sections/your-pay.js', 'js/sections/back-pay.js', 'js/selection.js']) {
     assert.doesNotMatch(read(file), /owed since|pay scales yet/, `${file} says "owed" or "yet" to readers`);
   }
-  assert.match(read('js/sections/your-pay.js'), /After forecast inflation \(/); // the wiring test checks the full sentence
+  assert.match(read('js/sections/your-pay.js'), /After inflation \$\{/); // the wiring test checks the full sentence
 });
 
 test('colour: the faded "from" figure is gone, and the browser bar matches the navy header', () => {

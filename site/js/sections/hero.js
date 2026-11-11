@@ -9,13 +9,13 @@
 // the start.
 
 import { applySteps, priceIndexSeries, careerEvents, positionIn } from '../pay.js';
-import { resolvePay, figuresFor, lowestScalePoint, sectorOf, gradesIn, gradeOf, careerOf, sectorPatch, gradePatch, thisMonth } from '../selection.js';
+import { resolvePay, figuresFor, lowestScalePoint, sectorOf, gradesIn, gradeOf, careerOf, scenarioOf, sectorPatch, gradePatch, thisMonth } from '../selection.js';
 import { eur, pct } from '../format.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { h } from '../dom.js';
 import { niceRange, labelSize } from '../chart.js';
 import { prefersReducedMotion, onFirstView } from '../motion.js';
-import { extrasSwitches } from '../switches.js';
+import { extrasSwitches, pricesSwitch } from '../switches.js';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DURATION = 7000; // ms for the play head to cross the chart
@@ -37,7 +37,7 @@ export function monthOffset(date, startYm) {
  * increments together, measured from their pay on 1 July 2026, and `deal` holds the
  * deal's rises alone on the point they held then, so the two can be told apart.
  */
-export function model(base, data, { includeLB, career = null }) {
+export function model(base, data, { includeLB, career = null, rates = data.INFLATION.rates }) {
   const { DEAL, INFLATION } = data;
   const start = DEAL.start.slice(0, 7);
   const dealSteps = (salary) => applySteps(salary, DEAL.steps, { includeLB }).filter((r) => r.included).map((r) => ({
@@ -49,7 +49,7 @@ export function model(base, data, { includeLB, career = null }) {
     flat: r.flat,
     kind: r.step.kind,
   }));
-  const price = [100, ...priceIndexSeries({ from: INFLATION.from, to: INFLATION.to, rates: INFLATION.rates }).map((p) => p.value)];
+  const price = [100, ...priceIndexSeries({ from: INFLATION.from, to: INFLATION.to, rates }).map((p) => p.value)];
   if (!career) return { months: DEAL.months, start, steps: dealSteps(base), price, base };
   const path = careerEvents(career.values, DEAL.steps, { ...career, from: start, to: DEAL.end.slice(0, 7), includeLB });
   const first = path.start.salary;
@@ -322,7 +322,7 @@ export function render(root, { store, data, now = thisMonth() }) {
   const mine = h('button', { type: 'button', 'aria-pressed': 'true' });
   const lowest = h('button', { type: 'button', 'aria-pressed': 'false' });
   const picks = h('div', { class: 'race-picks', role: 'group', 'aria-label': 'Whose pay' }, mine, lowest);
-  const options = h('div', { class: 'race-options' }, extrasSwitches(store, data, 'race'), picks,
+  const options = h('div', { class: 'race-options' }, pricesSwitch(store, data, 'race'), extrasSwitches(store, data, 'race'), picks,
     h('p', { class: 'race-more' }, h('a', { href: '#your-pay' }, 'Part-time, hourly-paid or not listed? Use the full calculator')));
   const source = h('p', { class: 'note race-source' });
 
@@ -412,7 +412,8 @@ export function render(root, { store, data, now = thisMonth() }) {
     const place0 = (month) => positionIn(month, { ...career, count: career.values.length });
     const climbs = Boolean(career) && place0(m0) !== place0(data.DEAL.end.slice(0, 7));
     const counting = climbs && who === 'mine';
-    m = model(base, data, { includeLB: sel.includeLB, career: counting ? career : null });
+    const prices = scenarioOf(sel, data.INFLATION);
+    m = model(base, data, { includeLB: sel.includeLB, career: counting ? career : null, rates: prices.rates });
     const incMonth = sel.incrementMonth ? MONTHS[sel.incrementMonth - 1] : '';
     incNote.hidden = !sel.incrementMonth;
     incNote.textContent = incrementNote({ sel, career, climbs, who, now });
@@ -439,7 +440,7 @@ export function render(root, { store, data, now = thisMonth() }) {
     incKey.replaceChildren(...(marked ? [h('span', { class: 'race-key-mark', 'aria-hidden': 'true' }, '◆'), 'Your increment'] : []));
     chart.svg.setAttribute('aria-label', `Pay and prices from July 2026 to March 2029. By the end, pay is up ${pct(end.pay - 100)}${m.deal ? ` with your increments (${pct(end.deal - 100)} from the deal alone)` : ''} and prices are up ${pct(end.price - 100)}. ${aheadText.textContent}.`);
     source.replaceChildren(
-      `Prices follow the Central Bank’s forecasts as reported by RTÉ: ${forecastText(data.INFLATION)}. `
+      `${prices.note} `
       + `Gross pay; local bargaining is ${sel.includeLB ? 'counted' : 'not counted'}. `
       + (counting ? `Increments are counted: one point each ${incMonth}; the rest of the page shows the deal on its own. ` : '')
       + 'A projection, not a promise. ',

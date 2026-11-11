@@ -193,8 +193,8 @@ test('chapter 2: every month gives the pay in euro beside the two indices', () =
   document.body.append(root);
   const store = createStore({ ...DEFAULT_SELECTION, touched: true, gradeId: 'lect', pointIndex: 10 });
   payVsPrices.render(root, { store, data });
-  const heads = () => root.querySelectorAll('thead th').map((th) => th.textContent);
-  const row = (i) => root.querySelectorAll('tbody tr')[i].querySelectorAll('td').map((td) => td.textContent);
+  const heads = () => root.querySelectorAll('.pvp-months thead th').map((th) => th.textContent);
+  const row = (i) => root.querySelectorAll('.pvp-months tbody tr')[i].querySelectorAll('td').map((td) => td.textContent);
   assert.deepEqual(heads(), ['Month', 'Yearly pay', 'Pay index', 'Price index', 'Ahead']);
   assert.deepEqual(row(0).slice(0, 3), ['Jul 2026', '€107,727', '100.0']);
   assert.deepEqual(row(11), ['Jun 2027', '€110,980', '103.0', '103.2', 'Prices']);
@@ -223,7 +223,7 @@ test('your pay: counting the 1% from 2025 moves the figure and the marked cell, 
   assert.equal(text('.pay-big .to'), '€118,684');
   assert.match(text('.pay-ways-table td.on'), /^€118,684 \+10\.2%/);
   assert.match(text('.pay-gain'), /\(\+10\.2%\)/);
-  assert.match(text('.pay-real'), /^After forecast inflation \(2029 assumed at 2%\), that would buy about 2\.5% more than in July 2026/);
+  assert.match(text('.pay-real'), /^After inflation on the Central Bank’s forecasts \(2029 assumed at 2%\), that would buy about 2\.5% more than in July 2026/);
 
   const owed = root.querySelector('#pp-owed');
   owed.checked = true;

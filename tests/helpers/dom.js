@@ -107,6 +107,7 @@ export class Element extends Node {
     return this.formValue ?? this.getAttribute('value') ?? '';
   }
   set value(v) { this.formValue = String(v); }
+  get name() { return this.getAttribute('name') ?? ''; }
 
   get children() { return this.childNodes.filter((n) => n instanceof Element); }
   insertBefore(node, ref) {

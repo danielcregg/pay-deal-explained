@@ -332,13 +332,48 @@ export const SCALES = {
   ],
 };
 
+// Prices. The Central Bank's forecast is the default. Published forecasts sit close
+// together (see `others`), so the lower and higher paths are round-number illustrations,
+// labelled as such wherever they are shown. Each scenario carries its own wording:
+// `lead` opens chapter 2's sentence, `phrase` goes in the pay panel, `note` under the charts.
+const CENTRAL_RATES = { 2026: 3.4, 2027: 3.1, 2028: 2, 2029: 2 };
 export const INFLATION = {
   from: '2026-07',
   to: '2029-03',
-  rates: { 2026: 3.4, 2027: 3.1, 2028: 2, 2029: 2 },
-  assumedYears: [2029],
-  current: 4,
-  sourceId: 'rte-analysis',
+  rates: CENTRAL_RATES,
+  assumedYears: [2029], // the Central Bank gives no figure for 2029
+  current: 4, // % in the year to October 2026 (CSO flash estimate of the HICP)
+  sourceId: 'cbi-qb3-2026',
+  defaultScenario: 'central',
+  scenarios: [
+    {
+      id: 'lower', label: 'Optimistic: 2%', rates: { 2026: 3.4, 2027: 2, 2028: 2, 2029: 2 },
+      lead: 'If inflation fell to 2% a year from 2027',
+      phrase: 'on the optimistic path (2% a year from 2027)',
+      note: 'Prices here are an illustration, not a forecast: the Central Bank’s 3.4% for 2026, then 2% a year, the European Central Bank’s target.',
+      sourceIds: ['cbi-qb3-2026', 'ecb-target'],
+    },
+    {
+      id: 'central', label: 'Central Bank', rates: CENTRAL_RATES,
+      lead: 'On the Central Bank’s forecasts',
+      phrase: 'on the Central Bank’s forecasts (2029 assumed at 2%)',
+      note: 'Prices follow the Central Bank of Ireland’s forecasts of September 2026: 3.4% in 2026, 3.1% in 2027 and 2% in 2028, with 2029 assumed at 2%.',
+      sourceIds: ['cbi-qb3-2026'],
+    },
+    {
+      id: 'higher', label: 'Pessimistic: 4%', rates: { 2026: 4, 2027: 4, 2028: 4, 2029: 4 },
+      lead: 'If prices kept rising by 4% a year',
+      phrase: 'on the pessimistic path (4% a year)',
+      note: 'Prices here are an illustration, not a forecast: prices keep rising by 4% a year, the rate in the year to October 2026.',
+      sourceIds: ['cso-hicp-oct2026'],
+    },
+  ],
+  // What other institutions forecast for Ireland, for context. Years they do not cover are left out.
+  others: [
+    { who: 'IMF', what: 'World Economic Outlook, October 2026', rates: { 2026: 3.4, 2027: 2.8, 2028: 1.9, 2029: 2 }, sourceId: 'imf-weo-oct2026' },
+    { who: 'ESRI', what: 'Quarterly Economic Commentary, Autumn 2026 (CPI)', rates: { 2026: 3.6, 2027: 3.3 }, sourceId: 'esri-qec-autumn2026' },
+    { who: 'European Commission', what: 'Spring 2026 forecast', rates: { 2026: 3.5, 2027: 2.6 }, sourceId: 'ec-spring2026' },
+  ],
 };
 
 export const TIMELINE = [
@@ -421,7 +456,7 @@ export const ASSUMPTIONS = [
   'Hourly rates for Assistant Lecturers are point 1 of the annual scale divided by 630 hours, which matches the 2026 pay circulars exactly.',
   'Back pay assumes the first rise is paid in the January 2027 payroll, with arrears from 1 September 2026. You can change the month.',
   'For hourly-paid lecturers, back pay assumes your teaching hours are spread evenly across the year.',
-  'Prices use the Central Bank’s inflation forecasts for 2026 to 2028, as reported by RTÉ. 2029 is assumed to be 2%.',
+  'Prices use the Central Bank of Ireland’s forecasts for 2026 to 2028 (Quarterly Bulletin, September 2026), with 2029 assumed to be 2%. The optimistic and pessimistic buttons on the charts are illustrations, not forecasts: 2% a year from 2027, and 4% a year throughout.',
   'TU Dublin academic staff are assumed to be on the same scales as staff in the former institutes of technology.',
 ];
 
@@ -429,6 +464,12 @@ export const SOURCES = [
   { id: 'psa-2026-text', publisher: 'Workplace Relations Commission and the parties to the talks (copy hosted by ASTI)', title: 'Strengthening Public Services: proposed Public Service Agreement 2026–2029', date: '2026-11-11', url: 'https://www.asti.ie/document-library/public-service-agreement-2026--2029/strengthening-public-services-public-service-agreement-2026-2029.pdf' },
   { id: 'ictu-psc-release', publisher: 'ICTU Public Services Committee (published by Fórsa)', title: 'Unions and Government representatives reach draft public sector pay agreement', date: '2026-11-11', url: 'https://www.forsa.ie/draft-public-sector-pay-agreement/' },
   { id: 'rte-deal', publisher: 'RTÉ News', title: 'Public sector strike suspended as unions agree pay deal', date: '2026-11-11', url: 'https://www.rte.ie/news/ireland/2026/1111/1598773-public-sector-pay-deal/' },
+  { id: 'cbi-qb3-2026', publisher: 'Central Bank of Ireland', title: 'Quarterly Bulletin No. 3 2026', date: '2026-09-16', url: 'https://www.centralbank.ie/publication/quarterly-bulletins/quarterly-bulletin-q3-2026' },
+  { id: 'cso-hicp-oct2026', publisher: 'Central Statistics Office', title: 'Flash estimate for the Harmonised Index of Consumer Prices, October 2026', date: '2026-11-03', url: 'https://www.cso.ie/en/csolatestnews/pressreleases/2026pressreleases/pressstatementflashestimatefortheharmonisedindexofconsumerpricesoctober2026/' },
+  { id: 'ecb-target', publisher: 'European Central Bank', title: 'Two per cent inflation target', date: '2026', url: 'https://www.ecb.europa.eu/mopo/strategy/pricestab/html/index.en.html' },
+  { id: 'imf-weo-oct2026', publisher: 'International Monetary Fund', title: 'World Economic Outlook, October 2026: inflation rate, average consumer prices, Ireland', date: '2026-10', url: 'https://www.imf.org/external/datamapper/PCPIPCH@WEO/IRL' },
+  { id: 'esri-qec-autumn2026', publisher: 'Economic and Social Research Institute', title: 'Quarterly Economic Commentary, Autumn 2026', date: '2026-09-29', url: 'https://www.esri.ie/publications/quarterly-economic-commentary-autumn-2026' },
+  { id: 'ec-spring2026', publisher: 'European Commission', title: 'Economic forecast for Ireland, Spring 2026', date: '2026-05-21', url: 'https://economy-finance.ec.europa.eu/economic-surveillance-eu-member-states/country-pages-including-country-reports/ireland/economic-forecast-ireland_en' },
   { id: 'rte-analysis', publisher: 'RTÉ News', title: 'Inside the €5bn pay offer to public servants', date: '2026-11-10', url: 'https://www.rte.ie/news/2026/1110/1598605-public-pay-deal-analysis/' },
   { id: 'rte-revised', publisher: 'RTÉ News', title: 'Public sector unions are considering a revised pay deal offer', date: '2026-11-10', url: 'https://www.rte.ie/news/ireland/2026/1110/1598619-pay-talks/' },
   { id: 'it-whats-in-it', publisher: 'The Irish Times', title: 'Public sector pay deal: What’s in it for me?', date: '2026-11-11', url: 'https://www.irishtimes.com/ireland/2026/11/11/public-sector-pay-deal-whats-in-it-for-me/' },

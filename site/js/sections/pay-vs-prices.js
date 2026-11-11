@@ -2,24 +2,24 @@
 // July 2026), using the Central Bank's forecasts or a flat inflation figure of their own.
 
 import { payIndexSeries, priceIndexSeries, monthsPricesAhead } from '../pay.js';
-import { resolvePay, figuresFor } from '../selection.js';
+import { resolvePay, figuresFor, scenarioOf } from '../selection.js';
 import { pct, eur, monthLabel } from '../format.js';
 import { h } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { niceRange, createTooltip } from '../chart.js';
 import { extrasSwitches } from '../switches.js';
 
-export function model(base, steps, inflation, { includeLB, flatRate = null }) {
+export function model(base, steps, inflation, { includeLB, flatRate = null, rates = inflation.rates }) {
   const span = { from: inflation.from, to: inflation.to };
   const pay = payIndexSeries(base, steps, { ...span, includeLB });
-  const price = priceIndexSeries({ ...span, rates: inflation.rates, flatRate });
+  const price = priceIndexSeries({ ...span, rates, flatRate });
   const real = (pay[pay.length - 1].value / price[price.length - 1].value - 1) * 100;
   return { pay, price, real, ahead: monthsPricesAhead(pay, price) };
 }
 
 /** The readout, worded as a projection on the chosen inflation figures (not as a fact). */
-export function readoutText(m, flatRate) {
-  const lead = flatRate === null ? 'On these forecasts' : `If prices rose by ${flatRate.toFixed(1)}% a year`;
+export function readoutText(m, flatRate, scenarioLead = 'On the Central Bank’s forecasts') {
+  const lead = flatRate === null ? scenarioLead : `If prices rose by ${flatRate.toFixed(1)}% a year`;
   return `${lead}, by March 2029 your pay would buy about ${pct(Math.abs(m.real))} ${m.real >= 0 ? 'more' : 'less'} than in July 2026. `
     + `Prices would be ahead of your pay in ${m.ahead.length} of the ${m.pay.length} months.`;
 }
@@ -94,9 +94,10 @@ export function render(root, { store, data }) {
   const inflation = data.INFLATION;
   const mode = { flat: false, rate: 3 };
 
-  const pills = h('div', { class: 'seg-options' },
-    h('label', { class: 'pill' }, h('input', { type: 'radio', name: 'pvp-mode', value: 'forecast', checked: true }), h('span', {}, 'Central Bank forecasts')),
-    h('label', { class: 'pill' }, h('input', { type: 'radio', name: 'pvp-mode', value: 'flat' }), h('span', {}, 'Try your own figure')));
+  // The three shared paths (the same choice as on the opening chart), and a figure of the reader's own.
+  const radios = [...inflation.scenarios.map((s) => [s.id, s.label]), ['own', 'Your own figure']]
+    .map(([value, label]) => ({ value, label, input: h('input', { type: 'radio', name: 'pvp-mode', value }) }));
+  const pills = h('div', { class: 'seg-options' }, radios.map((r) => h('label', { class: 'pill' }, r.input, h('span', {}, r.label))));
   const rateOut = h('output', { for: 'pvp-rate' }, '3.0%');
   const rate = h('input', { type: 'range', id: 'pvp-rate', class: 'pvp-range', min: 0, max: 6, step: 0.1, value: 3 });
   const rateField = h('div', { class: 'field', hidden: true }, h('label', { for: 'pvp-rate' }, 'Prices rise by ', rateOut, ' a year'), rate);
@@ -107,11 +108,20 @@ export function render(root, { store, data }) {
   const wrap = h('div', { class: 'chart-wrap' });
   const live = h('p', { class: 'visually-hidden', 'aria-live': 'polite' });
   const readout = h('p', { class: 'pvp-readout', 'aria-live': 'polite' });
-  const source = h('p', { class: 'note' },
-    'Forecasts: Central Bank of Ireland, as reported by RTÉ: 3.4% in 2026, 3.1% in 2027 and 2.0% in 2028. No forecast was reported for 2029, so this assumes 2.0%. Inflation is currently about 4%. Index: 1 July 2026 = 100; each month shows its end-of-month value.');
+  const source = h('p', { class: 'note pvp-source' });
+  // What others forecast: close to the Central Bank, which is why the two other buttons are illustrations.
+  const years = Object.keys(inflation.rates).map(Number).sort();
+  const rateCell = (rates, year) => h('td', { class: 'r' }, typeof rates[year] === 'number' && !(rates === inflation.rates && inflation.assumedYears.includes(year)) ? `${rates[year].toFixed(1)}%` : 'not given');
+  const others = h('details', { class: 'data pvp-others' }, h('summary', {}, 'What other forecasters say'),
+    h('p', { class: 'note' }, 'Published forecasts for Ireland sit close together, so the optimistic and pessimistic buttons are round-number illustrations that go wider, not forecasts.'),
+    h('div', { class: 'table-scroll' }, h('table', {},
+      h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Forecast'), years.map((y) => h('th', { scope: 'col', class: 'r' }, String(y))))),
+      h('tbody', {},
+        h('tr', {}, h('th', { scope: 'row' }, 'Central Bank of Ireland, September 2026'), years.map((y) => rateCell(inflation.rates, y))),
+        inflation.others.map((o) => h('tr', {}, h('th', { scope: 'row' }, `${o.who}, ${o.what}`), years.map((y) => rateCell(o.rates, y))))))));
   const tbody = h('tbody');
   const payHead = h('th', { scope: 'col', class: 'r' });
-  const details = h('details', { class: 'data' }, h('summary', {}, 'Show the numbers as a table'),
+  const details = h('details', { class: 'data pvp-months' }, h('summary', {}, 'Show the numbers as a table'),
     h('div', { class: 'table-scroll' }, h('table', {},
       h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Month'), payHead,
         h('th', { scope: 'col', class: 'r' }, 'Pay index'), h('th', { scope: 'col', class: 'r' }, 'Price index'),
@@ -121,9 +131,9 @@ export function render(root, { store, data }) {
   const context = h('p', { class: 'context-line' });
   root.append(h('div', { class: 'plate' },
     context,
-    h('fieldset', { class: 'seg' }, h('legend', {}, 'Prices'), pills), rateField,
+    h('fieldset', { class: 'seg' }, h('legend', {}, 'Inflation'), pills), rateField,
     extrasSwitches(store, data, 'pvp'),
-    readout, legend, wrap, live, source, details));
+    readout, legend, wrap, live, source, details, others));
 
   const tip = createTooltip(wrap);
   let chart = null;
@@ -153,7 +163,11 @@ export function render(root, { store, data }) {
     const sel = store.get();
     const pay = resolvePay(sel, data.SCALES);
     money = { base: pay.base, factor: pay.factor, unit: pay.unit };
-    m = model(pay.base, steps, inflation, { includeLB: sel.includeLB, flatRate: mode.flat ? mode.rate : null });
+    const prices = scenarioOf(sel, inflation);
+    for (const r of radios) r.input.checked = r.value === (mode.flat ? 'own' : prices.id);
+    m = model(pay.base, steps, inflation, { includeLB: sel.includeLB, flatRate: mode.flat ? mode.rate : null, rates: prices.rates });
+    source.textContent = (mode.flat ? `Prices here rise by ${mode.rate.toFixed(1)}% a year, a figure of your own. ` : `${prices.note} `)
+      + `Prices rose ${inflation.current.toFixed(1)}% in the year to October 2026 (CSO flash estimate). Index: 1 July 2026 = 100; each month shows its end-of-month value.`;
     chart = buildChart(m, width);
     for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();
     wrap.prepend(chart.svg);
@@ -174,7 +188,7 @@ export function render(root, { store, data }) {
     });
 
     context.textContent = figuresFor(sel, data.SCALES);
-    readout.textContent = readoutText(m, mode.flat ? mode.rate : null);
+    readout.textContent = readoutText(m, mode.flat ? mode.rate : null, prices.lead);
     const ahead = new Set(m.ahead);
     payHead.textContent = hourly() ? 'Hourly rate' : 'Yearly pay';
     tbody.replaceChildren(...m.pay.map((p, i) => h('tr', {},
@@ -186,9 +200,10 @@ export function render(root, { store, data }) {
   };
 
   pills.addEventListener('change', (e) => {
-    mode.flat = e.target.value === 'flat';
+    mode.flat = e.target.value === 'own';
     rateField.hidden = !mode.flat;
-    draw(true);
+    if (mode.flat || e.target.value === store.get().scenario) draw(true);
+    else store.set({ scenario: e.target.value }); // the store's subscribers redraw
   });
   rate.addEventListener('input', () => {
     mode.rate = Number(rate.value);

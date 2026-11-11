@@ -47,7 +47,7 @@ test('F5: the compounding demo explains the headline, not "your pay"', () => {
 
 test('F6: pay vs prices is framed neutrally and as a projection', () => {
   const m = payVsPrices(100000, data.DEAL.steps, data.INFLATION, { includeLB: false });
-  assert.match(readoutText(m, null), /^On these forecasts, by March 2029 your pay would buy about 2\.5% more than in July 2026\./);
+  assert.match(readoutText(m, null), /^On the Central Bank’s forecasts, by March 2029 your pay would buy about 2\.5% more than in July 2026\./);
   const m6 = payVsPrices(100000, data.DEAL.steps, data.INFLATION, { includeLB: false, flatRate: 6 });
   assert.match(readoutText(m6, 6), /^If prices rose by 6\.0% a year, by March 2029 your pay would buy about 6\.1% less/);
   assert.doesNotMatch(read('index.html'), /only helps/);

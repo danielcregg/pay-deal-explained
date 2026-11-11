@@ -188,6 +188,11 @@ input[type="number"] {
 .race-key-mark { color: var(--mark-pct); }
 .race-options { display: grid; gap: 0.55rem; margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--line); }
 .race-options .extras { margin: 0; }
+.prices-seg { gap: 0.3rem; }
+.prices-seg > legend { margin-bottom: 0.3rem; font-size: 0.9rem; }
+.race-options .prices-seg .pill span { min-height: 2.35rem; padding: 0.25rem 0.85rem; font-size: 0.9rem; }
+.pvp-others { margin-top: 0.75rem; }
+.pvp-others .note { margin: 0.5rem 0; }
 .race-picks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; }
 .race-more { margin: 0; font-size: 0.9rem; }
 @media (min-width: 1040px) {

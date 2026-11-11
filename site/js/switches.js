@@ -4,7 +4,7 @@
 // in the store, so ticking one anywhere changes the whole page.
 
 import { h } from './dom.js';
-import { owedFor } from './selection.js';
+import { owedFor, scenarioOf } from './selection.js';
 import { longDate } from './format.js';
 
 export function extrasSwitches(store, data, idPrefix) {
@@ -28,6 +28,26 @@ export function extrasSwitches(store, data, idPrefix) {
   };
   lbBox.addEventListener('change', () => store.set({ includeLB: lbBox.checked }));
   owedBox.addEventListener('change', () => store.set({ includeOwed: owedBox.checked }));
+  store.subscribe(sync);
+  sync();
+  return el;
+}
+
+/**
+ * The inflation path as three buttons: the Central Bank's forecast, and a lower and a
+ * higher illustration. Every copy reads and writes the same choice in the store.
+ */
+export function pricesSwitch(store, data, idPrefix) {
+  const name = `${idPrefix}-prices`;
+  const radios = data.INFLATION.scenarios.map((s) => h('input', { type: 'radio', name, value: s.id }));
+  const el = h('fieldset', { class: 'seg prices-seg' },
+    h('legend', {}, 'Inflation'),
+    h('div', { class: 'seg-options' }, data.INFLATION.scenarios.map((s, i) => h('label', { class: 'pill' }, radios[i], h('span', {}, s.label)))));
+  const sync = () => {
+    const chosen = scenarioOf(store.get(), data.INFLATION).id;
+    for (const r of radios) r.checked = r.value === chosen;
+  };
+  el.addEventListener('change', (e) => { if (radios.includes(e.target)) store.set({ scenario: e.target.value }); });
   store.subscribe(sync);
   sync();
   return el;
