@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Superpowers Brainstorming</title>
+  <style>
+    /*
+     * BRAINSTORM COMPANION FRAME TEMPLATE
+     *
+     * This template provides a consistent frame with:
+     * - OS-aware light/dark theming
+     * - Header branding and connection status
+     * - Scrollable main content area
+     * - CSS helpers for common UI patterns
+     *
+     * Content is injected via placeholder comment in #frame-content.
+     */
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+
+    /* ===== THEME VARIABLES ===== */
+    :root {
+      --bg-primary: #f5f5f7;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #e5e5e7;
+      --border: #d1d1d6;
+      --text-primary: #1d1d1f;
+      --text-secondary: #86868b;
+      --text-tertiary: #aeaeb2;
+      --accent: #0071e3;
+      --accent-hover: #0077ed;
+      --success: #34c759;
+      --warning: #ff9f0a;
+      --error: #ff3b30;
+      --selected-bg: #e8f4fd;
+      --selected-border: #0071e3;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: #1d1d1f;
+        --bg-secondary: #2d2d2f;
+        --bg-tertiary: #3d3d3f;
+        --border: #424245;
+        --text-primary: #f5f5f7;
+        --text-secondary: #86868b;
+        --text-tertiary: #636366;
+        --accent: #0a84ff;
+        --accent-hover: #409cff;
+        --selected-bg: rgba(10, 132, 255, 0.15);
+        --selected-border: #0a84ff;
+      }
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+    }
+
+    /* ===== FRAME STRUCTURE ===== */
+    .brand { display: flex; align-items: center; min-width: 0; overflow: hidden; color: var(--text-secondary); line-height: 1; }
+    .brand a { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; min-width: 0; max-width: 100%; line-height: 1; }
+    .brand-copy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1; transform: translateY(-1px); }
+    .brand-logo { display: block; height: 1em; width: auto; max-width: 180px; flex-shrink: 0; filter: invert(1); }
+    @media (prefers-color-scheme: dark) {
+      .brand-logo { filter: none; }
+    }
+    .status { font-size: 0.7rem; color: var(--status-color, var(--success)); display: flex; align-items: center; gap: 0.4rem; justify-self: end; white-space: nowrap; line-height: 1; }
+    .status::before { content: ''; width: 6px; height: 6px; background: var(--status-color, var(--success)); border-radius: 50%; }
+
+    .main { flex: 1; overflow-y: auto; }
+    #frame-content { padding: 2rem; min-height: 100%; }
+
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 0.5rem 1.5rem;
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+      min-height: 42px;
+    }
+    .header .brand { justify-self: start; width: 100%; font-size: 0.75rem; line-height: 1; }
+    .header .status { grid-column: 2; line-height: 1; }
+    .header span {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    .header .selected-text {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ===== TYPOGRAPHY ===== */
+    h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+    h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .subtitle { color: var(--text-secondary); margin-bottom: 1.5rem; }
+    .section { margin-bottom: 2rem; }
+    .label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+
+    /* ===== OPTIONS (for A/B/C choices) ===== */
+    .options { display: flex; flex-direction: column; gap: 0.75rem; }
+    .option {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .option:hover { border-color: var(--accent); }
+    .option.selected { background: var(--selected-bg); border-color: var(--selected-border); }
+    .option .letter {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      width: 1.75rem; height: 1.75rem;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 0.85rem; flex-shrink: 0;
+    }
+    .option.selected .letter { background: var(--accent); color: white; }
+    .option .content { flex: 1; }
+    .option .content h3 { font-size: 0.95rem; margin-bottom: 0.15rem; }
+    .option .content p { color: var(--text-secondary); font-size: 0.85rem; margin: 0; }
+
+    /* ===== CARDS (for showing designs/mockups) ===== */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .card.selected { border-color: var(--selected-border); border-width: 2px; }
+    .card-image { background: var(--bg-tertiary); aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; }
+    .card-body { padding: 1rem; }
+    .card-body h3 { margin-bottom: 0.25rem; }
+    .card-body p { color: var(--text-secondary); font-size: 0.85rem; }
+
+    /* ===== MOCKUP CONTAINER ===== */
+    .mockup {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .mockup-header {
+      background: var(--bg-tertiary);
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+    .mockup-body { padding: 1.5rem; }
+
+    /* ===== SPLIT VIEW (side-by-side comparison) ===== */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 700px) { .split { grid-template-columns: 1fr; } }
+
+    /* ===== PROS/CONS ===== */
+    .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+    .pros, .cons { background: var(--bg-secondary); border-radius: 8px; padding: 1rem; }
+    .pros h4 { color: var(--success); font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .cons h4 { color: var(--error); font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .pros ul, .cons ul { margin-left: 1.25rem; font-size: 0.85rem; color: var(--text-secondary); }
+    .pros li, .cons li { margin-bottom: 0.25rem; }
+
+    /* ===== PLACEHOLDER (for mockup areas) ===== */
+    .placeholder {
+      background: var(--bg-tertiary);
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-tertiary);
+    }
+
+    /* ===== INLINE MOCKUP ELEMENTS ===== */
+    .mock-nav { background: var(--accent); color: white; padding: 0.75rem 1rem; display: flex; gap: 1.5rem; font-size: 0.9rem; }
+    .mock-sidebar { background: var(--bg-tertiary); padding: 1rem; min-width: 180px; }
+    .mock-content { padding: 1.5rem; flex: 1; }
+    .mock-button { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; }
+    .mock-input { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <!-- BRANDING -->
+    <div class="status">Connecting…</div>
+  </div>
+
+  <div class="main">
+    <div id="frame-content">
+      <style>
+  .pd { --paper:#fbfaf7; --ink:#1d2433; --muted:#5b6475; --line:#e4e1d8;
+        --teal:#0f766e; --teal-soft:#d1efe9; --amber:#b45309; --amber-soft:#fdecc8; --red:#b42318; }
+  .pd-note { font-size:.85rem; color:var(--text-secondary); margin:-1rem 0 1.75rem; }
+  .pd .card-image { background:#efece4; }
+  /* ---------- mini page mockups ---------- */
+  .pd-mini { width:100%; height:100%; background:var(--paper); color:var(--ink); padding:12px 14px;
+             font-family:system-ui,sans-serif; overflow:hidden; position:relative; text-align:left; }
+  .pd-k { font-size:7.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--teal); font-weight:700; }
+  .pd-hl { font-family:Georgia,'Times New Roman',serif; font-size:15px; line-height:1.12; font-weight:700; margin:4px 0 8px; }
+  .pd-hl.c { text-align:center; font-size:16px; margin:10px 18px 10px; }
+  .pd-bars { display:flex; align-items:flex-end; gap:3px; height:44px; padding-bottom:2px; border-bottom:1px solid var(--line); }
+  .pd-bars i { flex:1; background:var(--teal); border-radius:2px 2px 0 0; display:block; }
+  .pd-bars.c { margin:0 28px; }
+  .pd-sec { font-size:8.5px; font-weight:600; margin-top:8px; display:flex; align-items:center; gap:6px; }
+  .pd-sec .sl { flex:1; height:3px; background:var(--line); border-radius:2px; position:relative; }
+  .pd-sec .sl b { position:absolute; left:22%; top:-3px; width:9px; height:9px; border-radius:50%; background:var(--amber); }
+  .pd-faint { opacity:.45; }
+  .pd-fade { position:absolute; left:0; right:0; bottom:0; height:38px; background:linear-gradient(transparent,var(--paper));
+             display:flex; align-items:flex-end; justify-content:center; font-size:8px; color:var(--muted); padding-bottom:5px; }
+  .pd-panel { background:#fff; border:1px solid var(--line); border-radius:6px; padding:8px 9px; }
+  .pd-ctrls { display:flex; gap:4px; margin-bottom:6px; }
+  .pd-ctrls span { font-size:7.5px; border:1px solid #cfd4dc; border-radius:3px; padding:2px 5px; background:var(--paper); }
+  .pd-big { font-family:Georgia,serif; font-size:15px; font-weight:700; }
+  .pd-big b { color:var(--teal); }
+  .pd-sub { font-size:7.5px; color:var(--muted); margin:2px 0 6px; }
+  .pd-panel .pd-bars { height:26px; }
+  .pd-tabs { display:flex; gap:4px; margin-top:7px; }
+  .pd-tabs span { font-size:7.5px; padding:3px 6px; border-radius:10px; background:#eceae3; color:var(--muted); }
+  .pd-tabs span.on { background:var(--ink); color:#fff; }
+  .pd-dots { display:flex; gap:4px; justify-content:center; margin-top:2px; }
+  .pd-dots i { width:6px; height:6px; border-radius:50%; background:#d5d2c8; display:block; }
+  .pd-dots i.on { background:var(--teal); width:16px; border-radius:3px; }
+  .pd-next { position:absolute; right:12px; bottom:10px; font-size:8px; background:var(--ink); color:#fff; padding:3px 8px; border-radius:3px; }
+  .pd-cap { position:absolute; left:12px; bottom:11px; font-size:7px; color:var(--muted); }
+
+  /* ---------- working sketches ---------- */
+  .pd-try { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:1rem; }
+  .pd-demo { background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:1rem 1.1rem 1.1rem; }
+  .pd-demo h4 { font-size:.7rem; letter-spacing:.08em; text-transform:uppercase; color:var(--teal); margin-bottom:.15rem; }
+  .pd-demo .t { font-family:Georgia,serif; font-size:1.15rem; font-weight:700; margin-bottom:.6rem; }
+  .pd-btns { display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:.8rem; }
+  .pd-btns button { font:inherit; font-size:.75rem; border:1px solid #cfd4dc; background:#fff; color:var(--ink);
+                    border-radius:999px; padding:.3rem .7rem; cursor:pointer; }
+  .pd-btns button.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .pd-stair { display:flex; align-items:flex-end; gap:6px; height:150px; border-bottom:1px solid #c9c5b9; }
+  .pd-col { flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%; }
+  .pd-bar { height:0; display:flex; flex-direction:column; overflow:hidden; border-radius:3px 3px 0 0;
+            transition:height .55s cubic-bezier(.2,.8,.2,1); }
+  .pd-bar .s { flex:none; }
+  .pd-bar .s.teal { background:var(--teal); } .pd-bar .s.amber { background:var(--amber); }
+  .pd-bar .p { flex:1; background:#bcd9d4; }
+  .pd-x { display:flex; gap:6px; margin-top:4px; }
+  .pd-x span { flex:1; font-size:.62rem; color:var(--muted); text-align:center; line-height:1.15; }
+  .pd-res { margin-top:.7rem; font-size:.9rem; }
+  .pd-res b { color:var(--teal); }
+  .pd-row { display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-top:.6rem; }
+  .pd-leg { font-size:.7rem; color:var(--muted); display:flex; gap:.8rem; align-items:center; flex-wrap:wrap; }
+  .pd-leg i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; vertical-align:-1px; }
+  .pd-replay { font:inherit; font-size:.75rem; border:none; background:none; color:var(--teal); cursor:pointer; font-weight:600; }
+  .pd-sal { font-size:.9rem; margin-bottom:.3rem; }
+  .pd-sal b { font-family:Georgia,serif; font-size:1.3rem; }
+  .pd-range { width:100%; accent-color:var(--ink); }
+  .pd-scale { position:relative; height:22px; font-size:.62rem; color:var(--muted); }
+  .pd-scale span { position:absolute; top:0; transform:translateX(-50%); white-space:nowrap; }
+  .pd-scale .th { color:var(--amber); font-weight:700; }
+  .pd-tbl { width:100%; border-collapse:collapse; font-size:.78rem; margin-top:.3rem; }
+  .pd-tbl td { padding:.28rem .3rem; border-top:1px solid var(--line); }
+  .pd-tbl td.r { text-align:right; font-variant-numeric:tabular-nums; font-weight:600; }
+  .pd-tbl td.m { color:var(--muted); }
+  .pd-tag { font-size:.62rem; font-weight:700; padding:.12rem .4rem; border-radius:999px; white-space:nowrap; }
+  .pd-tag.teal { background:var(--teal-soft); color:var(--teal); } .pd-tag.amber { background:var(--amber-soft); color:var(--amber); }
+  .pd-src { font-size:.75rem; color:var(--text-secondary); margin-top:1.5rem; line-height:1.5; }
+</style>
+
+<div class="pd">
+<h2>Pay deal explainer: first look</h2>
+<p class="subtitle">Rough sketches to react to, not the finished design. Every number is real: the draft deal as reported on 11 Nov, applied to the 1 June 2026 TU scales.</p>
+<p class="pd-note">Click to choose, then tell me in the chat what you think.</p>
+
+<!-- ============ QUESTION 1 ============ -->
+<div class="section">
+  <div class="label">Question 1 · pick one</div>
+  <h3 style="margin-bottom:.8rem">How should the site flow?</h3>
+  <div class="cards">
+
+    <div class="card" data-choice="A-scrolling-story" onclick="toggleSelect(this)">
+      <div class="card-image"><div class="pd-mini">
+        <div class="pd-k">Draft pay deal · TU lecturers</div>
+        <div class="pd-hl">10.75% over 33 months.<br>What it means for you.</div>
+        <div class="pd-bars"><i style="height:18%"></i><i style="height:27%"></i><i style="height:36%"></i><i style="height:50%"></i><i style="height:59%"></i><i style="height:69%"></i><i style="height:78%"></i><i style="height:88%"></i><i style="height:100%"></i></div>
+        <div class="pd-sec">② Flat sum or percentage? <span class="sl"><b></b></span></div>
+        <div class="pd-sec pd-faint">③ Your pay &nbsp; ④ Pay vs prices &nbsp; ⑤ What happens next</div>
+        <div class="pd-fade">scroll ↓</div>
+      </div></div>
+      <div class="card-body"><h3>A · Scrolling story</h3>
+        <p>One long page. Each section animates as you scroll to it: the nine rises, flat sum or percentage, your pay, prices, what happens next. It reads like a newspaper's interactive explainer.</p></div>
+    </div>
+
+    <div class="card" data-choice="B-your-pay-first" onclick="toggleSelect(this)">
+      <div class="card-image"><div class="pd-mini">
+        <div class="pd-k">What does the draft deal mean for my pay?</div>
+        <div class="pd-panel" style="margin-top:5px">
+          <div class="pd-ctrls"><span>Lecturer ▾</span><span>Point 5 ▾</span><span>Full-time ▾</span></div>
+          <div class="pd-big">€89,894 → <b>€100,028</b></div>
+          <div class="pd-sub">+€10,134 (+11.3%) by March 2029 · back pay about €599</div>
+          <div class="pd-bars"><i style="height:18%"></i><i style="height:27%"></i><i style="height:36%"></i><i style="height:50%"></i><i style="height:59%"></i><i style="height:69%"></i><i style="height:78%"></i><i style="height:88%"></i><i style="height:100%"></i></div>
+        </div>
+        <div class="pd-tabs"><span class="on">How it works</span><span>Flat or %</span><span>Prices</span><span>What next</span></div>
+      </div></div>
+      <div class="card-body"><h3>B · Your pay first</h3>
+        <p>The calculator is the first thing you see: pick your grade and point and get your numbers straight away. The explanations and demos sit underneath in tabs for anyone who wants the why.</p></div>
+    </div>
+
+    <div class="card" data-choice="C-guided-tour" onclick="toggleSelect(this)">
+      <div class="card-image"><div class="pd-mini">
+        <div class="pd-dots"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="pd-hl c">Nine pay rises between now and March 2029</div>
+        <div class="pd-bars c"><i style="height:18%"></i><i style="height:27%"></i><i style="height:36%"></i><i style="height:50%"></i><i style="height:59%"></i><i style="height:69%"></i><i style="height:78%"></i><i style="height:88%"></i><i style="height:100%"></i></div>
+        <div class="pd-cap">Chapter 1 of 5 · works on a projector</div>
+        <div class="pd-next">Next →</div>
+      </div></div>
+      <div class="card-body"><h3>C · Guided tour</h3>
+        <p>Five short full-screen chapters with Next buttons, one idea per screen, ending with your own numbers. Could be put up on a projector at a staff or branch meeting.</p></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ WORKING SKETCHES ============ -->
+<div class="section">
+  <div class="label">Try these · working sketches</div>
+  <h3 style="margin-bottom:.8rem">How the animated and interactive demos would feel</h3>
+  <div class="pd-try">
+
+    <div class="pd-demo">
+      <h4>Animated</h4>
+      <div class="t">The nine pay rises</div>
+      <div class="pd-btns" id="pdPresets">
+        <button class="on" data-sal="89894">Lecturer, point 5 · €89,894</button>
+        <button data-sal="47572">Asst Lecturer (new entrant), point 1 · €47,572</button>
+      </div>
+      <div class="pd-stair" id="pdStair"></div>
+      <div class="pd-x" id="pdStairX"></div>
+      <div class="pd-res" id="pdStairRes"></div>
+      <div class="pd-row">
+        <div class="pd-leg"><span><i style="background:var(--teal)"></i>percentage rise</span><span><i style="background:var(--amber)"></i>flat minimum was bigger</span></div>
+        <button class="pd-replay" id="pdReplay">↻ Replay</button>
+      </div>
+    </div>
+
+    <div class="pd-demo">
+      <h4>Interactive</h4>
+      <div class="t">Flat sum or percentage?</div>
+      <div class="pd-sal">Starting salary <b id="pdSalOut">€58,000</b></div>
+      <input class="pd-range" type="range" min="40000" max="140000" step="500" value="58000" id="pdSal" aria-label="Starting salary">
+      <div class="pd-scale"><span style="left:0%;transform:none">€40k</span><span class="th" style="left:20%;transform:translateX(-5px)">▲ €60k threshold</span><span style="left:100%;transform:translateX(-100%)">€140k</span></div>
+      <table class="pd-tbl" id="pdTbl"></table>
+      <div class="pd-res" id="pdSalRes"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ QUESTION 2 ============ -->
+<div class="section">
+  <div class="label">Question 2 · tick all you want</div>
+  <h3 style="margin-bottom:.8rem">Which demos should the site have?</h3>
+  <div class="options" data-multiselect>
+    <div class="option" data-choice="d1-nine-rises" onclick="toggleSelect(this)"><div class="letter">1</div><div class="content"><h3>The nine pay rises (animated)</h3><p>Your salary climbing step by step from September 2026 to March 2029, like the sketch above.</p></div></div>
+    <div class="option" data-choice="d2-flat-or-percent" onclick="toggleSelect(this)"><div class="letter">2</div><div class="content"><h3>Flat sum or percentage? (interactive)</h3><p>Drag a salary to see which rule you get at each step, and where the €60k threshold comes in.</p></div></div>
+    <div class="option" data-choice="d3-compounding" onclick="toggleSelect(this)"><div class="letter">3</div><div class="content"><h3>Why 10.75% comes to about 11.3% (animated)</h3><p>Each rise lands on pay that has already gone up. A short animation shows the compounding.</p></div></div>
+    <div class="option" data-choice="d4-my-pay" onclick="toggleSelect(this)"><div class="letter">4</div><div class="content"><h3>My pay calculator</h3><p>Pick your grade and point or type a salary, set full-time or part-time (including hourly), and see every increase in euro.</p></div></div>
+    <div class="option" data-choice="d5-back-pay" onclick="toggleSelect(this)"><div class="letter">5</div><div class="content"><h3>Back pay estimate</h3><p>Roughly how much is owed from 1 September and could arrive in January if the deal is accepted.</p></div></div>
+    <div class="option" data-choice="d6-pay-vs-prices" onclick="toggleSelect(this)"><div class="letter">6</div><div class="content"><h3>Pay vs prices (chart)</h3><p>Your pay against the Central Bank's inflation forecasts, with a slider to try your own inflation figure.</p></div></div>
+    <div class="option" data-choice="d7-how-we-got-here" onclick="toggleSelect(this)"><div class="letter">7</div><div class="content"><h3>How we got here (animated timeline)</h3><p>The old deal expiring in June, the work-to-rule, the 14 October strike, the 3.30am deal, the December ballots.</p></div></div>
+    <div class="option" data-choice="d8-vs-last-deal" onclick="toggleSelect(this)"><div class="letter">8</div><div class="content"><h3>This deal vs the last one</h3><p>10.25% over 30 months (2024–26) next to 10.75% over 33 months, compared on pace and on who gains most.</p></div></div>
+    <div class="option" data-choice="d9-plain-english" onclick="toggleSelect(this)"><div class="letter">9</div><div class="content"><h3>Plain-English glossary</h3><p>Local bargaining, review clause, general round, lower-pay threshold, explained in a sentence or two each.</p></div></div>
+  </div>
+</div>
+
+<p class="pd-src">Sources: draft deal terms as reported by RTÉ, The Irish Times and the Irish Independent (11 Nov 2026); salary scales from TU-IOT Circular 002/2026 (from 1 June 2026). The sketches treat local bargaining as a 1% rise for everyone and show gross pay before increments.</p>
+</div>
+
+<script>
+(function () {
+  var STEPS = [
+    { d: '1 Sep 2026', s: 'Sep<br>2026', pct: 2,    min: 1200 },
+    { d: '1 Apr 2027', s: 'Apr<br>2027', pct: 1,    min: 0 },
+    { d: '1 Aug 2027', s: 'Aug<br>2027', pct: 1,    min: 600 },
+    { d: '1 Nov 2027', s: 'Nov<br>2027', pct: 1.5,  min: 900 },
+    { d: '1 Mar 2028', s: 'Mar<br>2028', pct: 1,    min: 0 },
+    { d: '1 Jun 2028', s: 'Jun<br>2028', pct: 1,    min: 600 },
+    { d: '1 Oct 2028', s: 'Oct<br>2028', pct: 1,    min: 0 },
+    { d: '1 Mar 2029', s: 'Mar 29<br>local', pct: 1, min: 0, lb: true },
+    { d: '2 Mar 2029', s: 'Mar<br>2029', pct: 1.25, min: 750 }
+  ];
+  function eur(n) { return '€' + Math.round(n).toLocaleString('en-IE'); }
+  function rule(st) {
+    if (st.lb) return 'local bargaining (1%)';
+    return st.min ? st.pct + '% or €' + st.min.toLocaleString('en-IE') : st.pct + '%';
+  }
+  function run(start) {
+    var sal = start, cum = 0;
+    return STEPS.map(function (st) {
+      var p = sal * st.pct / 100, flat = st.min > p, gain = flat ? st.min : p;
+      sal += gain; cum += gain;
+      return { st: st, gain: gain, flat: flat, after: sal, cum: cum };
+    });
+  }
+
+  // ---- animated staircase ----
+  var stair = document.getElementById('pdStair'), stairX = document.getElementById('pdStairX'),
+      stairRes = document.getElementById('pdStairRes'), current = 89894, MAX = 11000, H = 150;
+  stairX.innerHTML = STEPS.map(function (s) { return '<span>' + s.s + '</span>'; }).join('');
+  function drawStair(start) {
+    var rows = run(start);
+    stair.innerHTML = '';
+    var bars = rows.map(function (r, i) {
+      var col = document.createElement('div'); col.className = 'pd-col';
+      col.title = r.st.d + ': +' + eur(r.gain) + ' (' + rule(r.st) + (r.flat ? ': flat sum applied' : '') + ')';
+      var bar = document.createElement('div'); bar.className = 'pd-bar';
+      var s = document.createElement('div'); s.className = 's ' + (r.flat ? 'amber' : 'teal');
+      s.style.height = (r.gain / r.cum * 100) + '%';
+      var p = document.createElement('div'); p.className = 'p';
+      bar.appendChild(s); bar.appendChild(p); col.appendChild(bar); stair.appendChild(col);
+      bar.style.transitionDelay = (i * 0.2) + 's';
+      return { bar: bar, h: r.cum / MAX * H };
+    });
+    stairRes.innerHTML = '';
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      bars.forEach(function (b) { b.bar.style.height = b.h + 'px'; });
+    }); });
+    var last = rows[rows.length - 1];
+    setTimeout(function () {
+      stairRes.innerHTML = 'By March 2029: <b>' + eur(last.after) + '</b> a year, up ' + eur(last.cum) +
+        ' (<b>' + (last.cum / start * 100).toFixed(1) + '%</b>)';
+    }, STEPS.length * 200 + 300);
+  }
+  document.getElementById('pdPresets').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    this.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
+    b.classList.add('on'); current = +b.dataset.sal; drawStair(current);
+  });
+  document.getElementById('pdReplay').addEventListener('click', function () { drawStair(current); });
+  drawStair(current);
+
+  // ---- flat or percentage slider ----
+  var sal = document.getElementById('pdSal'), out = document.getElementById('pdSalOut'),
+      tbl = document.getElementById('pdTbl'), res = document.getElementById('pdSalRes');
+  function drawTable() {
+    var start = +sal.value, rows = run(start), flats = 0, floors = 0;
+    out.textContent = eur(start);
+    tbl.innerHTML = rows.map(function (r) {
+      var tag = '';
+      if (r.st.min) {
+        floors++; if (r.flat) flats++;
+        tag = r.flat ? '<span class="pd-tag amber">flat sum</span>' : '<span class="pd-tag teal">percentage</span>';
+      }
+      return '<tr><td>' + r.st.d + '</td><td class="m">' + rule(r.st) + '</td><td class="r">+' + eur(r.gain) + '</td><td>' + tag + '</td></tr>';
+    }).join('');
+    var last = rows[rows.length - 1];
+    res.innerHTML = 'By March 2029: <b>' + eur(last.after) + '</b> (+' + (last.cum / start * 100).toFixed(1) + '%). ' +
+      'The flat sum wins at <b>' + flats + ' of ' + floors + '</b> steps that have one.';
+  }
+  sal.addEventListener('input', drawTable);
+  drawTable();
+})();
+</script>
+
+    </div>
+  </div>
+
+</body>
+</html>
