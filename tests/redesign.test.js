@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { readCss, themes, contrast } from './helpers/css.js';
 import * as data from '../site/js/data.js';
-import { DEFAULT_SELECTION as D0 } from '../site/js/selection.js';
+import { LECTURER_EXAMPLE as D0 } from './helpers/selections.js';
 import { mineText } from '../site/js/header.js';
 import { currentChapter } from '../site/js/rail.js';
 

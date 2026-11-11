@@ -444,6 +444,7 @@ export const BEYOND_PAY = [
 
 export const ASSUMPTIONS = [
   'Everything is based on the proposed Public Service Agreement 2026–2029, issued through the Workplace Relations Commission on 11 November 2026. Its section 3.1.2 sets out the nine pay adjustments used here. It is a proposal until union members have voted.',
+  'Until you choose a job, grade and point, every chapter shows an example salary of €60,000, the level at which the deal’s flat minimums stop applying.',
   'Figures are gross pay, before tax, USC, PRSI and pension deductions.',
   'Annual increments are not included: the figures show only what the deal adds to your current scale point. The one exception is the opening chart, where you can add your own increment month under Advanced.',
   'Where you add increments to the opening chart, each is counted from the 1st of the month you choose: one point a year, worked out from the point you are on now. Skipped points are passed over, and long service increments and promotions are left out.',

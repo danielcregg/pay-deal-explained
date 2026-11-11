@@ -17,6 +17,7 @@ export const LECTURER_NOTE = `Everyone on the Lecturer and Senior Lecturer scale
 export function flatNote(sector, data) {
   if (sector.id === 'tu') return LECTURER_NOTE;
   const threshold = eur(data.DEAL.threshold);
+  if (sector.id === 'any') return `Any salary below ${threshold} gets at least the first flat sum. At ${threshold} or more, every rise is a percentage.`;
   const values = gradesIn(data.SCALES, sector.id).flatMap((g) => g.points.map((p) => p.value));
   const below = values.filter((v) => v < data.DEAL.threshold);
   if (below.length === 0) return `For a ${sector.short}, every scale point is above ${threshold}, so all the rises are percentages.`;

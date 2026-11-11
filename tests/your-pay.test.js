@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as data from '../site/js/data.js';
-import { DEFAULT_SELECTION as D0, resolvePay, figuresFor } from '../site/js/selection.js';
+import { resolvePay, figuresFor } from '../site/js/selection.js';
+import { LECTURER_EXAMPLE as D0 } from './helpers/selections.js';
 import { model } from '../site/js/sections/your-pay.js';
 
 const near = (a, b, t = 0.01) => assert.ok(Math.abs(a - b) <= t, `${a} ≉ ${b}`);

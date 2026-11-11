@@ -19,7 +19,7 @@ export function model(base, data, { includeLB, includePrevLB = includeLB, sector
     return {
       id: d.id, name: d.name, start: d.start, end: d.end, months: d.months, stepCount: d.steps.length,
       headline: d.headlinePct, compoundedPct: (end / base - 1) * 100, endSalary: end,
-      threshold: d.threshold, lowPct: (finalSalary(lowSalary, d.steps, { includeLB: counts(d) }) / lowSalary - 1) * 100,
+      threshold: d.threshold, lowPct: lowSalary === null ? null : (finalSalary(lowSalary, d.steps, { includeLB: counts(d) }) / lowSalary - 1) * 100,
       // With this deal's own 1% counted, for when the other deal's is and this one's is not.
       withLBPct: (finalSalary(base, d.steps, { includeLB: true }) / base - 1) * 100,
       costBn: d.costBn, reviewClause: d.reviewClause,
@@ -111,7 +111,7 @@ function card(deal, accent, low, note, likeForLike = false) {
       h('div', { class: 'vs-yours' }, h('dt', {}, 'For your salary'), h('dd', {}, `+${pct(deal.compoundedPct)}`,
         likeForLike ? h('span', { class: 'vs-like' }, `, or +${pct(deal.withLBPct)} counting its 1% local bargaining too, as the 2024–26 figure does`) : null)),
       h('div', {}, h('dt', {}, 'Minimum payments apply below'), h('dd', {}, eur(deal.threshold))),
-      h('div', {}, h('dt', {}, `For a ${eur(low.salary)} salary, today’s ${low.label}`), h('dd', {}, `+${pct(deal.lowPct)}`)),
+      low ? h('div', {}, h('dt', {}, `For a ${eur(low.salary)} salary, today’s ${low.label}`), h('dd', {}, `+${pct(deal.lowPct)}`)) : null,
       h('div', {}, h('dt', {}, 'Cost'), h('dd', {}, `€${deal.costBn}bn`)),
       h('div', {}, h('dt', {}, 'Review clause'), h('dd', {}, deal.reviewClause))),
     note ? h('p', { class: 'note' }, note) : null);
@@ -161,7 +161,7 @@ export function render(root, { store, data }) {
     const sector = sectorOf(sel, data.SCALES);
     const includePrevLB = sector.owed ? sel.includeOwed : Boolean(sector.lastDealLB);
     m = model(base, data, { includeLB: sel.includeLB, includePrevLB, sector: sector.id });
-    const low = { salary: m.lowSalary, label: sector.low };
+    const low = m.lowSalary === null ? null : { salary: m.lowSalary, label: sector.low }; // none until a job is chosen
     context.textContent = figuresFor({ ...sel, includeOwed: false }, data.SCALES);
     cards.replaceChildren(card(m.deals[0], 'prev', low, sector.lastDealNote ?? null), card(m.deals[1], 'draft', low, null, Boolean(sector.lastDealLB) && !sel.includeLB));
     const said = (on) => (on ? 'counted' : 'left out');

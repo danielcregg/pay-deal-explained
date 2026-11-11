@@ -1,8 +1,8 @@
 // The reader's selection (grade, point, contract, switches): parsing, validation,
 // resolving it to the full-time salary the deal is applied to, and local storage.
 
-import { SITE, INFLATION } from './data.js';
-import { longDate } from './format.js';
+import { SITE, INFLATION, DEAL } from './data.js';
+import { longDate, eur } from './format.js';
 
 export const STORAGE_KEY = 'pde:selection:v1';
 export const PAY_MONTHS = ['2027-01', '2027-02', '2027-03'];
@@ -10,13 +10,20 @@ export const MIN_SALARY = 10000; // below any full-time yearly salary: catches "
 export const MAX_SALARY = 500000;
 export const MAX_HOURS = 2000;
 
+/**
+ * No job chosen: a salary on its own. The page opens this way, so that nothing on it
+ * points at any one job, grade or point until the reader picks their own.
+ */
+export const ANY_JOB = Object.freeze({ id: 'any', name: 'Choose your job', short: 'public servant', low: null, hourly: false, caveat: null, lastDealLB: false, lastDealNote: null });
+
+/** How the page opens: no job, and an example salary at the deal's threshold. */
 export const DEFAULT_SELECTION = Object.freeze({
   touched: false,
-  sector: 'tu',            // an occupation: one of SCALES.sectors
+  sector: ANY_JOB.id,      // an occupation: one of SCALES.sectors, or 'any' for none
   contract: 'full',        // 'full' | 'part' | 'hourly'
-  gradeId: 'lect',         // a grade id, or 'typed'
-  pointIndex: 4,
-  typed: null,
+  gradeId: 'typed',        // a grade id, or 'typed' for a salary on its own
+  pointIndex: 0,
+  typed: DEAL.threshold,   // the example salary, until the reader chooses
   fte: 1,
   alScale: 'al-ne',
   hoursPerYear: 0,
@@ -94,8 +101,8 @@ export function gradeOf(sel, scales) {
   return findGrade(scales, sel.gradeId) ?? null;
 }
 
-/** The reader's occupation: its scales' source, caveats and anything particular to it. */
-export const sectorOf = (sel, scales) => scales.sectors.find((s) => s.id === sel.sector) ?? scales.sectors[0];
+/** The reader's occupation: its scales' source, caveats and anything particular to it. With none chosen, a neutral stand-in. */
+export const sectorOf = (sel, scales) => scales.sectors.find((s) => s.id === sel.sector) ?? ANY_JOB;
 
 /** The grades of one occupation. */
 export const gradesIn = (scales, sectorId) => scales.grades.filter((g) => g.sector === sectorId);
@@ -128,7 +135,9 @@ export function resolvePay(sel, scales) {
   }
   const fte = sel.contract === 'part' ? sel.fte : 1;
   if (sel.gradeId === 'typed') {
-    return { base: sel.typed * lift, published: sel.typed, factor: fte, annualFactor: fte, unit: 'year', label: 'Typed salary', isExample };
+    // Untouched, a typed salary is the page's own example; once the reader types one, it is theirs.
+    const label = isExample ? `a salary of ${eur(sel.typed)}` : 'Typed salary';
+    return { base: sel.typed * lift, published: sel.typed, factor: fte, annualFactor: fte, unit: 'year', label, isExample };
   }
   const grade = findGrade(scales, sel.gradeId);
   const point = grade.points[sel.pointIndex];
@@ -136,12 +145,26 @@ export function resolvePay(sel, scales) {
   return { base: point.value * lift, published: point.value, factor: fte, annualFactor: fte, unit: 'year', label, isExample };
 }
 
-/** The changes to make when the reader picks another job: its first grade and point (a typed salary stays), and nothing the job does not have. */
+/**
+ * The changes to make when the reader picks another job: its first grade and point, and
+ * nothing the job does not have. A salary the reader typed is theirs, so it stays; the
+ * page's own example salary does not. Picking "no job" keeps the salary on its own.
+ */
 export function sectorPatch(sel, scales, sectorId) {
+  if (sectorId === ANY_JOB.id) {
+    return {
+      sector: ANY_JOB.id,
+      gradeId: 'typed',
+      typed: resolvePay({ ...sel, includeOwed: false }, scales).published,
+      pointIndex: 0,
+      contract: sel.contract === 'hourly' ? 'full' : sel.contract,
+      includeOwed: false,
+    };
+  }
   const sector = scales.sectors.find((s) => s.id === sectorId);
   return {
     sector: sector.id,
-    gradeId: sel.gradeId === 'typed' ? 'typed' : gradesIn(scales, sector.id)[0].id, // a typed salary is the reader's own: keep it
+    gradeId: sel.gradeId === 'typed' && sel.touched ? 'typed' : gradesIn(scales, sector.id)[0].id,
     pointIndex: 0,
     contract: sel.contract === 'hourly' && !sector.hourly ? 'full' : sel.contract,
     includeOwed: false, // counting the 1% from 2025 in one job says nothing about another
@@ -191,6 +214,7 @@ export function careerOf(sel, scales, now) {
 export function lowestScalePoint(scales, sectorId = scales.sectors[0].id) {
   const sector = scales.sectors.find((s) => s.id === sectorId);
   const grades = gradesIn(scales, sectorId).filter((g) => !sector?.lowGrade || g.id === sector.lowGrade);
+  if (grades.length === 0) return null; // no job chosen: no scale to take a low point from
   return Math.min(...grades.flatMap((g) => g.points.map((p) => p.value)));
 }
 
@@ -207,7 +231,9 @@ export function figuresFor(sel, scales) {
 function isValid(sel, scales) {
   if (!['full', 'part', 'hourly'].includes(sel.contract)) return false;
   const sector = scales.sectors.find((s) => s.id === sel.sector);
-  if (!sector || (sel.contract === 'hourly' && !sector.hourly)) return false;
+  const noJob = sel.sector === ANY_JOB.id; // valid only with a salary on its own
+  if (!sector && !noJob) return false;
+  if (sel.contract === 'hourly' && !sector?.hourly) return false;
   if (!PAY_MONTHS.includes(sel.payMonth)) return false;
   if (typeof sel.includeLB !== 'boolean' || typeof sel.includeOwed !== 'boolean') return false;
   if (sel.incrementMonth !== null && !(Number.isInteger(sel.incrementMonth) && sel.incrementMonth >= 1 && sel.incrementMonth <= 12)) return false;
@@ -217,6 +243,7 @@ function isValid(sel, scales) {
   if (!['al-ne', 'al-pre'].includes(sel.alScale)) return false;
   if (!(typeof sel.hoursPerYear === 'number' && sel.hoursPerYear >= 0 && sel.hoursPerYear <= MAX_HOURS)) return false;
   if (sel.gradeId === 'typed') return typeof sel.typed === 'number' && sel.typed >= MIN_SALARY && sel.typed <= MAX_SALARY;
+  if (noJob) return false;
   const grade = findGrade(scales, sel.gradeId);
   return Boolean(grade) && grade.sector === sel.sector && Number.isInteger(sel.pointIndex) && sel.pointIndex >= 0 && sel.pointIndex < grade.points.length;
 }
@@ -231,7 +258,9 @@ export function restoreSelection(raw, scales) {
   try { parsed = JSON.parse(raw); } catch { return { ...DEFAULT_SELECTION }; }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return { ...DEFAULT_SELECTION };
   if (parsed.touched !== true) return { ...DEFAULT_SELECTION };
-  const sel = Object.fromEntries(Object.keys(DEFAULT_SELECTION).map((k) => [k, k in parsed ? parsed[k] : DEFAULT_SELECTION[k]]));
+  // Choices saved before jobs existed were all lecturers', so a missing job means that one.
+  const fallback = { ...DEFAULT_SELECTION, sector: 'tu' };
+  const sel = Object.fromEntries(Object.keys(DEFAULT_SELECTION).map((k) => [k, k in parsed ? parsed[k] : fallback[k]]));
   return isValid(sel, scales) ? { ...sel, touched: true } : { ...DEFAULT_SELECTION };
 }
 

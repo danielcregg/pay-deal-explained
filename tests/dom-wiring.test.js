@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { installDom, Document, setReducedMotion } from './helpers/dom.js';
 import * as data from '../site/js/data.js';
 import { createStore } from '../site/js/state.js';
-import { DEFAULT_SELECTION } from '../site/js/selection.js';
+import { LECTURER_EXAMPLE as DEFAULT_SELECTION } from './helpers/selections.js';
 import * as staircase from '../site/js/sections/staircase.js';
 import * as hero from '../site/js/sections/hero.js';
 import * as yourPay from '../site/js/sections/your-pay.js';
@@ -269,7 +269,7 @@ test('your pay: choosing another job swaps the grades and hides what does not ap
   const owedSwitch = root.querySelector('label.switch-owed');
   const jobs = root.querySelector('#pp-sector');
   const choose = (id) => { jobs.value = id; jobs.dispatchEvent({ type: 'change', bubbles: true }); return store.get(); };
-  assert.deepEqual(values('#pp-sector option'), ['tu', 'primary', 'postprimary', 'nurse', 'garda']);
+  assert.deepEqual(values('#pp-sector option'), ['any', 'tu', 'primary', 'postprimary', 'nurse', 'garda']);
   assert.equal(jobs.closest('.field').hidden, false, 'the job list shows once there is more than one job');
   assert.equal(owedSwitch.hidden, false, 'lecturers are offered the 1% from September 2025');
   assert.equal(root.querySelector('label.pill-hourly').hidden, false);

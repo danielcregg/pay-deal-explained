@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import { installDom } from './helpers/dom.js';
 import * as data from '../site/js/data.js';
 import { positionIn, careerEvents, finalSalary } from '../site/js/pay.js';
-import { DEFAULT_SELECTION as D0, restoreSelection, careerOf, gradePatch, thisMonth } from '../site/js/selection.js';
+import { restoreSelection, careerOf, gradePatch, thisMonth } from '../site/js/selection.js';
+import { LECTURER_EXAMPLE as D0 } from './helpers/selections.js';
 import { mineText } from '../site/js/header.js';
 import { createStore } from '../site/js/state.js';
 import * as hero from '../site/js/sections/hero.js';
@@ -152,7 +153,7 @@ test('the race: the pickers set job, grade, point and increment month, and the f
   assert.ok(picker, 'the pickers are on the chart');
   assert.equal(picker.closest('details'), null, 'in the open, not folded away');
   assert.deepEqual(picker.querySelectorAll('label').map((l) => l.textContent), ['Your job', 'Grade', 'Point you are on now', 'Increment month']);
-  assert.deepEqual(root.querySelectorAll('#race-inc option').map((o) => o.textContent).slice(0, 3), ['Do not add increments', 'January', 'February']);
+  assert.deepEqual(root.querySelectorAll('#race-inc option').map((o) => o.textContent).slice(0, 3), ['None (optional)', 'January', 'February']);
   assert.deepEqual(tiles().slice(0, 2), ['€99,037', '+10.2%']);
   assert.equal(root.querySelector('.race-split').hidden, true);
   assert.equal(root.querySelector('.race-inc-note').hidden, true, 'nothing to explain until a month is chosen');

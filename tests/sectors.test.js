@@ -3,7 +3,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as data from '../site/js/data.js';
 import { finalSalary } from '../site/js/pay.js';
-import { DEFAULT_SELECTION as D0, restoreSelection, resolvePay, owedFor, gradesIn, sectorOf, lowestScalePoint } from '../site/js/selection.js';
+import { restoreSelection, resolvePay, owedFor, gradesIn, sectorOf, lowestScalePoint } from '../site/js/selection.js';
+import { LECTURER_EXAMPLE as D0 } from './helpers/selections.js';
 import { model as vsLastDeal } from '../site/js/sections/vs-last-deal.js';
 import { flatNote } from '../site/js/sections/flat-or-percent.js';
 
@@ -116,8 +117,8 @@ test('teachers: no hourly-paid option, and each sector says how the last deal’
   assert.match(sector('tu').lastDealNote, /still being sought by TUI/);
   const saved = (patch) => JSON.stringify({ ...D0, touched: true, sector: 'primary', gradeId: 'pt-new', pointIndex: 0, ...patch });
   assert.equal(restoreSelection(saved({}), SCALES).gradeId, 'pt-new');
-  assert.equal(restoreSelection(saved({ contract: 'hourly' }), SCALES).sector, 'tu', 'an hourly-paid teacher is not a valid choice');
-  assert.equal(restoreSelection(saved({ gradeId: 'lect' }), SCALES).sector, 'tu', 'a grade from another job is not a valid choice');
+  assert.equal(restoreSelection(saved({ contract: 'hourly' }), SCALES).touched, false, 'an hourly-paid teacher is not a valid choice');
+  assert.equal(restoreSelection(saved({ gradeId: 'lect' }), SCALES).touched, false, 'a grade from another job is not a valid choice');
 });
 
 test('teachers: a chosen point resolves to its scale figure, with no lift for the 2025 1%', () => {

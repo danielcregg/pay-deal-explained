@@ -9,7 +9,7 @@
 // the start.
 
 import { applySteps, priceIndexSeries, careerEvents, positionIn } from '../pay.js';
-import { resolvePay, figuresFor, lowestScalePoint, sectorOf, gradesIn, gradeOf, careerOf, scenarioOf, sectorPatch, gradePatch, thisMonth } from '../selection.js';
+import { resolvePay, figuresFor, lowestScalePoint, sectorOf, gradesIn, gradeOf, careerOf, scenarioOf, sectorPatch, gradePatch, thisMonth, ANY_JOB } from '../selection.js';
 import { eur, pct } from '../format.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { h } from '../dom.js';
@@ -279,10 +279,10 @@ export function render(root, { store, data, now = thisMonth() }) {
   // Who the chart is for: job, grade, the point held now and the month of the yearly increment.
   const option = (value, text) => h('option', { value }, text);
   const field = (id, label, control, hidden = false) => h('div', { class: 'field', hidden }, h('label', { for: id }, label), control);
-  const jobSelect = h('select', { id: 'race-job' }, SCALES.sectors.map((s) => option(s.id, s.name)));
+  const jobSelect = h('select', { id: 'race-job' });
   const gradeSelect = h('select', { id: 'race-grade' });
   const pointSelect = h('select', { id: 'race-point' });
-  const incSelect = h('select', { id: 'race-inc' }, option('', 'Do not add increments'), MONTHS.map((name, i) => option(i + 1, name)));
+  const incSelect = h('select', { id: 'race-inc' }, option('', 'None (optional)'), MONTHS.map((name, i) => option(i + 1, name)));
   const picker = h('div', { class: 'race-picker', role: 'group', 'aria-label': 'Whose pay to show' },
     field('race-job', 'Your job', jobSelect, SCALES.sectors.length < 2),
     field('race-grade', 'Grade', gradeSelect),
@@ -291,35 +291,58 @@ export function render(root, { store, data, now = thisMonth() }) {
   const context = h('p', { class: 'context-line' });
   const incNote = h('p', { class: 'race-inc-note note', hidden: true, 'aria-live': 'polite' });
 
-  const listed = { grades: null, points: null }; // what the two lists hold at the moment
+  // Until a job is chosen the page shows an example salary, and the three pickers are
+  // filled in one after the other: nothing changes until job, grade and point are all
+  // chosen. `draft` holds the first two meanwhile. After that, each change applies at once.
+  const draft = { sector: '', gradeId: '' };
+  const noJob = (sel) => sel.sector === ANY_JOB.id;
+  const listed = { jobs: null, grades: null, points: null }; // what the three lists hold at the moment
+  const fill = (select, key, slot, options) => {
+    if (listed[slot] === key) return;
+    listed[slot] = key;
+    select.replaceChildren(...options());
+  };
   const syncPicker = (sel) => {
-    const grade = gradeOf(sel, SCALES);
-    const gradesKey = `${sel.sector}|${grade ? 'grade' : 'none'}`;
-    if (listed.grades !== gradesKey) {
-      listed.grades = gradesKey;
-      // A typed salary or an hourly rate has no grade here until one is chosen.
-      gradeSelect.replaceChildren(...(grade ? [] : [option('', 'Choose a grade')]), ...gradesIn(SCALES, sel.sector).map((g) => option(g.id, g.name)));
-    }
-    const pointsKey = grade ? grade.id : '';
-    if (listed.points !== pointsKey) {
-      listed.points = pointsKey;
-      pointSelect.replaceChildren(...(grade ? grade.points : []).map((p, i) => option(i, `${p.label} (${eur(p.value)})`)));
-    }
-    jobSelect.value = sel.sector;
+    const drafting = noJob(sel);
+    if (!drafting) { draft.sector = ''; draft.gradeId = ''; }
+    const sector = drafting ? draft.sector : sel.sector;
+    const grade = drafting ? SCALES.grades.find((g) => g.id === draft.gradeId) ?? null : gradeOf(sel, SCALES);
+    fill(jobSelect, drafting ? 'asking' : 'chosen', 'jobs',
+      () => [...(drafting ? [option('', 'Choose your job')] : []), ...SCALES.sectors.map((s) => option(s.id, s.name))]);
+    // A typed salary or an hourly rate has no grade here until one is chosen.
+    fill(gradeSelect, `${sector}|${grade ? 'grade' : 'none'}`, 'grades',
+      () => [...(grade ? [] : [option('', sector ? 'Choose your grade' : 'Choose your job first')]), ...gradesIn(SCALES, sector).map((g) => option(g.id, g.name))]);
+    fill(pointSelect, `${grade ? grade.id : ''}|${drafting ? 'asking' : 'chosen'}`, 'points',
+      () => [...(drafting || !grade ? [option('', grade ? 'Choose your point' : 'Choose your grade first')] : []), ...(grade ? grade.points : []).map((p, i) => option(i, `${p.label} (${eur(p.value)})`))]);
+    jobSelect.value = sector;
     gradeSelect.value = grade ? grade.id : '';
-    pointSelect.value = grade ? String(sel.pointIndex) : '';
+    gradeSelect.disabled = !sector;
+    pointSelect.value = grade && !drafting ? String(sel.pointIndex) : '';
     pointSelect.disabled = !grade;
     incSelect.value = sel.incrementMonth ? String(sel.incrementMonth) : '';
+    incSelect.disabled = !gradeOf(sel, SCALES); // an increment needs a point to start from
   };
   // The month goes with the choice, so "the point you are on now" means the same on a later visit.
   const choose = (patch) => store.set({ ...patch, touched: true, pointMonth: now });
-  jobSelect.addEventListener('change', () => choose(sectorPatch(store.get(), SCALES, jobSelect.value)));
-  gradeSelect.addEventListener('change', () => {
-    if (!gradeSelect.value) return;
+  jobSelect.addEventListener('change', () => {
     const sel = store.get();
+    if (!jobSelect.value) return;
+    if (noJob(sel)) { draft.sector = jobSelect.value; draft.gradeId = ''; syncPicker(sel); return; }
+    choose(sectorPatch(sel, SCALES, jobSelect.value));
+  });
+  gradeSelect.addEventListener('change', () => {
+    const sel = store.get();
+    if (!gradeSelect.value) return;
+    if (noJob(sel)) { draft.gradeId = gradeSelect.value; syncPicker(sel); return; }
     choose({ ...gradePatch(sel, SCALES, gradeSelect.value), contract: sel.contract === 'hourly' ? 'full' : sel.contract });
   });
-  pointSelect.addEventListener('change', () => choose({ pointIndex: Number(pointSelect.value) }));
+  pointSelect.addEventListener('change', () => {
+    const sel = store.get();
+    if (pointSelect.value === '') return;
+    const pointIndex = Number(pointSelect.value);
+    if (noJob(sel)) choose({ sector: draft.sector, gradeId: draft.gradeId, pointIndex, typed: null, contract: sel.contract === 'hourly' ? 'full' : sel.contract, includeOwed: false });
+    else choose({ pointIndex });
+  });
   incSelect.addEventListener('change', () => choose({ incrementMonth: incSelect.value ? Number(incSelect.value) : null }));
 
   // The figures for the month the play head is on, the slider, and the chart.
@@ -431,8 +454,9 @@ export function render(root, { store, data, now = thisMonth() }) {
     const pay = resolvePay(sel, data.SCALES);
     const sector = sectorOf(sel, data.SCALES);
     const low = lowestScalePoint(data.SCALES, sector.id);
-    lowest.textContent = `The ${sector.low} (${eur(low)})`;
-    const sameAsLowest = pay.published === low;
+    lowest.textContent = low === null ? '' : `The ${sector.low} (${eur(low)})`;
+    const sameAsLowest = low === null || pay.published === low; // no job chosen: no low point to compare with
+    if (low === null) who = 'mine';
     if (sameAsLowest) who = 'mine';
     // The lowest point gets the same treatment as the reader's own: lifted if they count the 1% from 2025.
     const base = who === 'low' ? low * (pay.base / pay.published) : pay.base;

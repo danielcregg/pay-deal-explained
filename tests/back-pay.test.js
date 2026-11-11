@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as data from '../site/js/data.js';
-import { DEFAULT_SELECTION as D0, owedFor } from '../site/js/selection.js';
+import { owedFor } from '../site/js/selection.js';
+import { LECTURER_EXAMPLE as D0 } from './helpers/selections.js';
 import { owedBackPay } from '../site/js/pay.js';
 import { model } from '../site/js/sections/back-pay.js';
 import { model as yourPay } from '../site/js/sections/your-pay.js';

@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { installDom } from './helpers/dom.js';
 import * as data from '../site/js/data.js';
-import { DEFAULT_SELECTION as D0, sectorPatch, figuresFor } from '../site/js/selection.js';
+import { sectorPatch, figuresFor } from '../site/js/selection.js';
+import { LECTURER_EXAMPLE as D0 } from './helpers/selections.js';
 import { createStore } from '../site/js/state.js';
 import * as yourPay from '../site/js/sections/your-pay.js';
 import * as vsLastDeal from '../site/js/sections/vs-last-deal.js';
@@ -171,7 +172,7 @@ test('the published text of the proposed agreement is the source for the deal', 
 test('nothing still speaks only to lecturers where every job reads it', () => {
   assert.ok(data.ASSUMPTIONS.some((a) => /^For hourly-paid lecturers, back pay assumes/.test(a)));
   assert.match(data.GLOSSARY.find((g) => g.id === 'scale-point').text, /gardaí/);
-  assert.match(read('site/js/sections/your-pay.js'), /Pick your own job, grade and point\./);
+  assert.match(read('site/js/sections/your-pay.js'), /Pick your own job, grade and point/);
   assert.doesNotMatch(read('package.json'), /for TU lecturers/);
   assert.doesNotMatch(read('README.md'), /tuLbNote/);
 });

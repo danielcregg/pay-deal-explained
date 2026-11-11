@@ -3,7 +3,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { SCALES, SITE } from '../site/js/data.js';
-import { DEFAULT_SELECTION, parseSalary, clampHours, restoreSelection } from '../site/js/selection.js';
+import { parseSalary, clampHours, restoreSelection } from '../site/js/selection.js';
+import { LECTURER_EXAMPLE as DEFAULT_SELECTION } from './helpers/selections.js';
+import { DEFAULT_SELECTION as PAGE_DEFAULT } from '../site/js/selection.js';
 import { createStore } from '../site/js/state.js';
 import { longDate, shortDate } from '../site/js/format.js';
 import { presentKeyAction } from '../site/js/present.js';
@@ -49,8 +51,8 @@ test('M5: hours are whole numbers from 0 to 2,000, so the field can show what is
 });
 
 test('M6: only a selection the reader saved counts as their own', () => {
-  assert.deepEqual(restoreSelection('{}', SCALES), DEFAULT_SELECTION);
-  assert.deepEqual(restoreSelection('{"gradeId":"al-ne","pointIndex":0}', SCALES), DEFAULT_SELECTION);
+  assert.deepEqual(restoreSelection('{}', SCALES), PAGE_DEFAULT);
+  assert.deepEqual(restoreSelection('{"gradeId":"al-ne","pointIndex":0}', SCALES), PAGE_DEFAULT);
   const saved = restoreSelection(JSON.stringify({ ...DEFAULT_SELECTION, touched: true, gradeId: 'al-ne', pointIndex: 0 }), SCALES);
   assert.deepEqual([saved.gradeId, saved.touched], ['al-ne', true]);
 });

@@ -2,7 +2,7 @@
 // or hourly, and see what the draft deal adds. The choice then flows into every demo.
 
 import { applySteps, finalSalary, summarise, backPay, owedBackPay } from '../pay.js';
-import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradesIn, gradeOf, owedFor, scenarioOf, sectorPatch, gradePatch, thisMonth } from '../selection.js';
+import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradesIn, gradeOf, owedFor, scenarioOf, sectorPatch, gradePatch, thisMonth, ANY_JOB } from '../selection.js';
 import { eur, signedEur, pct, longDate, listSteps } from '../format.js';
 import { h } from '../dom.js';
 import { countTo } from '../motion.js';
@@ -99,7 +99,7 @@ export function render(root, { store, data, now = thisMonth() }) {
   const { SCALES } = data;
 
   // ---- form ----
-  const sectorSelect = h('select', { id: 'pp-sector' }, SCALES.sectors.map((s) => h('option', { value: s.id }, s.name)));
+  const sectorSelect = h('select', { id: 'pp-sector' }, [ANY_JOB, ...SCALES.sectors].map((s) => h('option', { value: s.id }, s.name)));
   const sectorField = h('div', { class: 'field', hidden: SCALES.sectors.length < 2 }, h('label', { for: 'pp-sector' }, 'Your job'), sectorSelect);
 
   const hourlyPill = pill('pp-contract', 'hourly', 'Hourly-paid');
@@ -120,7 +120,7 @@ export function render(root, { store, data, now = thisMonth() }) {
     const grades = gradesIn(SCALES, sectorId);
     const legacy = grades.filter((g) => g.group === 'legacy');
     gradeSelect.replaceChildren(
-      h('optgroup', { label: legacy.length ? 'Current grades' : 'Grades' }, grades.filter((g) => g.group !== 'legacy').map(option)),
+      ...(grades.length ? [h('optgroup', { label: legacy.length ? 'Current grades' : 'Grades' }, grades.filter((g) => g.group !== 'legacy').map(option))] : []),
       ...(legacy.length ? [h('optgroup', { label: 'Other or legacy scales' }, legacy.map(option))] : []),
       h('optgroup', { label: 'Not listed?' }, h('option', { value: 'typed' }, 'Type my salary')));
   };
@@ -161,7 +161,7 @@ export function render(root, { store, data, now = thisMonth() }) {
     h('p', { class: 'privacy' }, 'Your choices stay on this device. ', reset));
 
   // ---- results ----
-  const badge = h('p', { class: 'example-badge' }, 'Example: Lecturer, point 5. Pick your own job, grade and point.');
+  const badge = h('p', { class: 'example-badge' });
   const label = h('p', { class: 'pay-label' });
   const from = h('span', { class: 'from' });
   const to = h('span', { class: 'to' });
@@ -256,7 +256,9 @@ export function render(root, { store, data, now = thisMonth() }) {
     }[m.active];
 
     badge.hidden = !m.isExample;
-    label.textContent = (sel.contract === 'part' ? `${m.label}, ${fteText(sel.fte)} of full-time` : m.label)
+    badge.textContent = `Example: ${m.label}. Pick your own job, grade and point${sel.gradeId === 'typed' ? ', or type your salary' : ''}.`;
+    const name = m.label[0].toUpperCase() + m.label.slice(1); // "a salary of €60,000" opens the panel with a capital
+    label.textContent = (sel.contract === 'part' ? `${name}, ${fteText(sel.fte)} of full-time` : name)
       + (m.owedCounted ? `, with the ${m.owed.pct}% from ${longDate(m.owed.since.slice(0, 7))}` : '');
     from.textContent = money(nowR, u);
     const startFrom = shown && shown.unit === u ? shown.value : endR;

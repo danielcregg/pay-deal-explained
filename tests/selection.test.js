@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SCALES } from '../site/js/data.js';
-import { DEFAULT_SELECTION, parseSalary, clampFte, resolvePay, restoreSelection } from '../site/js/selection.js';
+import { parseSalary, clampFte, resolvePay, restoreSelection } from '../site/js/selection.js';
+import { LECTURER_EXAMPLE as DEFAULT_SELECTION } from './helpers/selections.js';
+import { DEFAULT_SELECTION as PAGE_DEFAULT } from '../site/js/selection.js';
 
 test('salary parsing is lenient but safe (Review Focus 1)', () => {
   assert.deepEqual(parseSalary('€58,000'), { ok: true, value: 58000 });
@@ -15,7 +17,7 @@ test('FTE is clamped to 1–100% (Review Focus 2)', () => {
 
 test('saved selections are validated (Review Focus 3)', () => {
   for (const raw of [null, 'not json', '{"gradeId":"nope"}', '{"gradeId":"lect","pointIndex":99}', '{"contract":"weird"}'])
-    assert.deepEqual(restoreSelection(raw, SCALES), DEFAULT_SELECTION, String(raw));
+    assert.deepEqual(restoreSelection(raw, SCALES), PAGE_DEFAULT, String(raw));
   const ok = restoreSelection(JSON.stringify({ ...DEFAULT_SELECTION, touched: true, gradeId: 'al-ne', pointIndex: 0 }), SCALES);
   assert.deepEqual([ok.gradeId, ok.touched], ['al-ne', true]);
 });
