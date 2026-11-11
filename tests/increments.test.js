@@ -403,3 +403,10 @@ test('copy: the glossary keeps increments out of every figure but the opening ch
   const text = data.GLOSSARY.find((g) => g.id === 'increment').text;
   assert.match(text, /are not included in the figures on this site\. The one exception is the opening chart/);
 });
+
+test('copy: increments are described as a line of their own, never set against prices, and no removed panel is named', () => {
+  const glossary = data.GLOSSARY.find((g) => g.id === 'increment').text;
+  assert.match(glossary, /drawn as a second line, and prices are still compared with the deal’s rises alone/);
+  assert.ok(data.ASSUMPTIONS.some((a) => /^Annual increments are not included/.test(a) && /Prices are always compared with the deal’s rises alone, because an increment is normal progression up a scale and not part of the deal/.test(a)));
+  assert.doesNotMatch(JSON.stringify([data.ASSUMPTIONS, data.GLOSSARY]), /Advanced/);
+});

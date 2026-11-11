@@ -119,20 +119,39 @@ under either chart. They are in `INFLATION.scenarios` in `data.js`.
 - `INFLATION.others` lists what other institutions forecast, for the table in chapter 2.
   Only add figures you have read at the source.
 
+### How the page opens
+
+The page opens the same way for everyone: no job, grade or point is chosen, and every
+chapter works from an example salary of €60,000 (`DEAL.threshold`, the salary from which
+every rise is a percentage). That state is `DEFAULT_SELECTION` in
+`site/js/selection.js`, and "no job" is `ANY_JOB`.
+
+- The opening chart has four pickers: job, grade, the point the reader is on now and,
+  optionally, the month their increment falls in. Nothing changes until job, grade and
+  point have all been chosen; after that each change applies at once.
+- Chapter 1 has the same choices in full, with part-time and hourly-paid contracts and a
+  box for typing a salary.
+- Choices are kept between visits only for a reader who ticks "Remember my choices on
+  this device" (`remember` in the selection; `persistSelection` saves or removes them).
+  `tests/generic.test.js` and `tests/remember.test.js` cover both.
+
 ### Increments in the opening chart
 
-Every figure on the site shows what the deal adds to one scale point, with one
-exception: the opening chart's Advanced panel, where a reader can pick their grade,
-the point they are on now and the month their increment falls in. The chart then adds
-one point a year to the deal's rises.
+Every figure on the site shows what the deal adds to one scale point. Prices are always
+compared with those rises alone, because an increment is normal progression up a scale
+and not part of the deal.
+
+A reader who picks an increment month in the opening chart also sees their own pay, as a
+second dashed line that climbs one point a year on top of the deal's rises. It has its
+own key and its own sentence, and it is never compared with prices.
 
 - The rules are in `positionIn` and `careerEvents` (`site/js/pay.js`) and `careerOf`
   (`site/js/selection.js`); `tests/increments.test.js` works examples through.
 - A point marked `skipped: true` in `data.js` is passed over, and a point marked
   `lsi: true` (a long service increment) is never climbed to, because it depends on
   years spent at the top. Mark new scales the same way.
-- The point a reader picks is saved with the month it was picked in (`pointMonth`), so
-  a later visit works from the same starting point.
+- The point a reader picks is held with the month it was picked in (`pointMonth`), so
+  that a remembered choice is read the same way on a later visit.
 
 ### If local bargaining turns out to reach staff as a pay rise
 
@@ -162,7 +181,7 @@ has a switch to count it and shows pay with and without it.
 | `site/index.html` | The page skeleton, one mount per section, and the no-JavaScript facts |
 | `site/js/data.js` | Every fact, pay scale, date and source |
 | `site/js/pay.js` | The pay maths: pure functions, no data or DOM |
-| `site/js/selection.js` | The reader's job, grade, point, contract and switches, saved on their device |
+| `site/js/selection.js` | The reader's job, grade, point, contract and switches; kept on their device only if they ask |
 | `site/js/switches.js` | The tick boxes and inflation buttons that several charts share |
 | `site/js/sections/` | One module per section, each with a testable `model()` and a `render()` |
 | `site/js/present.js` | Present mode for projectors |

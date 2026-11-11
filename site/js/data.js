@@ -405,7 +405,7 @@ export const GLOSSARY = [
   { id: 'ratification', term: 'Ratification', text: 'Formal acceptance of the deal by the unions after their members have voted. Until then, it is a draft.' },
   { id: 'wrc', term: 'WRC', text: 'The Workplace Relations Commission, the State body that hosted the talks where the draft deal was agreed.' },
   { id: 'ictu-psc', term: 'ICTU Public Services Committee', text: 'The committee of the Irish Congress of Trade Unions that brings the public service unions together to negotiate pay agreements and decide on them.' },
-  { id: 'increment', term: 'Increment', text: 'The yearly step up your pay scale for service. Increments are separate from this deal and are not included in the figures on this site. The one exception is the opening chart, if you add your increment month to it.' },
+  { id: 'increment', term: 'Increment', text: 'The yearly step up your pay scale for service. Increments are separate from this deal and are not included in the figures on this site. The one exception is the opening chart, if you add your increment month to it: your own pay is then drawn as a second line, and prices are still compared with the deal’s rises alone.' },
   { id: 'scale-point', term: 'Scale point', text: 'One step on your grade’s pay scale. The figures here are each scale’s point values for 1 June 2026; for gardaí they are worked out from the last published table.' },
 ];
 
@@ -446,7 +446,7 @@ export const ASSUMPTIONS = [
   'Everything is based on the proposed Public Service Agreement 2026–2029, issued through the Workplace Relations Commission on 11 November 2026. Its section 3.1.2 sets out the nine pay adjustments used here. It is a proposal until union members have voted.',
   'Until you choose a job, grade and point, every chapter shows an example salary of €60,000, the level at which the deal’s flat minimums stop applying.',
   'Figures are gross pay, before tax, USC, PRSI and pension deductions.',
-  'Annual increments are not included: the figures show only what the deal adds to your current scale point. The one exception is the opening chart, where you can add your own increment month under Advanced.',
+  'Annual increments are not included: the figures show only what the deal adds to your current scale point. The one exception is the opening chart: if you add your increment month, it draws your own pay with increments as a second line. Prices are always compared with the deal’s rises alone, because an increment is normal progression up a scale and not part of the deal.',
   'Where you add increments to the opening chart, each is counted from the 1st of the month you choose: one point a year, worked out from the point you are on now. Skipped points are passed over, and long service increments and promotions are left out.',
   'Local bargaining (1% on 1 March 2029) is left out of totals unless you switch it on. It is 1% of a bargaining unit’s pay bill, used as negotiated, so it may not reach you as a 1% rise.',
   'Lecturer, teacher and nurse figures are the pay scales in force from 1 June 2026. Garda figures are the official table of 1 August 2025 with the two rises since applied, because no later table could be found.',
