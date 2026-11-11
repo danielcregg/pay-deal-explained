@@ -393,3 +393,96 @@ tr.muted td { color: var(--muted); }
 @media (max-width: 480px) {
   .vs-facts div { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
 }
+
+/* ---------- 8. Beyond pay ---------- */
+
+.bp-cards { display: grid; gap: 1rem; }
+@media (min-width: 760px) { .bp-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.beyond h3 { font-size: 1.15rem; }
+.beyond p { margin-bottom: 0.6rem; }
+.badge { display: inline-block; font-size: 0.78rem; font-weight: 650; border-radius: 999px; padding: 0.12rem 0.6rem; margin-bottom: 0.6rem; }
+.badge.known { background: var(--teal-soft); color: var(--teal-ink); }
+.badge.reported { background: var(--amber-soft); color: var(--amber-ink); }
+.badge.unpublished { background: var(--line); color: var(--ink); }
+.beyond .beyond-src { font-size: 0.85rem; color: var(--muted); margin: 0; }
+
+/* ---------- 9. Timeline ---------- */
+
+.tl { list-style: none; margin: 0; padding: 0 0 0 1.9rem; position: relative; }
+.tl::before { content: ''; position: absolute; left: 0.6rem; top: 0.5rem; bottom: 0.5rem; width: 2px; background: var(--line); }
+.tl-item {
+  position: relative;
+  padding-bottom: 1.3rem;
+  transition: opacity 0.4s ease var(--d), transform 0.4s ease var(--d);
+}
+.tl-item:last-child { padding-bottom: 0; }
+.tl-dot {
+  position: absolute;
+  left: -1.72rem;
+  top: 0.3rem;
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--mark-pct);
+}
+.tl-item.past .tl-dot { background: var(--mark-pct); }
+.tl-item.now .tl-dot { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 0 4px var(--amber-soft); }
+.tl-item.future .tl-dot { border-style: dashed; border-color: var(--muted); }
+.tl-item.future .tl-label { color: var(--muted); }
+.tl-when { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0 0 0.1rem; font-size: 0.88rem; font-weight: 650; color: var(--muted); }
+.tl-now { font-size: 0.75rem; font-weight: 700; color: var(--amber-ink); background: var(--amber-soft); border-radius: 999px; padding: 0.05rem 0.5rem; }
+.tl-label { margin: 0 0 0.15rem; }
+.tl-source { margin: 0; font-size: 0.82rem; color: var(--muted); }
+.tl.pre .tl-item { opacity: 0; transform: translateY(6px); }
+
+.union-view { margin-top: 1.25rem; border-left: 4px solid var(--ink); }
+.union-view h3 { font-size: 1.1rem; }
+.union-view ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.3rem; }
+
+/* ---------- 10. Glossary ---------- */
+
+.glossary { margin: 0; display: grid; gap: 0.9rem; }
+.glossary dt { font-family: var(--serif); font-weight: 700; font-size: 1.08rem; scroll-margin-top: 4.5rem; }
+.glossary dt:target { color: var(--teal); }
+.glossary dd { margin: 0.15rem 0 0; max-width: var(--measure); }
+@media (min-width: 760px) {
+  .glossary { grid-template-columns: minmax(0, 14rem) minmax(0, 1fr); gap: 0.9rem 1.5rem; }
+  .glossary dd { margin: 0; }
+}
+
+button.term {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.2em;
+}
+button.term[aria-expanded="true"] { color: var(--teal); }
+
+.term-pop {
+  position: absolute;
+  z-index: 30;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.18);
+}
+.term-pop[hidden] { display: none; }
+.term-pop strong { display: block; margin-bottom: 0.2rem; }
+.term-pop a { color: var(--paper); font-weight: 650; }
+
+/* ---------- 11. Sources ---------- */
+
+.sources h3 { font-size: 1.15rem; margin-top: 1.4rem; }
+.sources h3:first-child { margin-top: 0; }
+.source-list, .assumption-list { display: grid; gap: 0.45rem; max-width: 52rem; margin: 0 0 0.5rem; padding-left: 1.25rem; }
+.src-pub { font-weight: 650; }
+.src-note { color: var(--muted); font-size: 0.88rem; }

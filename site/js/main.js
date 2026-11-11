@@ -13,6 +13,10 @@ import * as compounding from './sections/compounding.js';
 import * as backPay from './sections/back-pay.js';
 import * as payVsPrices from './sections/pay-vs-prices.js';
 import * as vsLastDeal from './sections/vs-last-deal.js';
+import * as beyondPay from './sections/beyond-pay.js';
+import * as timeline from './sections/timeline.js';
+import * as glossary from './sections/glossary.js';
+import * as sources from './sections/sources.js';
 
 const SECTIONS = [
   ['top', hero],
@@ -23,6 +27,10 @@ const SECTIONS = [
   ['back-pay', backPay],
   ['pay-vs-prices', payVsPrices],
   ['vs-last-deal', vsLastDeal],
+  ['beyond-pay', beyondPay],
+  ['timeline', timeline],
+  ['glossary', glossary], // after the sections above: it enhances their [data-term]s
+  ['sources', sources],
 ];
 
 const store = createStore(restoreSelection(loadSaved(), data.SCALES));
