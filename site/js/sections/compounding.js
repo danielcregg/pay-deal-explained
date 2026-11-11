@@ -48,11 +48,11 @@ export function render(root, { data }) {
   const bars = h('div', { class: 'cmp' },
     h('div', { class: 'cmp-row' },
       h('p', { class: 'cmp-label' }, 'Adding up the percentages'),
-      h('div', { class: 'cmp-track' }, segments(simpleAdds, kindOf)),
+      h('div', { class: 'cmp-track', role: 'img', 'aria-label': `Nine rises added up: €${two(withLB.sum)} on every €100.` }, segments(simpleAdds, kindOf)),
       simpleValue),
     h('div', { class: 'cmp-row' },
       h('p', { class: 'cmp-label' }, 'What your pay actually gains'),
-      h('div', { class: 'cmp-track' }, segments(compoundAdds, kindOf),
+      h('div', { class: 'cmp-track', role: 'img', 'aria-label': `The same rises, each worked out on pay that has already gone up: €${two(withLB.compounded)} on every €100.` }, segments(compoundAdds, kindOf),
         h('span', { class: 'cmp-extra', style: `left:${pctOf(withLB.sum)};width:${pctOf(extra)}` })),
       compoundValue));
 

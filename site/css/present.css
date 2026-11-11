@@ -1,0 +1,70 @@
+/* Present mode: one chapter per screen, larger type, a fixed nav bar. */
+
+body.present .site-header,
+body.present .site-footer,
+body.present .skip-link { display: none; }
+
+body.present main > section:not(.is-current) { display: none; }
+
+body.present main > section.is-current {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem clamp(1rem, 5vw, 4rem) 6.5rem;
+  border-top: 0;
+  font-size: 1.15rem;
+}
+
+body.present .chapter-head,
+body.present .chapter-body,
+body.present .hero-inner { width: 100%; max-width: 72rem; margin-left: auto; margin-right: auto; }
+
+body.present h1 { font-size: clamp(2.6rem, 2rem + 3vw, 4.4rem); max-width: 24ch; }
+body.present h2 { font-size: clamp(2.3rem, 1.8rem + 2.2vw, 3.4rem); }
+body.present .chapter-num { position: static; font-size: 1.15rem; }
+body.present .chapter-lede { font-size: 1.35rem; max-width: 46rem; }
+body.present h1:focus, body.present h2:focus { outline: none; }
+
+.present-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem clamp(0.75rem, 3vw, 1.5rem);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.present-nav button {
+  min-height: 2.75rem;
+  font: inherit;
+  font-weight: 650;
+  padding: 0.4rem 0.95rem;
+  border-radius: 6px;
+  border: 1px solid var(--muted);
+  background: transparent;
+  color: var(--paper);
+  cursor: pointer;
+}
+.present-nav button:disabled { opacity: 0.4; cursor: default; }
+.present-nav button:focus-visible { outline: 3px solid var(--mark-pct); outline-offset: 2px; }
+.present-nav .next { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+.present-nav .exit { margin-left: 0.25rem; }
+.present-nav .label { font-size: 0.95rem; white-space: nowrap; }
+
+.present-dots { display: flex; gap: 5px; margin: 0 auto; }
+.present-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.present-dots span.on { width: 18px; border-radius: 4px; background: var(--mark-pct); }
+
+@media (max-width: 560px) {
+  /* Present mode is for projectors and big screens; keep the phone header to one control less. */
+  .site-header .present-btn { display: none; }
+  .present-dots { display: none; }
+  .present-nav .label { margin: 0 auto; }
+}
