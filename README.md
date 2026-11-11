@@ -4,7 +4,8 @@ An unofficial, neutral explainer of the November 2026 draft Irish public service
 deal, written for lecturers in the technological universities. It uses animated and
 interactive demos so you can see what the draft does to your own pay.
 
-**Live site:** https://danielcregg.github.io/pay-deal-2026/
+**Live site:** https://danielcregg.is-a.dev/pay-deal-2026/ (the GitHub Pages address,
+danielcregg.github.io/pay-deal-2026, redirects there)
 
 - Static HTML, CSS and JavaScript modules: no build step, no dependencies, no tracking,
   no cookies.
