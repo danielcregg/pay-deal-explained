@@ -201,3 +201,13 @@ test('copy: the page still says increments are left out everywhere but the openi
   assert.ok(data.ASSUMPTIONS.some((a) => /increments are not included/i.test(a) && /opening chart/.test(a)));
   assert.match(data.GLOSSARY.find((g) => g.id === 'increment').text, /opening chart/);
 });
+
+test('the grade lists hold options and groups only, with no stray text', () => {
+  const { root, form, pick } = mountRace({});
+  const strays = (select) => select.childNodes.filter((n) => n.nodeName === '#text').map((n) => n.textContent);
+  for (const job of ['tu', 'primary', 'nurse', 'garda']) {
+    pick('#race-job', job);
+    assert.deepEqual(strays(root.querySelector('#race-grade')), [], `chart, ${job}`);
+    assert.deepEqual(strays(form.querySelector('#pp-grade')), [], `section 1, ${job}`);
+  }
+});

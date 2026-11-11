@@ -251,7 +251,7 @@ export function render(root, { store, data, now = currentMonth(data) }) {
     if (listed.grades !== gradesKey) {
       listed.grades = gradesKey;
       // A typed salary or an hourly rate has no grade here until one is chosen.
-      gradeSelect.replaceChildren(grade ? null : option('', 'Choose a grade'), ...gradesIn(SCALES, sel.sector).map((g) => option(g.id, g.name)));
+      gradeSelect.replaceChildren(...(grade ? [] : [option('', 'Choose a grade')]), ...gradesIn(SCALES, sel.sector).map((g) => option(g.id, g.name)));
     }
     const pointsKey = grade ? grade.id : '';
     if (listed.points !== pointsKey) {

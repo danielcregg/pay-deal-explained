@@ -120,7 +120,7 @@ export function render(root, { store, data }) {
     const legacy = grades.filter((g) => g.group === 'legacy');
     gradeSelect.replaceChildren(
       h('optgroup', { label: legacy.length ? 'Current grades' : 'Grades' }, grades.filter((g) => g.group !== 'legacy').map(option)),
-      legacy.length ? h('optgroup', { label: 'Other or legacy scales' }, legacy.map(option)) : null,
+      ...(legacy.length ? [h('optgroup', { label: 'Other or legacy scales' }, legacy.map(option))] : []),
       h('optgroup', { label: 'Not listed?' }, h('option', { value: 'typed' }, 'Type my salary')));
   };
   const gradeField = h('div', { class: 'field' }, h('label', { for: 'pp-grade' }, 'Grade'), gradeSelect);
