@@ -4,7 +4,7 @@
 import { applySteps, finalSalary, summarise, backPay, owedBackPay } from '../pay.js';
 import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradesIn, gradeOf, owedFor, scenarioOf, sectorPatch, gradePatch, thisMonth, ANY_JOB } from '../selection.js';
 import { eur, signedEur, pct, longDate, listSteps } from '../format.js';
-import { h } from '../dom.js';
+import { h, setText } from '../dom.js';
 import { countTo } from '../motion.js';
 import { model as payVsPrices } from './pay-vs-prices.js';
 
@@ -276,7 +276,7 @@ export function render(root, { store, data, now = thisMonth() }) {
       `After inflation ${m.prices.phrase}, that would buy about ${pct(Math.abs(m.real))} ${m.real >= 0 ? 'more' : 'less'} than in July 2026. `,
       h('a', { href: '#pay-vs-prices' }, 'See pay against prices'));
     per.textContent = u === 'hour' ? ' an hour' : '';
-    gain.textContent = `${signedEur(endR - nowR, opts)}${perText} (+${pct(m.shown.pct)}) by March 2029, ${counting}.`;
+    setText(gain, `${signedEur(endR - nowR, opts)}${perText} (+${pct(m.shown.pct)}) by March 2029, ${counting}.`);
     // Every way of counting, side by side; the one the big figure uses is marked.
     const cell = (id) => {
       const s = m.scenarios.find((x) => x.id === id);

@@ -127,7 +127,11 @@ export class Element extends Node {
     this.parentNode.insertBefore(node, siblings[siblings.indexOf(this) + 1] ?? null);
   }
   replaceWith(node) { this.parentNode.insertBefore(node, this); this.remove(); }
-  replaceChildren(...nodes) { for (const c of [...this.childNodes]) c.remove(); this.append(...nodes); }
+  replaceChildren(...nodes) {
+    for (const c of [...this.childNodes]) c.remove();
+    if (this.localName === 'select') this.formValue = undefined; // new options: a browser selects the first
+    this.append(...nodes);
+  }
   get textContent() { return this.childNodes.map((n) => n.textContent).join(''); }
   set textContent(v) { this.replaceChildren(...(v === '' || v == null ? [] : [new Text(v)])); }
 

@@ -4,7 +4,7 @@
 import { applySteps, finalSalary } from '../pay.js';
 import { resolvePay, sectorOf, gradesIn } from '../selection.js';
 import { eur, signedEur, pct, longDate } from '../format.js';
-import { h } from '../dom.js';
+import { h, setText } from '../dom.js';
 import { DEAL } from '../data.js';
 
 export const SLIDER = { min: 30000, max: 140000, step: 500 };
@@ -134,8 +134,8 @@ export function render(root, { store, data }) {
         : r.tag === 'pct'
           ? h('span', { class: 'tag pct' }, 'Percentage')
           : h('span', { class: 'tag none' }, r.included ? 'No minimum' : 'Not counted')))));
-    summary.textContent = `Starting at ${eur(salary)}, you would reach ${eur(m.end)} by March 2029 (+${pct(m.pct)}). `
-      + `The flat sum wins at ${m.flatCount} of the ${m.floorCount} steps that have one.`;
+    setText(summary, `Starting at ${eur(salary)}, you would reach ${eur(m.end)} by March 2029 (+${pct(m.pct)}). `
+      + `The flat sum wins at ${m.flatCount} of the ${m.floorCount} steps that have one.`);
   };
 
   let lastBase = null;

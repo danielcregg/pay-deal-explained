@@ -12,7 +12,7 @@ import { applySteps, priceIndexSeries, careerEvents, positionIn } from '../pay.j
 import { resolvePay, figuresFor, lowestScalePoint, sectorOf, gradesIn, gradeOf, careerOf, scenarioOf, owedFor, sectorPatch, gradePatch, thisMonth, ANY_JOB } from '../selection.js';
 import { eur, pct, longDate } from '../format.js';
 import { svgEl, scaleLinear } from '../svg.js';
-import { h } from '../dom.js';
+import { h, setText } from '../dom.js';
 import { niceRange, labelSize } from '../chart.js';
 import { prefersReducedMotion, onFirstView } from '../motion.js';
 import { extrasSwitches, pricesSwitch } from '../switches.js';
@@ -312,6 +312,9 @@ export function render(root, { store, data, now = thisMonth() }) {
     field('race-inc', 'Increment month', incSelect));
   const context = h('p', { class: 'context-line' });
   const incNote = h('p', { class: 'race-inc-note note', hidden: true, 'aria-live': 'polite' });
+  // For a screen reader: what the chart shows for these choices, said once when they change.
+  // The tiles follow the slider and the animation, so they are not announced.
+  const said = h('p', { class: 'race-said visually-hidden', 'aria-live': 'polite' });
 
   // Until a job is chosen the page shows an example salary, and the three pickers are
   // filled in one after the other: nothing changes until job, grade and point are all
@@ -411,7 +414,7 @@ export function render(root, { store, data, now = thisMonth() }) {
 
   root.append(
     h('h2', { id: 'race-h' }, 'Your pay against prices, month by month'),
-    picker, context, incNote,
+    picker, said, context, incNote,
     h('div', { class: 'race-when-row' }, when, h('span', { class: 'race-hint' }, 'Press play, or slide to any month')),
     tiles, split,
     h('div', { class: 'race-controls' }, playBtn, scrub), // beside the figures it changes
@@ -499,7 +502,7 @@ export function render(root, { store, data, now = thisMonth() }) {
     const prices = scenarioOf(sel, data.INFLATION);
     m = model(base, data, { includeLB: sel.includeLB, career: counting ? career : null, rates: prices.rates });
     incNote.hidden = !sel.incrementMonth;
-    incNote.textContent = incrementNote({ sel, career, climbs, who, now });
+    setText(incNote, incrementNote({ sel, career, climbs, who, now }));
 
     // Say whose figures these are when the pickers do not say it all: an example, or
     // something set in section 1 (part-time, an hourly rate, a typed salary, the 1% from 2025).
@@ -541,6 +544,12 @@ export function render(root, { store, data, now = thisMonth() }) {
       + (counting ? 'The rest of the page shows the deal without your increments. ' : '')
       + 'A projection, not a promise. ',
       h('a', { href: '#pay-vs-prices' }, 'Try your own inflation figure'));
+
+    const endPay = eur(payThen(m, N) * money.factor, { cents: money.unit === 'hour' });
+    const whose = pay.isExample ? `Example: ${pay.label}` : who === 'low' ? `The ${sector.low}` : pay.label;
+    setText(said, `${whose}. ${endPay} ${money.unit === 'hour' ? 'an hour' : 'a year'} by the end of March 2029${m.own ? ', with your increments' : ''}: `
+      + `${m.own ? 'the deal adds' : 'pay is up'} ${pct(end.pay - 100)} and prices are up ${pct(end.price - 100)} ${prices.phrase}, `
+      + `so ${m.own ? 'the deal’s rises buy' : 'pay buys'} ${pct(Math.abs(end.real))} ${end.real >= 0 ? 'more' : 'less'}.`);
 
     const mountChart = (height) => {
       chart = buildChart(m, width, labelSize(wrap), height);

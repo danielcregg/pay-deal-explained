@@ -17,6 +17,15 @@ export function h(tag, attrs = {}, ...children) {
   return el;
 }
 
+/**
+ * Set an element's text only if it differs. For live regions: writing the same words again
+ * makes a screen reader say them again.
+ */
+export function setText(el, text) {
+  if (el.textContent !== text) el.textContent = text;
+  return el;
+}
+
 export function clear(el) {
   while (el.firstChild) el.removeChild(el.firstChild);
   return el;

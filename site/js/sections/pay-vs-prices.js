@@ -4,7 +4,7 @@
 import { payIndexSeries, priceIndexSeries, monthsPricesAhead } from '../pay.js';
 import { resolvePay, figuresFor, scenarioOf } from '../selection.js';
 import { pct, eur, monthLabel } from '../format.js';
-import { h } from '../dom.js';
+import { h, setText } from '../dom.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { niceRange, createTooltip } from '../chart.js';
 import { extrasSwitches } from '../switches.js';
@@ -190,7 +190,7 @@ export function render(root, { store, data }) {
     });
 
     context.textContent = figuresFor(sel, data.SCALES);
-    readout.textContent = readoutText(m, mode.flat ? mode.rate : null, prices.lead);
+    setText(readout, readoutText(m, mode.flat ? mode.rate : null, prices.lead));
     const ahead = new Set(m.ahead);
     payHead.textContent = hourly() ? 'Hourly rate' : 'Yearly pay';
     tbody.replaceChildren(...m.pay.map((p, i) => h('tr', {},

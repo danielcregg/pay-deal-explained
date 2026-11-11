@@ -372,3 +372,49 @@ test('Present mode: whatever still runs over the screen comes off the chart, dow
   const source = readFileSync(new URL('../site/js/sections/hero.js', import.meta.url), 'utf8');
   assert.match(source, /addEventListener\('resize'/, 'a window made shorter in Present mode is fitted again');
 });
+
+// ---------- screen readers ----------
+
+test('live regions are written only when their words change, so the same thing is not announced twice', () => {
+  const cases = [
+    [yourPay, '.pay-gain', { includeLB: true }],
+    [flat, '.fp-summary', { includeLB: true }],
+    [pvp, '.pvp-readout', { scenario: 'higher' }],
+    [hero, '.race-inc-note', { incrementMonth: 3 }],
+  ];
+  for (const [mod, selector, change] of cases) {
+    const { root, store } = mount(mod, { ...lecturer, incrementMonth: 9 });
+    const region = root.querySelector(selector);
+    assert.equal(region.getAttribute('aria-live'), 'polite', selector);
+    const before = region.childNodes[0];
+    store.set({ remember: true }); // nothing these sentences say depends on it
+    assert.ok(region.childNodes[0] === before, `${selector}: left alone`);
+    store.set(change);
+    assert.ok(region.childNodes[0] !== before, `${selector}: rewritten when its words change`);
+  }
+});
+
+test('the opening chart tells a screen reader what it now shows, once for each change of choice', () => {
+  const { root, store } = mount(hero);
+  const said = root.querySelector('.race-said');
+  assert.equal(said.getAttribute('aria-live'), 'polite');
+  assert.equal(said.textContent, 'Example: a salary of €60,000. €66,103 a year by the end of March 2029: pay is up 10.2% and prices are up 7.5% on the Central Bank’s forecasts (2029 assumed at 2%), so pay buys 2.5% more.');
+  store.set({ ...lecturer, incrementMonth: 9, scenario: 'higher' });
+  assert.equal(said.textContent, 'Lecturer, point 5. €105,601 a year by the end of March 2029, with your increments: the deal adds 10.2% and prices are up 11.4% on the pessimistic path (4% a year, an illustration), so the deal’s rises buy 1.1% less.');
+  const before = said.childNodes[0];
+  const scrub = root.querySelector('input.race-scrub');
+  scrub.value = '12';
+  scrub.dispatchEvent({ type: 'input', bubbles: true });
+  assert.ok(said.childNodes[0] === before, 'the slider moves the tiles, which say their own month; this sentence stays');
+});
+
+// ---------- the test DOM ----------
+
+test('the stand-in select forgets its value when its options are replaced, as a browser does', () => {
+  const select = document.createElement('select');
+  const option = (value) => { const o = document.createElement('option'); o.setAttribute('value', value); return o; };
+  select.append(option('a'), option('b'));
+  select.value = 'b';
+  select.replaceChildren(option('a'), option('b'), option('c'));
+  assert.equal(select.value, 'a', 'new options: the first is selected until the code says otherwise');
+});
