@@ -2,6 +2,7 @@
 // resolving it to the full-time salary the deal is applied to, and local storage.
 
 import { SITE } from './data.js';
+import { longDate } from './format.js';
 
 export const STORAGE_KEY = 'pde:selection:v1';
 export const PAY_MONTHS = ['2027-01', '2027-02', '2027-03'];
@@ -19,6 +20,7 @@ export const DEFAULT_SELECTION = Object.freeze({
   alScale: 'al-ne',
   hoursPerYear: 0,
   includeLB: SITE.includeLBDefault,
+  includeOwed: SITE.includeOwedDefault, // count the 1% owed since September 2025 (SCALES.owed)
   payMonth: '2027-01',
 });
 
@@ -77,11 +79,15 @@ const findGrade = (scales, id) => scales.grades.find((g) => g.id === id);
  */
 export function resolvePay(sel, scales) {
   const isExample = !sel.touched;
+  // When the reader counts the 1% owed from the last agreement, it lifts the starting point.
+  // `published` is always the figure in today's scale.
+  const lift = sel.includeOwed && scales.owed ? 1 + scales.owed.pct / 100 : 1;
   if (sel.contract === 'hourly') {
     const grade = findGrade(scales, sel.alScale) ?? findGrade(scales, 'al-ne');
     const hours = Math.max(0, Number(sel.hoursPerYear) || 0);
     return {
-      base: grade.points[0].value,
+      base: grade.points[0].value * lift,
+      published: grade.points[0].value,
       factor: 1 / scales.hourlyDivisor,
       annualFactor: hours / scales.hourlyDivisor,
       unit: 'hour',
@@ -91,12 +97,12 @@ export function resolvePay(sel, scales) {
   }
   const fte = sel.contract === 'part' ? sel.fte : 1;
   if (sel.gradeId === 'typed') {
-    return { base: sel.typed, factor: fte, annualFactor: fte, unit: 'year', label: 'Typed salary', isExample };
+    return { base: sel.typed * lift, published: sel.typed, factor: fte, annualFactor: fte, unit: 'year', label: 'Typed salary', isExample };
   }
   const grade = findGrade(scales, sel.gradeId);
   const point = grade.points[sel.pointIndex];
   const label = point.label.startsWith('Point') ? `${grade.name}, point ${sel.pointIndex + 1}` : `${grade.name}, ${point.label}`;
-  return { base: point.value, factor: fte, annualFactor: fte, unit: 'year', label, isExample };
+  return { base: point.value * lift, published: point.value, factor: fte, annualFactor: fte, unit: 'year', label, isExample };
 }
 
 /** The lowest point on the lecturing scales: where the flat minimums count most. */
@@ -105,15 +111,16 @@ export const lowestScalePoint = (scales) => Math.min(...scales.grades.flatMap((g
 /** The line each demo shows so readers know whose figures they are looking at. */
 export function figuresFor(sel, scales) {
   const pay = resolvePay(sel, scales);
-  if (pay.isExample) return `Example: ${pay.label}. Pick your own grade and point in section 1.`;
+  const owed = sel.includeOwed && scales.owed ? `, with the ${scales.owed.pct}% owed since ${longDate(scales.owed.since.slice(0, 7))}` : '';
+  if (pay.isExample) return `Example: ${pay.label}${owed}. Pick your own grade and point in section 1.`;
   const part = sel.contract === 'part' ? `, ${Math.round(sel.fte * 1000) / 10}% of full-time` : '';
-  return `Showing: ${pay.label}${part}.`;
+  return `Showing: ${pay.label}${part}${owed}.`;
 }
 
 function isValid(sel, scales) {
   if (!['full', 'part', 'hourly'].includes(sel.contract)) return false;
   if (!PAY_MONTHS.includes(sel.payMonth)) return false;
-  if (typeof sel.includeLB !== 'boolean') return false;
+  if (typeof sel.includeLB !== 'boolean' || typeof sel.includeOwed !== 'boolean') return false;
   if (!(typeof sel.fte === 'number' && sel.fte >= 0.01 && sel.fte <= 1)) return false;
   if (!['al-ne', 'al-pre'].includes(sel.alScale)) return false;
   if (!(typeof sel.hoursPerYear === 'number' && sel.hoursPerYear >= 0 && sel.hoursPerYear <= MAX_HOURS)) return false;

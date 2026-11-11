@@ -53,19 +53,31 @@ input[type="number"] {
 
 @media (min-width: 820px) {
   .pay-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: start; }
-  .pay-result { position: sticky; top: 4.5rem; }
 }
 
 .pay-form { display: grid; gap: 1.15rem; }
 .privacy { color: var(--muted); font-size: 0.9rem; margin: 0; }
 
-.pay-result { display: grid; gap: 0.6rem; }
-.pay-result > p { margin: 0; }
+.switch[hidden] { display: none; }
+.pay-result { display: grid; gap: 0.9rem; }
+
+/* The result itself: a solid teal panel with the figure in white. */
+.pay-panel {
+  display: grid;
+  gap: 0.45rem;
+  background: var(--fam-teal);
+  color: #fff;
+  border-radius: 16px;
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+}
+.pay-panel > p { margin: 0; }
+.pay-detail { display: grid; gap: 0.6rem; }
+.pay-detail > p { margin: 0; }
 
 .example-badge {
   justify-self: start;
-  background: var(--teal-soft);
-  color: var(--teal-ink);
+  background: #fff;
+  color: var(--fam-teal);
   font-size: 0.85rem;
   font-weight: 650;
   border-radius: 999px;
@@ -73,7 +85,18 @@ input[type="number"] {
 }
 .example-badge[hidden] { display: none; }
 
-.pay-label { color: var(--muted); }
+.pay-label { font-weight: 600; }
+.pay-real {
+  justify-self: start;
+  margin-top: 0.35rem;
+  background: var(--navy);
+  color: var(--on-navy);
+  border-radius: 12px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.95rem;
+}
+.pay-real a { color: var(--gold); font-weight: 650; white-space: nowrap; }
+.pay-panel :focus-visible { outline-color: var(--gold); }
 
 .pay-big {
   font-family: var(--sans);
@@ -83,28 +106,21 @@ input[type="number"] {
   line-height: 1.1;
   font-variant-numeric: lining-nums proportional-nums;
 }
-.pay-big .from { color: var(--muted); }
-.pay-big .arrow { color: var(--muted); font-weight: 400; }
-.pay-big .to { color: var(--teal); }
-.pay-big .per { font-family: var(--sans); font-size: 1rem; font-weight: 600; color: var(--muted); }
+.pay-big .from { opacity: 0.8; font-weight: 600; font-size: 0.72em; }
+.pay-big .arrow { opacity: 0.8; font-weight: 400; font-size: 0.72em; }
+.pay-big .to { font-variant-numeric: tabular-nums; }
+.pay-big .per { font-family: var(--sans); font-size: 1rem; font-weight: 600; }
 
 .pay-gain { font-size: 1.05rem; }
 .pay-alt { margin-top: 1rem; }
 .pay-ways-title { font-family: var(--sans); font-size: 0.95rem; font-weight: 650; margin: 0 0 0.35rem; }
-.pay-ways { margin: 0; display: grid; gap: 0.25rem; }
-.pay-ways div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 0.75rem;
-  padding: 0.35rem 0.6rem;
-  border-radius: 6px;
-  font-size: 0.95rem;
-}
-.pay-ways div.on { background: var(--teal-soft); color: var(--teal-ink); font-weight: 650; }
-.pay-ways dd { margin: 0; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pay-ways-table { font-size: 0.93rem; }
+.pay-ways-table th { font-weight: 600; }
+.pay-ways-table thead th { color: var(--muted); font-size: 0.85rem; text-align: right; vertical-align: bottom; }
+.pay-ways-table td { text-align: right; white-space: nowrap; }
+.pay-ways-table td.on { background: var(--teal-soft); color: var(--teal-ink); font-weight: 650; }
 .pay-ways-pct { color: var(--muted); font-size: 0.88rem; }
-.pay-ways div.on .pay-ways-pct { color: inherit; }
+.pay-ways-table td.on .pay-ways-pct { color: inherit; }
 .pay-ways-note { color: var(--muted); font-size: 0.9rem; margin: 0.5rem 0 0; }
 .pay-ways-note[hidden] { display: none; }
 

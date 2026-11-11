@@ -21,7 +21,7 @@ test('saved selections are validated (Review Focus 3)', () => {
 });
 
 test('resolvePay covers full-time, part-time, typed and hourly', () => {
-  assert.deepEqual(resolvePay(DEFAULT_SELECTION, SCALES), { base: 89894, factor: 1, annualFactor: 1, unit: 'year', label: 'Lecturer, point 5', isExample: true });
+  assert.deepEqual(resolvePay(DEFAULT_SELECTION, SCALES), { base: 89894, published: 89894, factor: 1, annualFactor: 1, unit: 'year', label: 'Lecturer, point 5', isExample: true });
   const pt = resolvePay({ ...DEFAULT_SELECTION, touched: true, contract: 'part', fte: 0.5 }, SCALES);
   assert.deepEqual([pt.base, pt.factor, pt.isExample], [89894, 0.5, false]);
   assert.equal(resolvePay({ ...DEFAULT_SELECTION, gradeId: 'typed', typed: 58000 }, SCALES).base, 58000);

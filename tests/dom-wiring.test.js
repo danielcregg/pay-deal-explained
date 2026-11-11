@@ -9,6 +9,7 @@ import { createStore } from '../site/js/state.js';
 import { DEFAULT_SELECTION } from '../site/js/selection.js';
 import * as staircase from '../site/js/sections/staircase.js';
 import * as hero from '../site/js/sections/hero.js';
+import * as yourPay from '../site/js/sections/your-pay.js';
 import { enhanceTerms } from '../site/js/sections/glossary.js';
 import { presentKeyAction } from '../site/js/present.js';
 
@@ -148,4 +149,24 @@ test('the race: the tiles show the end state, follow the slider, and the chips s
 
   store.set({ touched: true, gradeId: 'al-ne', pointIndex: 0 }); // the reader is on the lowest point already
   assert.equal(root.querySelector('.race-picks').hidden, true);
+});
+
+test('your pay: counting the 1% owed since 2025 moves the figure, the starting point and the marked cell', () => {
+  const root = document.createElement('div');
+  document.body.append(root);
+  const store = createStore({ ...DEFAULT_SELECTION, touched: true, gradeId: 'lect', pointIndex: 10 });
+  yourPay.render(root, { store, data });
+  const text = (selector) => root.querySelector(selector).textContent;
+  assert.equal(text('.pay-big .to'), '€118,684');
+  assert.match(text('.pay-ways-table td.on'), /^€118,684/);
+  assert.match(text('.pay-real'), /buy about 2.5% more than in July 2026/);
+
+  const owed = root.querySelector('#pp-owed');
+  owed.checked = true;
+  owed.dispatchEvent({ type: 'change', bubbles: true });
+  assert.equal(text('.pay-big .from'), '€108,804');
+  assert.equal(text('.pay-big .to'), '€119,871');
+  assert.match(text('.pay-ways-table td.on'), /^€119,871/);
+  assert.match(text('.pay-label'), /with the 1% owed since September 2025$/);
+  assert.equal(root.querySelectorAll('.pay-ways-table td.on').length, 1);
 });

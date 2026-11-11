@@ -19,6 +19,22 @@ export function replayTransition(el, cls = 'pre') {
 }
 
 /**
+ * Count a figure from one value to another. Timed, not frame-based, so it lands on `to`
+ * even where no frames are drawn; with reduced motion it lands there at once.
+ */
+export function countTo(el, from, to, format, duration = 600) {
+  if (el.counting) clearInterval(el.counting);
+  el.counting = null;
+  if (prefersReducedMotion() || from === to || !Number.isFinite(from)) { el.textContent = format(to); return; }
+  const t0 = Date.now();
+  el.counting = setInterval(() => {
+    const p = Math.min(1, (Date.now() - t0) / duration);
+    el.textContent = format(from + (to - from) * (1 - Math.pow(1 - p, 3)));
+    if (p >= 1) { clearInterval(el.counting); el.counting = null; }
+  }, 30);
+}
+
+/**
  * Run `fn` once, the first time `el` scrolls into the upper 80% of the viewport.
  * (A visibility ratio would never be reached by elements taller than the screen.)
  */

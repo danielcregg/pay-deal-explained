@@ -83,14 +83,18 @@ Set `SITE.includeLBDefault` to `true` and update `PREVIOUS_DEAL.tuLbNote`.
 ### If the 1% owed since 1 September 2025 is paid to TU lecturers
 
 That 1% (local bargaining under the 2024–2026 agreement) was not in the lecturer scales
-of 1 June 2026, so section 1 shows an extra line: pay "if it is paid too". When a
-circular applies it:
+of 1 June 2026. While `SCALES.owed` exists, section 1 has a switch to count it and shows
+pay with and without it.
 
-1. Replace the figures in `SCALES` with the new circular's, and update `SCALES.effective`
-   and its source.
-2. Set `PREVIOUS_DEAL.lbOutstanding` to `false`. The extra line disappears.
-3. Update `PREVIOUS_DEAL.tuLbNote`, and the matching sentence in `ASSUMPTIONS`.
-4. Update the reference values in the tests, then run `npm test`.
+- **To count it for everyone by default** (still labelled, and readers can switch it
+  off): set `SITE.includeOwedDefault` to `true`, and update the reference values in the
+  tests that use the default selection.
+- **When a circular applies it:**
+  1. Replace the figures in `SCALES` with the new circular's, and update
+     `SCALES.effective` and its source.
+  2. Delete `SCALES.owed`. The switch and the extra column disappear.
+  3. Update `PREVIOUS_DEAL.tuLbNote`, and the matching sentence in `ASSUMPTIONS`.
+  4. Update the reference values in the tests, then run `npm test`.
 
 ## How it is organised
 

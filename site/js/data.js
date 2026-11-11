@@ -14,6 +14,9 @@ export const SITE = {
   },
   lastUpdated: '2026-11-11',
   includeLBDefault: false,
+  // Whether the 1% owed since 1 September 2025 (see SCALES.owed) is counted from the start.
+  // It is unconfirmed for TU lecturers, so it is off; readers can switch it on in section 1.
+  includeOwedDefault: false,
   repoUrl: 'https://github.com/danielcregg/pay-deal-2026',
   issuesUrl: 'https://github.com/danielcregg/pay-deal-2026/issues',
 };
@@ -82,10 +85,6 @@ export const PREVIOUS_DEAL = {
   ],
   reviewClause: 'General only: pay terms were not to be revisited unless the assumptions underlying the agreement needed to be (section 5.7).',
   tuLbNote: 'For TU academic staff, the first local bargaining instalment (1%, due 1 September 2025) was still being sought by TUI in December 2025, and it does not appear in the February or June 2026 pay scales. This comparison leaves it out unless you count local bargaining as a rise.',
-  // True while that 1% is still missing from the lecturer scales. Section 1 then shows
-  // what pay comes to if it is paid as well. Set to false once SCALES includes it.
-  lbOutstanding: true,
-  lbOutstandingNote: 'Local bargaining money is used as each sector negotiates, so neither 1% is certain to reach you as a rise. The 1% due from 1 September 2025 under the last agreement was not in the lecturer pay scales of 1 June 2026, and TUI has been seeking it from that date. If it is paid and backdated, the new rises build on it, which is why some calculations come out about 1% higher.',
   sourceIds: ['psa-2024', 'rte-analysis', 'tui-lb-dec2025', 'circular-001-2026', 'circular-002-2026'],
 };
 
@@ -98,6 +97,16 @@ export const SCALES = {
   effective: '2026-06-01',
   sourceId: 'circular-002-2026',
   hourlyDivisor: 630,
+  // The 1% local bargaining due from 1 September 2025 under the 2024–2026 agreement is not
+  // in these scales. While this entry exists, readers can choose to count it (section 1)
+  // and the page shows pay with and without it. Delete the entry once a circular applies
+  // the 1% and the figures below include it.
+  owed: {
+    pct: 1,
+    since: '2025-09-01',
+    note: 'Local bargaining money is used as each sector negotiates, so neither 1% is certain to reach you as a rise. The 1% due from 1 September 2025 under the last agreement was not in the lecturer pay scales of 1 June 2026. TUI has claimed it for academic staff from that date, and second-level teachers were paid theirs, backdated, under a circular of 1 October 2026. If it is paid, the new rises build on it, which is why some calculations come out about 1% higher.',
+    sourceIds: ['tui-lb-dec2025', 'tui-senior-cycle-1pc'],
+  },
   grades: [
     {
       id: 'al-ne', name: 'Assistant Lecturer (joined 2011 or later)', group: 'current', hourly: 75.51,
@@ -214,7 +223,7 @@ export const ASSUMPTIONS = [
   'Figures are gross pay, before tax, USC, PRSI and pension deductions.',
   'Annual increments are not included: the figures show only what the deal adds to your current scale point.',
   'Local bargaining (1% on 1 March 2029) is left out of totals unless you switch it on. It is 1% of a bargaining unit’s pay bill, used as negotiated, so it may not reach you as a 1% rise.',
-  'The 1% local bargaining due from 1 September 2025 under the last agreement is not in the lecturer pay scales of 1 June 2026, so it is left out. Section 1 shows one extra line with it included: 1% added to your current point, then the new rises on top.',
+  'The 1% local bargaining due from 1 September 2025 under the last agreement is not in the lecturer pay scales of 1 June 2026, so it is left out unless you switch it on in section 1. Counting it adds 1% to your current point before the new rises. Its own back pay is not estimated.',
   'Amounts are worked out to the cent and shown in whole euros. Official pay scales may differ by about €1 because of rounding.',
   'Part-time pay is your full-time scale point times your FTE, so the flat minimums are pro-rated.',
   'Hourly rates for Assistant Lecturers are point 1 of the annual scale divided by 630 hours, which matches the 2026 pay circulars exactly.',
@@ -237,6 +246,7 @@ export const SOURCES = [
   { id: 'circular-002-2026', publisher: 'Department of Further and Higher Education', title: 'TU-IOT Circular 002/2026: revision of pay from 1 June 2026, appendix (copy hosted by DkIT)', date: '2026', url: 'https://www.dkit.ie/system/files/2026-06/TU-IOT-Circular-002_2026-Revision-of-Pay-for-the-Higher-Education-Sector-with-effect-from-1st-June-2026-Appendix.pdf' },
   { id: 'circular-001-2026', publisher: 'Department of Further and Higher Education', title: 'TU-IOT Circular 001/2026: revision of pay from 1 February 2026 (copy hosted by TUI)', date: '2026', url: 'https://www.tui.ie/_fileupload/tu-iot-circular-001-2026-revision-of-pay-for-the-higher-education-sector-with-effect-from-1st-february-2026.pdf' },
   { id: 'tui-scales', publisher: 'TUI', title: 'Third level salary scales', date: '2026', url: 'https://www.tui.ie/third-level-pay-pensions/third-level-salary-scales-.2167.html' },
+  { id: 'tui-senior-cycle-1pc', publisher: 'TUI', title: 'Department issues circular for payment of overdue 1% after over 98% of TUI members vote for industrial action', date: '2026-10', url: 'https://www.tui.ie/news/department-issues-circular-for-payment-of-overdue-1-after-over-98-of-tui-members-vote-for-industrial-action.15569.html' },
   { id: 'tui-lb-dec2025', publisher: 'TUI', title: 'Consultation, parity of esteem and application of pay agreement increase required for professorships', date: '2025-12-16', url: 'https://www.tui.ie/press-releases/consultation-parity-of-esteem-and-application-of-pay-agreement-increase-required-for-professorships%E2%80%99.15414.html' },
 ];
 
