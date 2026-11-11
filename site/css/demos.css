@@ -363,3 +363,33 @@ tr.muted td { color: var(--muted); }
 .swatch.line.pay { background: var(--mark-pct); }
 .swatch.line.price { background: var(--mark-price); }
 .swatch.ahead { background: var(--mark-price); opacity: 0.2; }
+
+/* ---------- 7. This deal vs the last one ---------- */
+
+.vs-cards { display: grid; gap: 1rem; margin-bottom: 1.25rem; }
+@media (min-width: 760px) { .vs-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.vs-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--mark-prev);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem 1.25rem;
+}
+.vs-card.draft { border-top-color: var(--mark-pct); }
+.vs-card h3 { font-size: 1.15rem; margin-bottom: 0.15rem; }
+.vs-period { color: var(--muted); font-size: 0.92rem; margin-bottom: 0.75rem; }
+.vs-facts { margin: 0; display: grid; gap: 0.45rem; }
+.vs-facts div { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: 0.75rem; padding-bottom: 0.45rem; border-bottom: 1px solid var(--line); }
+.vs-facts dt { color: var(--muted); font-size: 0.9rem; }
+.vs-facts dd { margin: 0; font-size: 0.95rem; }
+.vs-facts .vs-yours dd { font-weight: 700; font-size: 1.15rem; }
+.vs-chart h3 { font-size: 1.15rem; }
+.vs-svg { cursor: crosshair; }
+.vs-svg:focus-visible { outline: 3px solid var(--teal); outline-offset: 4px; border-radius: 4px; }
+.line-prev { fill: none; stroke: var(--mark-prev); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.dot-prev { fill: var(--mark-prev); stroke: var(--card); stroke-width: 2; }
+.swatch.line.prev { background: var(--mark-prev); }
+
+@media (max-width: 480px) {
+  .vs-facts div { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
+}

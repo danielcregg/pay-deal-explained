@@ -12,6 +12,7 @@ import * as flatOrPercent from './sections/flat-or-percent.js';
 import * as compounding from './sections/compounding.js';
 import * as backPay from './sections/back-pay.js';
 import * as payVsPrices from './sections/pay-vs-prices.js';
+import * as vsLastDeal from './sections/vs-last-deal.js';
 
 const SECTIONS = [
   ['top', hero],
@@ -21,6 +22,7 @@ const SECTIONS = [
   ['compounding', compounding],
   ['back-pay', backPay],
   ['pay-vs-prices', payVsPrices],
+  ['vs-last-deal', vsLastDeal],
 ];
 
 const store = createStore(restoreSelection(loadSaved(), data.SCALES));
