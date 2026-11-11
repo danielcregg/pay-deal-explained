@@ -15,6 +15,19 @@ export function niceTicks(max, target = 5) {
   return { step, ticks };
 }
 
+/** Clean ticks spanning [lo, hi] for axes that don't start at zero (e.g. an index around 100). */
+export function niceRange(lo, hi, target = 5) {
+  const raw = (hi - lo) / target;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(raw)));
+  const nice = [1, 2, 2.5, 5, 10].find((c) => c >= raw / magnitude - 1e-9);
+  const step = nice * magnitude;
+  const first = Math.floor(lo / step + 1e-9);
+  const last = Math.ceil(hi / step - 1e-9);
+  const ticks = [];
+  for (let i = first; i <= last; i++) ticks.push(Math.round(i * step * 1e6) / 1e6);
+  return { step, ticks };
+}
+
 const r2 = (n) => Math.round(n * 100) / 100;
 
 /** A bar from (x, y) down to y + hgt: 4px rounded data-end on top, square at the baseline. */

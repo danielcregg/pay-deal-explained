@@ -18,3 +18,9 @@ test('axis money labels: full under 10,000, compact on an axis that reaches it',
   assert.deepEqual([0, 2000, 8000].map((v) => axisMoney(v, 8000)), ['€0', '€2,000', '€8,000']);
   assert.deepEqual([2500, 10000, 12500].map((v) => axisMoney(v, 12500)), ['€2.5k', '€10k', '€12.5k']);
 });
+
+test('index axes get a clean range around the data', async () => {
+  const { niceRange } = await import('../site/js/chart.js');
+  assert.deepEqual(niceRange(99.5, 110.5), { step: 2.5, ticks: [97.5, 100, 102.5, 105, 107.5, 110, 112.5] });
+  assert.deepEqual(niceRange(100, 117.4), { step: 5, ticks: [100, 105, 110, 115, 120] });
+});

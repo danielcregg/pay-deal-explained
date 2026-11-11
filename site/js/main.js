@@ -11,6 +11,7 @@ import * as staircase from './sections/staircase.js';
 import * as flatOrPercent from './sections/flat-or-percent.js';
 import * as compounding from './sections/compounding.js';
 import * as backPay from './sections/back-pay.js';
+import * as payVsPrices from './sections/pay-vs-prices.js';
 
 const SECTIONS = [
   ['top', hero],
@@ -19,6 +20,7 @@ const SECTIONS = [
   ['flat-or-percent', flatOrPercent],
   ['compounding', compounding],
   ['back-pay', backPay],
+  ['pay-vs-prices', payVsPrices],
 ];
 
 const store = createStore(restoreSelection(loadSaved(), data.SCALES));

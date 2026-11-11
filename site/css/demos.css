@@ -343,3 +343,23 @@ tr.muted td { color: var(--muted); }
 .bp-small { font-size: 0.8rem; color: var(--muted); }
 .bp-tiles.pre .bp-fill { transform: scaleY(0); }
 .bp-tiles.pre .bp-total { opacity: 0; transform: translateY(6px); }
+
+/* ---------- 6. Pay vs prices ---------- */
+
+.pvp-svg { cursor: crosshair; }
+.pvp-svg:focus-visible { outline: 3px solid var(--teal); outline-offset: 4px; border-radius: 4px; }
+.line-pay, .line-price { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.line-pay { stroke: var(--mark-pct); }
+.line-price { stroke: var(--mark-price); }
+.chart-svg .ahead { fill: var(--mark-price); opacity: 0.1; }
+.chart-svg .end-label { fill: var(--ink); font: 650 12px var(--sans); }
+.crosshair { stroke: var(--muted); stroke-width: 1; }
+.dot-pay, .dot-price { stroke: var(--card); stroke-width: 2; }
+.dot-pay { fill: var(--mark-pct); }
+.dot-price { fill: var(--mark-price); }
+.pvp-readout { font-size: 1.1rem; font-weight: 600; margin: 1.1rem 0 0.9rem; max-width: var(--measure); }
+.pvp-range { width: 100%; min-height: 2.5rem; accent-color: var(--mark-price); }
+.swatch.line { width: 1.1rem; height: 3px; border-radius: 2px; }
+.swatch.line.pay { background: var(--mark-pct); }
+.swatch.line.price { background: var(--mark-price); }
+.swatch.ahead { background: var(--mark-price); opacity: 0.2; }
