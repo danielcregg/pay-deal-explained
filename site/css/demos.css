@@ -178,7 +178,10 @@ input[type="number"] {
 .race h2 { font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem); margin-bottom: 0.25rem; }
 .race .context-line { margin-bottom: 0.25rem; }
 .race-picker { display: grid; gap: 0.6rem 0.75rem; align-items: end; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0.6rem 0 0.6rem; }
-@media (min-width: 700px) and (max-width: 1039px), (min-width: 1280px) { .race-picker { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* Each list needs room for a grade's name, or a point and its salary: one under another on a
+   phone, and four across only where the card is wide enough. */
+@media (max-width: 479px) { .race-picker { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 800px) and (max-width: 1039px), (min-width: 1280px) { .race-picker { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .race-picker .field { min-width: 0; }
 .race-picker .field[hidden] { display: none; }
 .race-picker .field > label { font-size: 0.85rem; }

@@ -41,6 +41,13 @@ test('the opening sits headline and chart side by side on a wide screen, and sta
   assert.doesNotMatch(css, /\.race\s*\{[^}]*margin-top:\s*clamp\(-/, 'the card no longer hangs off the bottom of the band');
 });
 
+test('the pickers: one under another on a phone, four across only where each has room for a point and its salary', () => {
+  const css = readCss('demos.css');
+  assert.match(css, /@media \(max-width: 479px\)\s*\{\s*\.race-picker\s*\{\s*grid-template-columns:\s*minmax\(0, 1fr\);/, 'two across, a phone cuts "Staff Nurse or Midwife" and "Point 5 (€44,213)" short');
+  assert.match(css, /@media \(min-width: 800px\) and \(max-width: 1039px\), \(min-width: 1280px\)\s*\{\s*\.race-picker\s*\{\s*grid-template-columns:\s*repeat\(4,/);
+  assert.doesNotMatch(css, /\(min-width: 700px\) and \(max-width: 1039px\)[^{]*\{\s*\.race-picker/, 'at 700px four across leaves each list under 140px');
+});
+
 test('the chart card: pickers first, then the figures and the chart, with the options under it', () => {
   const { root } = mount();
   const order = root.children.map((el) => el.className.split(' ')[0] || el.localName);
