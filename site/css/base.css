@@ -19,6 +19,14 @@
   --grey-bar: #bcd9d4;
   --field-border: #8a93a3; /* 3:1 against white cards (WCAG 1.4.11) */
 
+  /* chart marks: validated with the dataviz palette checker (light, on #ffffff) */
+  --mark-pct: #00897b;
+  --mark-flat: #b45309;
+  --mark-price: #b42318;
+  --mark-earlier: #c9ced6;
+  --mark-prev: #8a93a3;
+  --grid: #e7e4dc;
+
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   --measure: 40rem;
@@ -45,6 +53,13 @@
     --on-teal: #0b1a18;
     --grey-bar: #2f4c48;
     --field-border: #6b7489;
+    /* validated on the dark card #1a2030 */
+    --mark-pct: #26a392;
+    --mark-flat: #c97e33;
+    --mark-price: #e0675c;
+    --mark-earlier: #3a4256;
+    --mark-prev: #7c869b;
+    --grid: #283041;
   }
 }
 
@@ -268,13 +283,13 @@ td.r, th.r { text-align: right; }
 .ruler-tick { stroke: var(--muted); stroke-width: 1; }
 .ruler-year { fill: var(--muted); font: 12px var(--sans); }
 .ruler-bar {
-  fill: var(--teal);
+  fill: var(--mark-pct);
   transform-box: fill-box;
   transform-origin: 50% 100%;
   transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.ruler-bar.lb { fill: url(#hatch-ruler); stroke: var(--teal); stroke-width: 1; }
-.hatch-line { stroke: var(--teal); stroke-width: 2; }
+.ruler-bar.lb { fill: url(#hatch-ruler); }
+.hatch-line { stroke: var(--mark-pct); stroke-width: 2; }
 .ruler-pct {
   fill: var(--ink);
   font: 650 13px var(--sans);
@@ -311,11 +326,12 @@ td.r, th.r { text-align: right; }
 
 .hero-facts dd {
   margin: 0;
-  font-family: var(--serif);
-  font-size: clamp(2.1rem, 1.6rem + 2vw, 2.9rem);
+  font-family: var(--sans);
+  font-size: clamp(2rem, 1.5rem + 2vw, 2.75rem);
   font-weight: 700;
+  letter-spacing: -0.02em;
   line-height: 1.05;
-  font-variant-numeric: tabular-nums lining-nums;
+  font-variant-numeric: lining-nums proportional-nums;
 }
 
 .hero-facts dt {
@@ -411,6 +427,14 @@ details.data summary {
   max-width: var(--wide);
   margin: 0 auto 2rem;
   padding: 0 var(--gutter);
+}
+
+/* ---------- print: always show final states ---------- */
+
+@media print {
+  .site-header { position: static; }
+  .pre * { transform: none !important; opacity: 1 !important; }
+  details.data { display: none; }
 }
 
 /* ---------- reduced motion ---------- */

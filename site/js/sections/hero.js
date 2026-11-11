@@ -3,7 +3,7 @@
 
 import { svgEl } from '../svg.js';
 import { h, clear } from '../dom.js';
-import { prefersReducedMotion } from '../motion.js';
+import { prefersReducedMotion, replayTransition } from '../motion.js';
 import { longDate } from '../format.js';
 
 /** Fractional months from the start of month `startYm` to `date`. */
@@ -113,10 +113,7 @@ export function render(root, { data }) {
     lastWidth = width;
     const svg = buildRuler(data.DEAL, width);
     clear(root).append(svg, caption);
-    if (withMotion) {
-      svg.classList.add('pre');
-      requestAnimationFrame(() => requestAnimationFrame(() => svg.classList.remove('pre')));
-    }
+    if (withMotion) replayTransition(svg);
   };
 
   draw(animate);

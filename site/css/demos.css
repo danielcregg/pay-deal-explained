@@ -76,11 +76,12 @@ input[type="number"] {
 .pay-label { color: var(--muted); }
 
 .pay-big {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-weight: 700;
-  font-size: clamp(1.9rem, 1.35rem + 2.3vw, 2.75rem);
+  font-size: clamp(1.85rem, 1.3rem + 2.3vw, 2.6rem);
+  letter-spacing: -0.02em;
   line-height: 1.1;
-  font-variant-numeric: tabular-nums lining-nums;
+  font-variant-numeric: lining-nums proportional-nums;
 }
 .pay-big .from { color: var(--muted); }
 .pay-big .arrow { color: var(--muted); font-weight: 400; }
@@ -106,4 +107,151 @@ input[type="number"] {
   background: var(--paper);
   border-radius: 8px;
   font-size: 0.95rem;
+}
+
+/* ---------- charts (shared) ---------- */
+
+.legend {
+  list-style: none;
+  margin: 0 0 0.85rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+.legend li { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+.swatch { display: inline-block; flex: none; width: 0.8rem; height: 0.8rem; border-radius: 3px; vertical-align: -0.05rem; }
+.swatch.pct { background: var(--mark-pct); }
+.swatch.flat { background: var(--mark-flat); }
+.swatch.price { background: var(--mark-price); }
+.swatch.earlier { background: var(--mark-earlier); }
+.swatch.prev { background: var(--mark-prev); }
+.swatch.possible {
+  background: repeating-linear-gradient(45deg, var(--mark-pct) 0 2px, transparent 2px 5px);
+  box-shadow: inset 0 0 0 1px var(--mark-pct);
+}
+
+.chart-wrap { position: relative; }
+.chart-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart-svg .grid { stroke: var(--grid); stroke-width: 1; }
+.chart-svg .baseline { stroke: var(--muted); stroke-width: 1; }
+.chart-svg .axis-label { fill: var(--muted); font: 12px var(--sans); font-variant-numeric: tabular-nums; }
+.chart-svg .value-label { fill: var(--ink); font: 650 13px var(--sans); }
+
+.bar-pct { fill: var(--mark-pct); }
+.bar-flat { fill: var(--mark-flat); }
+.bar-earlier { fill: var(--mark-earlier); }
+.bar-possible { fill: url(#hatch-stairs); }
+.bar .hit { fill: transparent; }
+.bar { outline: none; }
+.bar:focus-visible .hit { fill: var(--teal-soft); stroke: var(--teal); stroke-width: 2; }
+.bar-grow {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.chart-svg.pre .bar-grow { transform: scaleY(0); }
+
+.chart-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-top: 0.75rem;
+}
+.chart-result { margin: 0; font-size: 1rem; max-width: var(--measure); }
+.button-quiet[hidden] { display: none; }
+
+.tip {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  max-width: 17rem;
+  display: grid;
+  gap: 0.1rem;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  padding: 0.45rem 0.65rem;
+  border-radius: 6px;
+}
+.tip[hidden] { display: none; }
+
+tr.muted td { color: var(--muted); }
+
+.tag { display: inline-block; font-size: 0.8rem; font-weight: 650; border-radius: 999px; padding: 0.1rem 0.6rem; white-space: nowrap; }
+.tag.flat { background: var(--amber-soft); color: var(--amber-ink); }
+.tag.pct { background: var(--teal-soft); color: var(--teal-ink); }
+.tag.none { color: var(--muted); padding-left: 0; font-weight: 500; }
+
+/* ---------- 3. Flat sum or percentage? ---------- */
+
+.fp-label { display: block; font-weight: 650; margin-bottom: 0.25rem; }
+.fp-value { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin-left: 0.25rem; }
+
+.fp-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2.75rem;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.fp-range::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, var(--mark-flat) 0 var(--th), var(--mark-pct) var(--th) 100%);
+}
+.fp-range::-moz-range-track {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, var(--mark-flat) 0 var(--th), var(--mark-pct) var(--th) 100%);
+}
+.fp-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 3px solid var(--ink);
+}
+.fp-range::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--card); border: 3px solid var(--ink); }
+.fp-range:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; border-radius: 6px; }
+
+.fp-scale { position: relative; height: 1.4rem; font-size: 0.8rem; color: var(--muted); }
+.fp-scale span { position: absolute; top: 0; white-space: nowrap; }
+.fp-scale .lo { left: 0; }
+.fp-scale .hi { right: 0; }
+.fp-scale .th { transform: translateX(-0.35rem); color: var(--ink); font-weight: 650; }
+
+.fp-key { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.45rem; margin: 0.85rem 0; font-size: 0.9rem; color: var(--muted); }
+.fp-summary { font-size: 1.05rem; margin: 0.25rem 0 1rem; max-width: var(--measure); }
+.fp-table td, .fp-table th { white-space: nowrap; }
+
+.examples { margin-top: 1.25rem; }
+.examples h3 { font-size: 1.15rem; }
+.hbars { list-style: none; margin: 1rem 0; padding: 0; display: grid; gap: 0.6rem; }
+.hbars li {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) 3.5rem;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.92rem;
+}
+.hb-track { display: block; height: 14px; }
+.hb-bar { display: block; height: 100%; background: var(--mark-earlier); border-radius: 0 4px 4px 0; }
+.hbars li.ours .hb-bar { background: var(--mark-pct); }
+.hbars li.ours .hb-label { font-weight: 650; }
+.hb-value { text-align: right; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 560px) {
+  .hbars li { grid-template-columns: minmax(0, 1fr) 3.5rem; }
+  .hbars .hb-label { grid-column: 1 / -1; }
 }

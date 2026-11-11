@@ -7,6 +7,18 @@ export function prefersReducedMotion() {
 }
 
 /**
+ * Replay a CSS transition from the state set by `cls` (e.g. bars at scaleY(0)) to the
+ * element's normal state. Forcing a style flush between adding and removing the class
+ * starts the transition without waiting for an animation frame, so the final state
+ * never depends on frames being rendered (background tabs, print, screenshots).
+ */
+export function replayTransition(el, cls = 'pre') {
+  el.classList.add(cls);
+  void el.getBoundingClientRect();
+  el.classList.remove(cls);
+}
+
+/**
  * Run `fn` once, the first time `el` scrolls into the upper 80% of the viewport.
  * (A visibility ratio would never be reached by elements taller than the screen.)
  */

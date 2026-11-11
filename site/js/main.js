@@ -7,10 +7,14 @@ import { longDate } from './format.js';
 import { restoreSelection, loadSaved, saveSelection } from './selection.js';
 import * as hero from './sections/hero.js';
 import * as yourPay from './sections/your-pay.js';
+import * as staircase from './sections/staircase.js';
+import * as flatOrPercent from './sections/flat-or-percent.js';
 
 const SECTIONS = [
   ['top', hero],
   ['your-pay', yourPay],
+  ['nine-rises', staircase],
+  ['flat-or-percent', flatOrPercent],
 ];
 
 const store = createStore(restoreSelection(loadSaved(), data.SCALES));
