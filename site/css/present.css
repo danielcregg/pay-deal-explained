@@ -119,6 +119,11 @@ body.present .hero-inner { max-width: 84rem; }
   body.present .hero-facts { grid-area: facts; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body.present .hero-lede { font-size: 1.05rem; }
   body.present .hero h1 { font-size: clamp(2rem, 1rem + 2.4vw, 3.2rem); } /* 1366 by 768 with no scrolling */
+  /* The card is narrow from here, 40px before the page's own breakpoint: the same smaller figures, on one line. */
+  body.present .race-tile b { font-size: clamp(1.25rem, 0.6rem + 1.1vw, 1.6rem); }
+}
+@media (min-width: 1000px) and (max-width: 1039px) {
+  body.present .race-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); } /* four across would be 114px each */
 }
 /* The card has to fit a projector screen beside the headline. */
 body.present .race { padding: 0.9rem 1.25rem 0.8rem; }
@@ -137,8 +142,17 @@ body.present .race .extras .switch { font-size: 0.85rem; }
 body.present .race-when-row { margin: 0.4rem 0 0.3rem; }
 /* The tile beside it says "increments not counted": one line here keeps the card on a short screen. */
 body.present .race-split-why { display: none; }
-@media (max-height: 820px) {
-  /* A short projector screen: the tick boxes and the comparison give way. Set them before presenting;
-     the note under the chart still says what is counted. */
+@media (max-height: 1059px) {
+  /* Anything shorter than a 1080-line screen: the tick boxes and the comparison give way. Set them
+     before presenting; the note under the chart still says what is counted. */
   body.present .race-options { display: none; }
+}
+@media (max-width: 1279px) {
+  /* A narrow screen: the headline's column and the card both run long. The sentence saying what
+     the site is gives way, and so does the card's own title: the headline beside it says it. */
+  body.present .lede-about, body.present .race h2 { display: none; }
+}
+@media (max-height: 759px), (max-width: 1279px) {
+  /* A 720-line or a narrow screen: the key keeps to one row. The dashed line is labelled "You" on the chart itself. */
+  body.present .race-key-own, body.present .race-key-inc { display: none; }
 }

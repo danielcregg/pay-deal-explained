@@ -127,11 +127,31 @@ export function forecastText(inflation) {
 
 const signed = (n) => `${n < 0 ? '−' : '+'}${pct(Math.abs(n))}`;
 
-function buildChart(m, width, text, compact) {
+/**
+ * The chart's height. On the page it follows the card's width: shorter beside the headline,
+ * so it is on the first screen. In Present mode the whole opening has to fit the screen, so
+ * on a short one the chart gives way, and more so with increments, when the tiles and the
+ * key run longer. `presentHeight` is the screen's height in Present mode, or null.
+ */
+export function chartHeight(width, { own = false, presentHeight = null } = {}) {
+  if (presentHeight !== null && presentHeight < 760) return own ? 136 : 160;
+  if (presentHeight !== null && presentHeight < 900) return own ? 160 : 196;
+  return width < 520 ? 250 : width < 760 ? 264 : 310;
+}
+
+/**
+ * Present mode: the whole opening has to fit the screen. Whatever still runs `over` it after
+ * the rules in present.css comes off the chart, down to a height that can still be read.
+ */
+export function fittedHeight(height, over, min = 120) {
+  if (!Number.isFinite(over) || over <= 0) return height;
+  const slack = 2; // rounding in the layout must not leave a pixel or two to scroll
+  return Math.max(Math.min(height, min), height - Math.ceil(over) - slack);
+}
+
+function buildChart(m, width, text, H) {
   const W = Math.max(280, width);
   const narrow = W < 520;
-  // Present mode on a short screen: with increments the tiles and the note run longer, so the chart gives way.
-  const H = compact ? (m.own ? 160 : 196) : narrow ? 250 : W < 760 ? 264 : 310; // shorter beside the headline, so it is on the first screen
   const k = text / 12;
   const margin = { top: 16, right: Math.round(58 * k), bottom: Math.round(30 * k), left: Math.round(38 * k) };
   const N = m.months;
@@ -480,9 +500,6 @@ export function render(root, { store, data, now = thisMonth() }) {
     m = model(base, data, { includeLB: sel.includeLB, career: counting ? career : null, rates: prices.rates });
     incNote.hidden = !sel.incrementMonth;
     incNote.textContent = incrementNote({ sel, career, climbs, who, now });
-    // On a projector screen the whole opening has to fit: a shorter chart in Present mode.
-    const compact = document.body.classList.contains('present') && window.innerHeight < 900;
-    chart = buildChart(m, width, labelSize(wrap), compact);
 
     // Say whose figures these are when the pickers do not say it all: an example, or
     // something set in section 1 (part-time, an hourly rate, a typed salary, the 1% from 2025).
@@ -507,8 +524,8 @@ export function render(root, { store, data, now = thisMonth() }) {
     ownKey.replaceChildren(...(m.own ? [h('span', { class: 'swatch line own' }), 'Your pay with increments'] : []));
     incKey.hidden = !marked;
     incKey.replaceChildren(...(marked ? [h('span', { class: 'race-key-mark', 'aria-hidden': 'true' }, '◆'), 'Your increment'] : []));
-    chart.svg.setAttribute('aria-label', `Pay and prices from July 2026 to March 2029. By the end, ${m.own ? 'the deal’s rises add' : 'pay is up'} ${pct(end.pay - 100)} and prices are up ${pct(end.price - 100)}. ${aheadText.textContent}.`
-      + (m.own ? ` With your increments, your own pay is up ${pct(end.own - 100)}, which is not counted against prices.` : ''));
+    const chartLabel = `Pay and prices from July 2026 to March 2029. By the end, ${m.own ? 'the deal’s rises add' : 'pay is up'} ${pct(end.pay - 100)} and prices are up ${pct(end.price - 100)}. ${aheadText.textContent}.`
+      + (m.own ? ` With your increments, your own pay is up ${pct(end.own - 100)}, which is not counted against prices.` : '');
     // Which 1% is counted: Present mode hides the tick boxes on a short screen, so the note has to say.
     const owedDef = owedFor(sel, SCALES);
     const counted = (() => {
@@ -525,30 +542,51 @@ export function render(root, { store, data, now = thisMonth() }) {
       + 'A projection, not a promise. ',
       h('a', { href: '#pay-vs-prices' }, 'Try your own inflation figure'));
 
-    for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();
-    wrap.prepend(chart.svg);
-    // A mouse scrubs at once. A finger scrubs on a sideways drag or a tap, so that
-    // swiping up or down past the chart scrolls the page and leaves it alone.
-    const scrubTo = (e) => { stop(); t = chart.timeAt(e.clientX); place(); };
-    let touch = null;
-    chart.svg.addEventListener('pointerdown', (e) => {
-      if (e.pointerType === 'touch') { touch = { x: e.clientX, y: e.clientY, dragging: false }; return; }
-      chart.svg.setPointerCapture?.(e.pointerId);
-      scrubTo(e);
-    });
-    chart.svg.addEventListener('pointermove', (e) => {
-      if (e.pointerType !== 'touch') { if (e.buttons) scrubTo(e); return; }
-      if (!touch) return;
-      const dx = Math.abs(e.clientX - touch.x);
-      if (!touch.dragging && dx > 8 && dx > Math.abs(e.clientY - touch.y)) touch.dragging = true;
-      if (touch.dragging) scrubTo(e);
-    });
-    chart.svg.addEventListener('pointerup', (e) => {
-      if (e.pointerType === 'touch' && touch && !touch.dragging && Math.abs(e.clientY - touch.y) < 8) scrubTo(e);
-      touch = null;
-    });
-    chart.svg.addEventListener('pointercancel', () => { touch = null; });
-    place();
+    const mountChart = (height) => {
+      chart = buildChart(m, width, labelSize(wrap), height);
+      chart.svg.setAttribute('aria-label', chartLabel);
+      for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();
+      wrap.prepend(chart.svg);
+      // A mouse scrubs at once. A finger scrubs on a sideways drag or a tap, so that
+      // swiping up or down past the chart scrolls the page and leaves it alone.
+      const scrubTo = (e) => { stop(); t = chart.timeAt(e.clientX); place(); };
+      let touch = null;
+      chart.svg.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'touch') { touch = { x: e.clientX, y: e.clientY, dragging: false }; return; }
+        chart.svg.setPointerCapture?.(e.pointerId);
+        scrubTo(e);
+      });
+      chart.svg.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'touch') { if (e.buttons) scrubTo(e); return; }
+        if (!touch) return;
+        const dx = Math.abs(e.clientX - touch.x);
+        if (!touch.dragging && dx > 8 && dx > Math.abs(e.clientY - touch.y)) touch.dragging = true;
+        if (touch.dragging) scrubTo(e);
+      });
+      chart.svg.addEventListener('pointerup', (e) => {
+        if (e.pointerType === 'touch' && touch && !touch.dragging && Math.abs(e.clientY - touch.y) < 8) scrubTo(e);
+        touch = null;
+      });
+      chart.svg.addEventListener('pointercancel', () => { touch = null; });
+      place();
+    };
+    // In Present mode the whole opening has to fit the screen: the chart starts shorter on a
+    // short screen, and then gives up whatever the page still runs over by.
+    const presentHeight = document.body.classList.contains('present') ? window.innerHeight : null;
+    const height = chartHeight(Math.max(280, width), { own: Boolean(m.own), presentHeight });
+    mountChart(height);
+    if (presentHeight !== null) {
+      const overflow = () => document.documentElement.scrollHeight - window.innerHeight;
+      const over = overflow();
+      const fitted = fittedHeight(height, over);
+      if (fitted !== height) {
+        mountChart(fitted);
+        // Still clearly over: the rest is the headline's column, not the card. Give the chart back what did not help.
+        const left = overflow();
+        const useful = Math.max(0, over - left);
+        if (left > 4 && height - useful > fitted) mountChart(height - useful);
+      }
+    }
   };
 
   playBtn.addEventListener('click', () => { if (timer) stop(); else play(); });
@@ -564,6 +602,8 @@ export function render(root, { store, data, now = thisMonth() }) {
   // Present mode hides the two "whose pay" buttons and the line naming the comparison, so it shows what the pickers say.
   document.addEventListener('presentchange', () => { backToMine(); draw(true); });
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => draw()).observe(wrap);
+  // A window made shorter keeps the card's width, so the observer above says nothing: in Present mode, fit again.
+  window.addEventListener('resize', () => { if (document.body.classList.contains('present')) draw(true); });
   if (motion) {
     document.querySelectorAll('.hero-facts [data-count]').forEach(countUp);
     onFirstView(wrap, () => { t = 0; play(); });

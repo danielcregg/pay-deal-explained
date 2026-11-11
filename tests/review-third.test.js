@@ -334,3 +334,41 @@ test('chapter 7 with no job chosen: the two deals’ 1% for local bargaining are
   assert.deepEqual([yours('prev'), yours('draft')], [pctOf(data.PREVIOUS_DEAL, true), pctOf(data.DEAL, true)], 'like for like');
   assert.match(root.textContent, /With no job chosen, each deal’s 1% for local bargaining is treated the same way: both are counted\./);
 });
+
+// ---------- Present mode ----------
+
+test('Present mode: the chart gives way on a short screen, and more so with increments', () => {
+  assert.deepEqual([hero.chartHeight(400), hero.chartHeight(700), hero.chartHeight(900)], [250, 264, 310], 'on the page: by the card’s width');
+  assert.equal(hero.chartHeight(700, { presentHeight: 1080 }), 264, 'a tall projector screen changes nothing');
+  assert.deepEqual([hero.chartHeight(700, { presentHeight: 899 }), hero.chartHeight(700, { presentHeight: 899, own: true })], [196, 160]);
+  assert.deepEqual([hero.chartHeight(700, { presentHeight: 720 }), hero.chartHeight(700, { presentHeight: 720, own: true })], [160, 136]);
+});
+
+test('Present mode: the tick boxes are hidden wherever the card would not fit with them', () => {
+  const css = readCss('present.css');
+  const short = ruleBody(css, '@media (max-height: 1059px)');
+  assert.match(short ?? '', /body\.present \.race-options\s*\{\s*display:\s*none;/, 'at 900px tall the card ran 149px over with them');
+  assert.equal(ruleBody(css, '@media (max-height: 820px)'), null);
+  const shorter = ruleBody(css, '@media (max-height: 759px), (max-width: 1279px)');
+  assert.match(shorter ?? '', /body\.present \.race-key-own,\s*body\.present \.race-key-inc\s*\{\s*display:\s*none;/, 'on a 720-line or a narrow screen the key keeps to one row: the line itself is labelled "You"');
+});
+
+test('Present mode: beside the headline the card is narrow from 1000px, so it takes the page’s narrow-card rules from there', () => {
+  const css = readCss('present.css');
+  const two = ruleBody(css, '@media (min-width: 1000px)');
+  assert.match(two ?? '', /body\.present \.race-tile b\s*\{\s*font-size:\s*clamp\(1\.25rem/, 'figures that stay on one line');
+  assert.match(css, /@media \(min-width: 1000px\) and \(max-width: 1039px\)\s*\{\s*body\.present \.race-picker\s*\{\s*grid-template-columns:\s*repeat\(2,/, 'and pickers two by two, not four at 114px each');
+  const narrow = ruleBody(css, '@media (max-width: 1279px)');
+  assert.match(narrow ?? '', /body\.present \.lede-about,\s*body\.present \.race h2\s*\{\s*display:\s*none;/, 'on a narrow screen both columns run long: what the headline already says gives way');
+});
+
+test('Present mode: whatever still runs over the screen comes off the chart, down to a height that can be read', () => {
+  assert.equal(hero.fittedHeight(196, 0), 196);
+  assert.equal(hero.fittedHeight(196, -40), 196);
+  assert.equal(hero.fittedHeight(196, 30.2), 163, 'the overflow, rounded up, and two pixels for rounding in the layout');
+  assert.equal(hero.fittedHeight(160, 90), 120, 'no shorter than that');
+  assert.equal(hero.fittedHeight(110, 30), 110, 'a chart already shorter is left alone');
+  assert.equal(hero.fittedHeight(196, NaN), 196, 'nothing to measure, nothing to do');
+  const source = readFileSync(new URL('../site/js/sections/hero.js', import.meta.url), 'utf8');
+  assert.match(source, /addEventListener\('resize'/, 'a window made shorter in Present mode is fitted again');
+});
