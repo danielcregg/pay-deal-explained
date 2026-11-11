@@ -148,7 +148,7 @@ export function resolvePay(sel, scales) {
 
 /**
  * The changes to make when the reader picks another job: its first grade and point, and
- * nothing the job does not have. A salary the reader typed is theirs, so it stays; the
+ * nothing that belonged to the old job (its increment month, its 1% from 2025). A salary the reader typed is theirs, so it stays; the
  * page's own example salary does not. Picking "no job" keeps the salary on its own.
  */
 export function sectorPatch(sel, scales, sectorId) {
@@ -160,6 +160,7 @@ export function sectorPatch(sel, scales, sectorId) {
       pointIndex: 0,
       contract: sel.contract === 'hourly' ? 'full' : sel.contract,
       includeOwed: false,
+      incrementMonth: null,
     };
   }
   const sector = scales.sectors.find((s) => s.id === sectorId);
@@ -169,6 +170,7 @@ export function sectorPatch(sel, scales, sectorId) {
     pointIndex: 0,
     contract: sel.contract === 'hourly' && !sector.hourly ? 'full' : sel.contract,
     includeOwed: false, // counting the 1% from 2025 in one job says nothing about another
+    incrementMonth: null, // nor does the month of its increment
   };
 }
 
@@ -229,21 +231,31 @@ export function figuresFor(sel, scales) {
   return `Showing: ${pay.label}${part}${owed}.`;
 }
 
+/**
+ * The settings around the pay itself. A remembered one that no longer makes sense (a path
+ * that was renamed, a pay month that has passed) goes back to its default without costing
+ * the reader their job, grade and point.
+ */
+const SETTINGS = {
+  payMonth: (v) => PAY_MONTHS.includes(v),
+  includeLB: (v) => typeof v === 'boolean',
+  includeOwed: (v) => typeof v === 'boolean',
+  incrementMonth: (v) => v === null || (Number.isInteger(v) && v >= 1 && v <= 12),
+  scenario: (v) => INFLATION.scenarios.some((s) => s.id === v),
+  pointMonth: (v) => v === null || (typeof v === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(v)),
+  fte: (v) => typeof v === 'number' && v >= 0.01 && v <= 1,
+  alScale: (v) => ['al-ne', 'al-pre'].includes(v),
+  hoursPerYear: (v) => typeof v === 'number' && v >= 0 && v <= MAX_HOURS,
+};
+
 function isValid(sel, scales) {
   if (typeof sel.touched !== 'boolean' || typeof sel.remember !== 'boolean') return false;
+  if (!Object.entries(SETTINGS).every(([key, ok]) => ok(sel[key]))) return false;
   if (!['full', 'part', 'hourly'].includes(sel.contract)) return false;
   const sector = scales.sectors.find((s) => s.id === sel.sector);
   const noJob = sel.sector === ANY_JOB.id; // valid only with a salary on its own
   if (!sector && !noJob) return false;
   if (sel.contract === 'hourly' && !sector?.hourly) return false;
-  if (!PAY_MONTHS.includes(sel.payMonth)) return false;
-  if (typeof sel.includeLB !== 'boolean' || typeof sel.includeOwed !== 'boolean') return false;
-  if (sel.incrementMonth !== null && !(Number.isInteger(sel.incrementMonth) && sel.incrementMonth >= 1 && sel.incrementMonth <= 12)) return false;
-  if (!INFLATION.scenarios.some((s) => s.id === sel.scenario)) return false;
-  if (sel.pointMonth !== null && !(typeof sel.pointMonth === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(sel.pointMonth))) return false;
-  if (!(typeof sel.fte === 'number' && sel.fte >= 0.01 && sel.fte <= 1)) return false;
-  if (!['al-ne', 'al-pre'].includes(sel.alScale)) return false;
-  if (!(typeof sel.hoursPerYear === 'number' && sel.hoursPerYear >= 0 && sel.hoursPerYear <= MAX_HOURS)) return false;
   if (sel.gradeId === 'typed') return typeof sel.typed === 'number' && sel.typed >= MIN_SALARY && sel.typed <= MAX_SALARY;
   if (noJob) return false;
   const grade = findGrade(scales, sel.gradeId);
@@ -262,6 +274,7 @@ export function restoreSelection(raw, scales) {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return { ...DEFAULT_SELECTION };
   if (parsed.remember !== true) return { ...DEFAULT_SELECTION };
   const sel = Object.fromEntries(Object.keys(DEFAULT_SELECTION).map((k) => [k, k in parsed ? parsed[k] : DEFAULT_SELECTION[k]]));
+  for (const [key, ok] of Object.entries(SETTINGS)) if (!ok(sel[key])) sel[key] = DEFAULT_SELECTION[key];
   return isValid(sel, scales) ? sel : { ...DEFAULT_SELECTION };
 }
 
@@ -285,4 +298,25 @@ export function forgetSelection() {
 export function persistSelection(sel) {
   if (sel.remember) saveSelection(sel);
   else forgetSelection();
+}
+
+/**
+ * Keep a store's choices in step with this device's storage, for a reader who asked for that.
+ * When the page opens, anything saved without being asked for is removed. After that a tab
+ * that is not remembering leaves storage alone, so it cannot wipe what another tab keeps;
+ * and when another tab unticks the box or clears its choices, this one stops remembering
+ * too, or its next change would save them again.
+ */
+export function rememberChoices(store, target = globalThis.window) {
+  let remembering = store.get().remember;
+  persistSelection(store.get());
+  store.subscribe((sel) => {
+    if (sel.remember) saveSelection(sel);
+    else if (remembering) forgetSelection();
+    remembering = sel.remember;
+  });
+  target?.addEventListener?.('storage', (e) => {
+    const ours = e.key === STORAGE_KEY || e.key === null; // null: the other tab cleared everything
+    if (ours && e.newValue == null && store.get().remember) store.set({ remember: false });
+  });
 }

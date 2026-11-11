@@ -241,7 +241,10 @@ export function render(root, { store, data, now = thisMonth() }) {
     // These can also be changed from other chapters, so they follow the store.
     lbBox.checked = sel.includeLB;
     owedBox.checked = sel.includeOwed;
+    rememberBox.checked = sel.remember; // another tab may have unticked it
     for (const r of form.querySelectorAll('input[name="pp-contract"]')) r.checked = r.value === sel.contract;
+    // A job change can turn a scale point into a salary on its own: the box shows it, unless it is being typed in.
+    if (sel.gradeId === 'typed' && document.activeElement !== typedInput) typedInput.value = sel.typed ? String(Math.round(sel.typed * 100) / 100) : '';
     if (listed.sector !== sel.sector) fillGrades(sel.sector);
     sectorSelect.value = sel.sector;
     gradeSelect.value = sel.gradeId;
@@ -311,12 +314,14 @@ export function render(root, { store, data, now = thisMonth() }) {
   };
 
   // ---- events ----
-  // The month goes with the choice: "the point you are on" is then read the same way on a later visit.
+  // A choice of job, grade or point makes the figures the reader's own and says where they stand
+  // this month: the month goes with it, so the point is read the same way on a later visit.
+  // Part-time, hours and the switches change neither, so they leave both alone.
   const set = (patch) => store.set({ ...patch, touched: true, pointMonth: now });
   form.addEventListener('change', (e) => {
     const t = e.target;
-    if (t.name === 'pp-contract') set({ contract: t.value });
-    else if (t.name === 'pp-alscale') set({ alScale: t.value });
+    if (t.name === 'pp-contract') store.set({ contract: t.value });
+    else if (t.name === 'pp-alscale') store.set({ alScale: t.value });
     else if (t === lbBox) store.set({ includeLB: lbBox.checked });
     else if (t === owedBox) store.set({ includeOwed: owedBox.checked });
     else if (t === rememberBox) store.set({ remember: rememberBox.checked });
@@ -338,7 +343,7 @@ export function render(root, { store, data, now = thisMonth() }) {
   });
   typedInput.addEventListener('input', () => {
     const r = parseSalary(typedInput.value);
-    if (r.ok) { typedError.textContent = ''; set({ typed: r.value }); }
+    if (r.ok) { typedError.textContent = ''; store.set({ typed: r.value, touched: true }); }
     // "Too low" waits for blur: every salary is too low while its first digits are typed.
     else if (r.code !== 'low' && typedInput.value.trim() !== '') typedError.textContent = r.error;
     else typedError.textContent = '';
@@ -347,16 +352,16 @@ export function render(root, { store, data, now = thisMonth() }) {
     const r = parseSalary(typedInput.value);
     typedError.textContent = r.ok ? '' : r.error;
   });
-  fteInput.addEventListener('input', () => set({ fte: clampFte(fteInput.value) }));
+  fteInput.addEventListener('input', () => store.set({ fte: clampFte(fteInput.value) }));
   fteInput.addEventListener('blur', () => { fteInput.value = String(Math.round(store.get().fte * 1000) / 10); });
-  hoursInput.addEventListener('input', () => set({ hoursPerYear: clampHours(hoursInput.value) }));
+  hoursInput.addEventListener('input', () => store.set({ hoursPerYear: clampHours(hoursInput.value) }));
   hoursInput.addEventListener('blur', () => {
     const used = store.get().hoursPerYear;
     hoursInput.value = used ? String(used) : '';
   });
   reset.addEventListener('click', () => {
     forgetSelection();
-    store.set({ ...DEFAULT_SELECTION });
+    store.reset({ ...DEFAULT_SELECTION }); // a reset: other sections drop what they hold themselves
     syncForm(store.get());
   });
 

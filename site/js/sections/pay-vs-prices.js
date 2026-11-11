@@ -210,7 +210,14 @@ export function render(root, { store, data }) {
     rateOut.textContent = `${mode.rate.toFixed(1)}%`;
     draw(true);
   });
-  store.subscribe(() => draw(true));
+  // A path chosen on the opening chart, or clearing the choices, takes over from a figure of the reader's own.
+  let lastScenario = store.get().scenario;
+  store.subscribe((sel, meta) => {
+    if (meta?.reset || sel.scenario !== lastScenario) { mode.flat = false; rateField.hidden = true; }
+    if (meta?.reset) { mode.rate = 3; rate.value = '3'; rateOut.textContent = '3.0%'; }
+    lastScenario = sel.scenario;
+    draw(true);
+  });
   draw(true);
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => draw()).observe(wrap);
 }

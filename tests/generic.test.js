@@ -52,11 +52,11 @@ test('saved choices: none means the generic page, and a salary with no job can b
 });
 
 test('choosing a job: from the example it starts on the job’s first grade; a salary the reader typed is kept', () => {
-  assert.deepEqual(sectorPatch(DEFAULT_SELECTION, SCALES, 'nurse'), { sector: 'nurse', gradeId: 'nm-enhanced', pointIndex: 0, contract: 'full', includeOwed: false });
+  assert.deepEqual(sectorPatch(DEFAULT_SELECTION, SCALES, 'nurse'), { sector: 'nurse', gradeId: 'nm-enhanced', pointIndex: 0, contract: 'full', includeOwed: false, incrementMonth: null });
   const typed = { ...DEFAULT_SELECTION, touched: true, typed: 52000 };
   assert.equal(sectorPatch(typed, SCALES, 'nurse').gradeId, 'typed');
   const lecturer = { ...DEFAULT_SELECTION, touched: true, sector: 'tu', gradeId: 'lect', pointIndex: 4, typed: null };
-  assert.deepEqual(sectorPatch(lecturer, SCALES, 'any'), { sector: 'any', gradeId: 'typed', typed: 89894, pointIndex: 0, contract: 'full', includeOwed: false }, 'back to no job: the salary stays');
+  assert.deepEqual(sectorPatch(lecturer, SCALES, 'any'), { sector: 'any', gradeId: 'typed', typed: 89894, pointIndex: 0, contract: 'full', includeOwed: false, incrementMonth: null }, 'back to no job: the salary stays');
 });
 
 test('the opening chart starts generic: empty pickers, an example salary, nothing about any job', () => {

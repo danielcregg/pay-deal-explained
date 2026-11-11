@@ -47,12 +47,13 @@ test('scenarios: what other institutions forecast is listed, with its source', (
   assert.match(rows.ESRI.what, /CPI/);
 });
 
-test('scenarios: the choice is saved with the others, and an unknown one is not accepted', () => {
+test('scenarios: the choice is saved with the others, and an unknown one falls back to the Central Bank', () => {
   assert.equal(D0.scenario, 'central');
   assert.equal(scenarioOf(D0, INFLATION).id, 'central');
   const saved = (patch) => JSON.stringify({ ...D0, touched: true, remember: true, ...patch });
   assert.equal(restoreSelection(saved({ scenario: 'higher' }), SCALES).scenario, 'higher');
-  assert.equal(restoreSelection(saved({ scenario: 'doom' }), SCALES).touched, false);
+  const odd = restoreSelection(saved({ scenario: 'doom' }), SCALES);
+  assert.deepEqual([odd.scenario, odd.touched, odd.gradeId], ['central', true, D0.gradeId], 'the rest of what was remembered is kept');
   const old = JSON.stringify({ touched: true, remember: true, sector: 'tu', contract: 'full', gradeId: 'lect', pointIndex: 2, typed: null, fte: 1, alScale: 'al-ne', hoursPerYear: 0, includeLB: false, payMonth: '2027-01' });
   assert.equal(restoreSelection(old, SCALES).scenario, 'central');
 });

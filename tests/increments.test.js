@@ -75,7 +75,10 @@ test('increments: off by default, saved with the other choices, and only a month
   const saved = (patch) => JSON.stringify({ ...D0, touched: true, remember: true, ...patch });
   assert.equal(restoreSelection(saved({ incrementMonth: 9 }), SCALES).incrementMonth, 9);
   assert.equal(restoreSelection(saved({}), SCALES).incrementMonth, null);
-  for (const bad of [0, 13, 2.5, '9', true]) assert.equal(restoreSelection(saved({ incrementMonth: bad }), SCALES).touched, false, String(bad));
+  for (const bad of [0, 13, 2.5, '9', true]) {
+    const kept = restoreSelection(saved({ incrementMonth: bad }), SCALES);
+    assert.deepEqual([kept.incrementMonth, kept.touched], [null, true], `${bad}: left out, and the rest is kept`);
+  }
   const old = JSON.stringify({ touched: true, remember: true, sector: 'tu', contract: 'full', gradeId: 'lect', pointIndex: 2, typed: null, fte: 1, alScale: 'al-ne', hoursPerYear: 0, includeLB: false, payMonth: '2027-01' });
   assert.deepEqual([restoreSelection(old, SCALES).pointIndex, restoreSelection(old, SCALES).incrementMonth], [2, null], 'a save without the field takes the default');
 });
@@ -257,7 +260,10 @@ test('increments: the month a point was chosen in is kept, so a later visit read
   assert.equal(D0.pointMonth, null);
   const saved = (patch) => JSON.stringify({ ...D0, touched: true, remember: true, ...patch });
   assert.equal(restoreSelection(saved({ pointMonth: '2026-11' }), SCALES).pointMonth, '2026-11');
-  for (const bad of ['2026-13', '2026-1', 'November', 202611]) assert.equal(restoreSelection(saved({ pointMonth: bad }), SCALES).touched, false, String(bad));
+  for (const bad of ['2026-13', '2026-1', 'November', 202611]) {
+    const kept = restoreSelection(saved({ pointMonth: bad }), SCALES);
+    assert.deepEqual([kept.pointMonth, kept.touched], [null, true], `${bad}: left out, and the rest is kept`);
+  }
   // Lecturer point 4 chosen in November 2026, increment each December.
   const sel = { ...D0, touched: true, pointIndex: 3, incrementMonth: 12, pointMonth: '2026-11' };
   const path = (c) => careerEvents(c.values, DEAL.steps, { ...c, from: '2026-07', to: '2029-03', includeLB: false });

@@ -4,7 +4,7 @@
 import * as data from './data.js';
 import { createStore } from './state.js';
 import { longDate, shortDate } from './format.js';
-import { restoreSelection, loadSaved, persistSelection } from './selection.js';
+import { restoreSelection, loadSaved, rememberChoices } from './selection.js';
 import { initPresent } from './present.js';
 import { trackHeaderHeight, mountMine } from './header.js';
 import { mountRail } from './rail.js';
@@ -38,8 +38,7 @@ const SECTIONS = [
 
 const store = createStore(restoreSelection(loadSaved(), data.SCALES));
 // Choices are kept only for a reader who ticked "remember"; anything else found saved is removed.
-persistSelection(store.get());
-store.subscribe(persistSelection);
+rememberChoices(store);
 const ctx = { store, data };
 
 function bindText() {

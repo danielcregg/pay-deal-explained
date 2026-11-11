@@ -322,18 +322,22 @@ export function render(root, { store, data, now = thisMonth() }) {
     incSelect.value = sel.incrementMonth ? String(sel.incrementMonth) : '';
     incSelect.disabled = !gradeOf(sel, SCALES); // an increment needs a point to start from
   };
-  // The month goes with the choice, so "the point you are on now" means the same on a later visit.
-  const choose = (patch) => store.set({ ...patch, touched: true, pointMonth: now });
+  // A choice of job, grade or point says where the reader stands this month. The month goes
+  // with it, so "the point you are on now" means the same on a later visit; nothing else
+  // re-dates it. Any choice here also brings the chart back from the lowest-point comparison.
+  const backToMine = () => { who = 'mine'; };
+  const choose = (patch) => { backToMine(); store.set({ ...patch, touched: true, pointMonth: now }); };
   jobSelect.addEventListener('change', () => {
     const sel = store.get();
-    if (!jobSelect.value) return;
+    // Back to "Choose your job" drops the grade that went with the job.
     if (noJob(sel)) { draft.sector = jobSelect.value; draft.gradeId = ''; syncPicker(sel); return; }
+    if (!jobSelect.value) return;
     choose(sectorPatch(sel, SCALES, jobSelect.value));
   });
   gradeSelect.addEventListener('change', () => {
     const sel = store.get();
-    if (!gradeSelect.value) return;
     if (noJob(sel)) { draft.gradeId = gradeSelect.value; syncPicker(sel); return; }
+    if (!gradeSelect.value) return;
     choose({ ...gradePatch(sel, SCALES, gradeSelect.value), contract: sel.contract === 'hourly' ? 'full' : sel.contract });
   });
   pointSelect.addEventListener('change', () => {
@@ -343,7 +347,7 @@ export function render(root, { store, data, now = thisMonth() }) {
     if (noJob(sel)) choose({ sector: draft.sector, gradeId: draft.gradeId, pointIndex, typed: null, contract: sel.contract === 'hourly' ? 'full' : sel.contract, includeOwed: false });
     else choose({ pointIndex });
   });
-  incSelect.addEventListener('change', () => choose({ incrementMonth: incSelect.value ? Number(incSelect.value) : null }));
+  incSelect.addEventListener('change', () => { backToMine(); store.set({ incrementMonth: incSelect.value ? Number(incSelect.value) : null, touched: true }); });
 
   // The figures for the month the play head is on, the slider, and the chart.
   const when = h('p', { class: 'race-when' });
@@ -538,8 +542,12 @@ export function render(root, { store, data, now = thisMonth() }) {
   lowest.addEventListener('click', () => { who = 'low'; draw(true); });
 
   draw(true);
-  store.subscribe(() => draw(true));
-  document.addEventListener('presentchange', () => draw(true));
+  store.subscribe((_sel, meta) => {
+    if (meta?.reset) { draft.sector = ''; draft.gradeId = ''; backToMine(); } // "Clear my choices": a half-made choice goes too
+    draw(true);
+  });
+  // Present mode hides the two "whose pay" buttons and the line naming the comparison, so it shows what the pickers say.
+  document.addEventListener('presentchange', () => { backToMine(); draw(true); });
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => draw()).observe(wrap);
   if (motion) {
     document.querySelectorAll('.hero-facts [data-count]').forEach(countUp);
