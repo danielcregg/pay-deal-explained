@@ -447,7 +447,7 @@ tr.muted td { color: var(--muted); }
 /* ---------- 10. Glossary ---------- */
 
 .glossary { margin: 0; display: grid; gap: 0.9rem; }
-.glossary dt { font-family: var(--serif); font-weight: 700; font-size: 1.08rem; scroll-margin-top: 4.5rem; }
+.glossary dt { font-family: var(--serif); font-weight: 700; font-size: 1.08rem; }
 .glossary dt:target { color: var(--teal); }
 .glossary dd { margin: 0.15rem 0 0; max-width: var(--measure); }
 @media (min-width: 760px) {

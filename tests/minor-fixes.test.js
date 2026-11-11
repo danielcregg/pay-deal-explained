@@ -10,6 +10,7 @@ import { presentKeyAction } from '../site/js/present.js';
 import * as data from '../site/js/data.js';
 import { barClass, legendItems, nextBar } from '../site/js/sections/staircase.js';
 import { model as vsModel } from '../site/js/sections/vs-last-deal.js';
+import { syncHeaderHeight } from '../site/js/header.js';
 import { readCss, ruleBody, tokens, themes, contrast } from './helpers/css.js';
 
 const read = (p) => readFileSync(new URL(`../site/${p}`, import.meta.url), 'utf8');
@@ -131,4 +132,13 @@ test('M14: the "rises so far" grey has an edge at 3:1 or more, and its fill stay
   assert.match(ruleBody(demos, '.bar-earlier'), /stroke:\s*var\(--mark-earlier-edge\)/);
   assert.match(ruleBody(demos, '.swatch.earlier'), /var\(--mark-earlier-edge\)/);
   assert.match(ruleBody(demos, '.hb-bar'), /var\(--mark-earlier-edge\)/);
+});
+
+test('M7: links land below the sticky header, however many rows it wraps to', () => {
+  const set = {};
+  const doc = { querySelector: () => ({ offsetHeight: 89 }), documentElement: { style: { setProperty: (k, v) => { set[k] = v; } } } };
+  assert.equal(syncHeaderHeight(doc), 89);
+  assert.deepEqual(set, { '--header-h': '89px' });
+  assert.match(ruleBody(readCss('base.css'), 'html'), /scroll-padding-top:\s*calc\(var\(--header-h/);
+  for (const f of ['base.css', 'demos.css']) assert.doesNotMatch(readCss(f), /scroll-margin-top/, `${f} has a fixed offset`);
 });

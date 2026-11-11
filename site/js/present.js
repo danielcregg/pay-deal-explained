@@ -2,6 +2,7 @@
 // Back/Next buttons, arrow keys, Page Up/Down, Space, Home/End, and Esc to exit.
 
 import { h } from './dom.js';
+import { syncHeaderHeight } from './header.js';
 
 /** Where a key press takes you, or `current` when a control owns the key. */
 export function nextChapter(current, key, count, inFormControl) {
@@ -69,6 +70,7 @@ export function exitPresent() {
   state.sections.forEach((s) => s.classList.remove('is-current'));
   document.body.classList.remove('present');
   state = null;
+  syncHeaderHeight(); // the header is back: measure it now, before scrolling under it
   current.scrollIntoView({ behavior: 'instant', block: 'start' });
   document.querySelector('[data-action="present"]')?.focus({ preventScroll: true });
 }

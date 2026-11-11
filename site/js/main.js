@@ -6,6 +6,7 @@ import { createStore } from './state.js';
 import { longDate, shortDate } from './format.js';
 import { restoreSelection, loadSaved, saveSelection } from './selection.js';
 import { initPresent } from './present.js';
+import { trackHeaderHeight } from './header.js';
 import * as hero from './sections/hero.js';
 import * as yourPay from './sections/your-pay.js';
 import * as staircase from './sections/staircase.js';
@@ -55,6 +56,7 @@ function bindText() {
 }
 
 bindText();
+trackHeaderHeight();
 for (const [id, mod] of SECTIONS) {
   const root = document.querySelector(`[data-mount="${id}"]`);
   if (!root) continue;
