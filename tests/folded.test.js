@@ -184,3 +184,23 @@ test('nothing on the page still points at the chapter that is gone', () => {
 test('Present mode: the two tables under the chart are for reading, not for a slide', () => {
   assert.match(readCss('present.css'), /body\.present \.race-months,\s*body\.present \.race-others\s*\{\s*display:\s*none;/);
 });
+
+test('the slider moves the figures at once, even where animation frames never come (a tab in the background)', () => {
+  const before = globalThis.requestAnimationFrame;
+  globalThis.requestAnimationFrame = () => 0; // asked for, never run
+  try {
+    const { root, store, radio, slide } = mount(hero, lecturer);
+    radio('race-prices', 'own');
+    slide('#race-rate', 5);
+    assert.equal(store.get().ownRate, 5);
+    assert.equal(root.querySelectorAll('.race-tile b')[2].textContent, '+14.4%');
+  } finally {
+    globalThis.requestAnimationFrame = before;
+  }
+});
+
+test('a wide table under the chart scrolls inside the card: it cannot push the options past the card’s edge', () => {
+  const css = readCss('demos.css');
+  assert.match(css, /\.race-options\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/,
+    'a grid column sized by its content grows to the table’s width: 348px in a 311px card on a phone');
+});

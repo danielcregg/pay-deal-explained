@@ -193,7 +193,8 @@ input[type="number"] {
 .race-legend { margin: 0.4rem 0 0; }
 .race-key-inc[hidden] { display: none; }
 .race-key-mark { color: var(--ink); }
-.race-options { display: grid; gap: 0.55rem; margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--line); }
+/* One column that cannot grow past the card: the month table then scrolls inside it on a phone. */
+.race-options { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.55rem; margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--line); }
 .race-options .extras { margin: 0; }
 .prices-seg { gap: 0.3rem; }
 .prices-seg > legend { margin-bottom: 0.3rem; font-size: 0.9rem; }
@@ -203,6 +204,11 @@ input[type="number"] {
 .prices-own output { font-weight: 650; }
 .prices-range { width: 100%; min-height: 2.5rem; accent-color: var(--mark-price); }
 .race-months .note, .race-others .note { margin: 0.5rem 0; }
+.race-options details.data { margin-top: 0; }
+/* Five columns in a phone-width card: tighter cells, so "Ahead" is not left off the edge. */
+.race-months table, .race-others table { font-size: 0.85rem; }
+.race-months th, .race-months td, .race-others th, .race-others td { padding: 0.4rem 0.3rem; }
+.race-months td:first-child { white-space: nowrap; }
 .race-picks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; }
 .race-more { margin: 0; font-size: 0.9rem; }
 .race-picks[hidden], .race .context-line[hidden] { display: none; }

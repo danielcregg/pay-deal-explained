@@ -109,8 +109,10 @@ test with the scale figures to `tests/sectors.test.js`.
 
 ### Inflation paths
 
-The charts and the pay panel use one of three inflation paths, chosen with the buttons
-under either chart. They are in `INFLATION.scenarios` in `data.js`.
+The opening chart and the pay panel use one inflation path, chosen with the buttons under
+the opening chart. Three are published in `INFLATION.scenarios` in `data.js`; the fourth is
+a figure of the reader's own, set with a slider (`OWN_PATH` and `ownRate` in
+`site/js/selection.js`, where `scenarioOf` gives it the same shape as the others).
 
 Each path has a `kind`, `forecast` or `illustration`, which the opening chart shows under
 the price figure and uses in its key ("are ahead" or "would be ahead").
@@ -123,8 +125,13 @@ the price figure and uses in its key ("are ahead" or "would be ahead").
   they are used. The 4% is the rate in the year to October 2026 (`INFLATION.current`);
   if inflation moves a long way from it, choose a new round figure and say where it
   comes from.
-- `INFLATION.others` lists what other institutions forecast, for the table in chapter 2.
-  Only add figures you have read at the source.
+- `INFLATION.others` lists what other institutions forecast, for the table under the
+  opening chart. Only add figures you have read at the source.
+
+There used to be a second pay-against-prices chart, as chapter 2. It was folded into the
+opening chart: the reader's own figure, the month-by-month table and the forecasters'
+table are all under that chart now, and `payAgainstPrices` in `site/js/pay.js` keeps the
+month-by-month sums that the tests check the chart against.
 
 ### How the page opens
 

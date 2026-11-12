@@ -58,15 +58,9 @@ export function pricesSwitch(store, data, idPrefix) {
     rate.value = String(sel.ownRate);
   };
   el.addEventListener('change', (e) => { if (radios.includes(e.target)) store.set({ scenario: e.target.value }); });
-  // Dragging fires many times a second, and every chapter follows the store: one update a frame is enough.
-  const nextFrame = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (fn) => fn();
-  let waiting = false;
-  rate.addEventListener('input', () => {
-    rateOut.textContent = `${Number(rate.value).toFixed(1)}%`;
-    if (waiting) return;
-    waiting = true;
-    nextFrame(() => { waiting = false; store.set({ ownRate: Number(rate.value) }); });
-  });
+  // Straight to the store: a browser already sends at most one `input` a frame while a slider is
+  // dragged, and waiting for an animation frame would leave the figures behind where none comes.
+  rate.addEventListener('input', () => store.set({ ownRate: Number(rate.value) }));
   store.subscribe(sync);
   sync();
   return el;
