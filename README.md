@@ -8,6 +8,20 @@ It uses animated and interactive demos so you can see what the draft does to you
 **Live site:** https://publicpaydeal2026.tech/ (the GitHub Pages addresses,
 danielcregg.github.io/pay-deal-2026 and danielcregg.is-a.dev/pay-deal-2026, redirect there)
 
+**Second address:** https://danielcregg.is-a.dev/pay-deal-explained/ is the same site, for
+networks that block the main one. Some workplace web filters block any newly registered
+domain: ATU's blocked `publicpaydeal2026.tech` on 12 November 2026. The second address is
+served from a second repository, `danielcregg/pay-deal-explained`, which is a copy of this
+one with its own Pages deployment. Push every change to both, or the two addresses drift
+apart. To make one push do both, run this once in a clone:
+
+```bash
+git remote set-url --add --push origin https://github.com/danielcregg/pay-deal-2026.git
+git remote set-url --add --push origin https://github.com/danielcregg/pay-deal-explained.git
+```
+
+When the main address is no longer blocked, the second repository can be deleted.
+
 The domain is registered at Namify (get.tech). Its DNS has four `A` records for the bare
 domain, pointing at GitHub Pages (185.199.108.153 to 185.199.111.153), and a `CNAME` for
 `www` pointing at `danielcregg.github.io`. The custom domain itself is set in the
@@ -72,7 +86,8 @@ Every fact lives in [`site/js/data.js`](site/js/data.js).
    longer proposals: in `site/js/sections/beyond-pay.js`, change the `known` badge from
    "In the proposed text" to "In the agreement", and reword "the proposed agreement says"
    and "the proposed text" in `BEYOND_PAY`, `TIMELINE` and the sectors' notes in `data.js`.
-6. Run `npm test`, then commit and push to `main`. The site redeploys in a minute or two.
+6. Run `npm test`, then commit and push to `main`, in both repositories (see "Second
+   address" at the top). Each site redeploys in a minute or two.
 
 ### If the agreement's text changes
 
