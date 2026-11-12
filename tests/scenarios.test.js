@@ -77,7 +77,7 @@ function mountAll(selection = {}) {
   const [opening, form] = [0, 1].map(() => { const el = document.createElement('div'); document.body.append(el); return el; });
   const store = createStore({ ...D0, ...selection });
   hero.render(opening, { store, data, now: '2026-11' });
-  yourPay.render(form, { store, data, now: '2026-11' });
+  hero.render(form, { store, data, now: '2026-11' });
   const pick = (root, name, value) => {
     const radio = root.querySelectorAll(`input[name="${name}"]`).find((r) => r.value === value);
     for (const r of root.querySelectorAll(`input[name="${name}"]`)) r.checked = r === radio;
@@ -95,23 +95,23 @@ test('the main chart: the buttons switch the inflation path, and every figure fo
   assert.deepEqual(opening.querySelectorAll('.race-options .prices-seg .pill').map((p) => p.textContent), ['Optimistic: 2%', 'Central Bank', 'Pessimistic: 4%', 'Your own figure']);
   assert.deepEqual(checked(opening, 'race-prices'), ['central']);
   assert.deepEqual(tiles().slice(2), ['+7.5%', '2.5% more']);
-  assert.match(opening.querySelector('.race-source').textContent, /^Prices follow the Central Bank of Ireland’s forecasts/);
+  assert.match(opening.querySelector('.race-source').textContent, /^Inflation follows the Central Bank of Ireland’s forecasts/);
 
   pick(opening, 'race-prices', 'higher');
   assert.equal(store.get().scenario, 'higher');
   assert.equal(store.get().touched, false, 'a way of looking at it, not a choice about the reader');
   assert.deepEqual(tiles(), ['€99,037', '+10.2%', '+11.4%', '1.1% less']);
-  assert.match(opening.querySelector('.race-source').textContent, /an illustration, not a forecast: prices keep rising by 4% a year/);
+  assert.match(opening.querySelector('.race-source').textContent, /an illustration, not a forecast: it stays at 4% a year/);
   const behind = hero.monthsBehind(hero.model(89894, data, { includeLB: false, rates: scenario('higher').rates }));
-  assert.equal(opening.querySelector('.race-legend').textContent, `Prices would be ahead of pay in ${behind} of the 33 months`);
-  // the same choice shows in the pay panel
-  assert.match(form.querySelector('.pay-real').textContent, /^After inflation on the pessimistic path \(4% a year, an illustration\), that would buy about 1\.1% less than in July 2026/);
+  assert.equal(opening.querySelector('.race-legend').textContent, `Pay would be behind inflation in ${behind} of the 33 months`);
+  // what the chart tells a screen reader names the path, and that it is an illustration
+  assert.match(opening.querySelector('.race-said').textContent, /inflation is 11\.4% on the pessimistic path \(4% a year, an illustration\), so pay buys 1\.1% less\.$/);
 
   pick(opening, 'race-prices', 'lower');
   assert.equal(store.get().scenario, 'lower');
   assert.deepEqual(checked(opening, 'race-prices'), ['lower']);
   assert.deepEqual(tiles().slice(2), ['+6.3%', '3.6% more']);
-  assert.match(form.querySelector('.pay-real').textContent, /^After inflation on the optimistic path \(2% a year from 2027, an illustration\), that would buy about 3\.6% more/);
+  assert.match(opening.querySelector('.race-said').textContent, /inflation is 6\.3% on the optimistic path \(2% a year from 2027, an illustration\), so pay buys 3\.6% more\.$/);
 });
 
 test('copy: the assumptions name the forecast’s own source and say what the other two paths are', () => {

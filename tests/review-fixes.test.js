@@ -53,7 +53,6 @@ test('F6: pay vs prices is framed neutrally and as a projection', () => {
   // the opening chart, where these figures are now shown: an index with its base, said to be a projection
   assert.match(read('js/sections/hero.js'), /1 July 2026 = 100/);
   assert.match(read('js/sections/hero.js'), /A projection, not a promise\./);
-  assert.match(read('js/sections/your-pay.js'), /that would buy about/);
 });
 
 test('F7: the glossary makes no unsourced claim about how ratification works', () => {

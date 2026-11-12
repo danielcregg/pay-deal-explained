@@ -1,8 +1,10 @@
-// Section 1: Your pay. Pick a grade and point (or type a salary), full-time, part-time
-// or hourly, and see what the draft deal adds. The choice then flows into every demo.
+// The reader's own pay, as parts of the one calculator at the top of the page (hero.js
+// places them in its card): the less common cases, folded away under the four pickers; the
+// figures in detail, under the chart; and the row that asks before anything is remembered.
+// The sums are in `model`, which every part reads.
 
 import { applySteps, finalSalary, summarise, backPay, owedBackPay, payAgainstPrices } from '../pay.js';
-import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradesIn, gradeOf, owedFor, scenarioOf, sectorPatch, gradePatch, thisMonth, ANY_JOB } from '../selection.js';
+import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradeOf, owedFor, scenarioOf } from '../selection.js';
 import { eur, signedEur, pct, longDate, listSteps } from '../format.js';
 import { h, setText } from '../dom.js';
 import { countTo } from '../motion.js';
@@ -86,7 +88,6 @@ export function model(sel, data) {
 
 const roundFor = (n, unit) => (unit === 'hour' ? Math.round(n * 100) / 100 : Math.round(n));
 const money = (n, unit) => eur(n, { cents: unit === 'hour' });
-const fteText = (fte) => `${Math.round(fte * 1000) / 10}%`;
 
 function pill(name, value, text) {
   return h('label', { class: 'pill' },
@@ -94,13 +95,12 @@ function pill(name, value, text) {
     h('span', {}, text));
 }
 
-export function render(root, { store, data, now = thisMonth() }) {
+/**
+ * The less common cases, folded away under the four pickers: part-time, hourly-paid, and a
+ * salary typed in for a job that is not listed. They write to the same store as the pickers.
+ */
+export function payExtras(store, data) {
   const { SCALES } = data;
-
-  // ---- form ----
-  const sectorSelect = h('select', { id: 'pp-sector' }, [ANY_JOB, ...SCALES.sectors].map((s) => h('option', { value: s.id }, s.name)));
-  const sectorField = h('div', { class: 'field', hidden: SCALES.sectors.length < 2 }, h('label', { for: 'pp-sector' }, 'Your job'), sectorSelect);
-
   const hourlyPill = pill('pp-contract', 'hourly', 'Hourly-paid');
   hourlyPill.classList.add('pill-hourly');
   const contract = h('fieldset', { class: 'seg' },
@@ -109,29 +109,6 @@ export function render(root, { store, data, now = thisMonth() }) {
       pill('pp-contract', 'full', 'Full-time'),
       pill('pp-contract', 'part', 'Part-time'),
       hourlyPill));
-
-  // The grades on offer follow the job.
-  const gradeSelect = h('select', { id: 'pp-grade' });
-  const listed = { sector: null, grade: null }; // what the grade and point lists hold at the moment
-  const fillGrades = (sectorId) => {
-    listed.sector = sectorId;
-    const option = (g) => h('option', { value: g.id }, g.name);
-    const grades = gradesIn(SCALES, sectorId);
-    const legacy = grades.filter((g) => g.group === 'legacy');
-    gradeSelect.replaceChildren(
-      ...(grades.length ? [h('optgroup', { label: legacy.length ? 'Current grades' : 'Grades' }, grades.filter((g) => g.group !== 'legacy').map(option))] : []),
-      ...(legacy.length ? [h('optgroup', { label: 'Other or legacy scales' }, legacy.map(option))] : []),
-      h('optgroup', { label: 'Not listed?' }, h('option', { value: 'typed' }, 'Type my salary')));
-  };
-  const gradeField = h('div', { class: 'field' }, h('label', { for: 'pp-grade' }, 'Grade'), gradeSelect);
-
-  const pointSelect = h('select', { id: 'pp-point' });
-  const pointField = h('div', { class: 'field' }, h('label', { for: 'pp-point' }, 'Scale point'), pointSelect);
-
-  const typedInput = h('input', { id: 'pp-typed', type: 'text', inputmode: 'decimal', autocomplete: 'off', 'aria-describedby': 'pp-typed-error' });
-  const typedError = h('p', { class: 'field-error', id: 'pp-typed-error', role: 'alert' });
-  const typedField = h('div', { class: 'field' },
-    h('label', { for: 'pp-typed' }, 'Full-time salary (€ a year)'), typedInput, typedError);
 
   const fteInput = h('input', { id: 'pp-fte', type: 'number', min: 0.01, max: 100, step: 'any', inputmode: 'decimal' });
   const fteField = h('div', { class: 'field' },
@@ -147,34 +124,85 @@ export function render(root, { store, data, now = thisMonth() }) {
   const hoursField = h('div', { class: 'field' },
     h('label', { for: 'pp-hours' }, 'Hours you teach in a year (optional, for yearly totals and back pay)'), hoursInput);
 
-  const lbBox = h('input', { id: 'pp-lb', type: 'checkbox' });
-  const lbSwitch = h('label', { class: 'switch', for: 'pp-lb' }, lbBox,
-    h('span', {}, 'Count local bargaining (1% on 1 March 2029) as a rise for me'));
-  const owedBox = h('input', { id: 'pp-owed', type: 'checkbox' });
-  const owedText = h('span');
-  const owedSwitch = h('label', { class: 'switch switch-owed', for: 'pp-owed', hidden: true }, owedBox, owedText);
+  const typedInput = h('input', { id: 'pp-typed', type: 'text', inputmode: 'decimal', autocomplete: 'off', 'aria-describedby': 'pp-typed-error' });
+  const typedError = h('p', { class: 'field-error', id: 'pp-typed-error', role: 'alert' });
+  const typedField = h('div', { class: 'field' },
+    h('label', { for: 'pp-typed' }, 'Not listed? Type your full-time salary (€ a year)'), typedInput, typedError);
 
-  const rememberBox = h('input', { id: 'pp-remember', type: 'checkbox' });
-  const rememberSwitch = h('label', { class: 'switch', for: 'pp-remember' }, rememberBox, h('span', {}, 'Remember my choices on this device'));
-  const reset = h('button', { type: 'button', class: 'button-quiet' }, 'Clear my choices');
-  const form = h('form', { class: 'plate pay-form', novalidate: true, onsubmit: (e) => e.preventDefault() },
-    sectorField, contract, gradeField, pointField, typedField, fteField, alScale, hoursField, lbSwitch, owedSwitch,
-    h('div', { class: 'privacy' },
-      h('p', {}, 'Your choices are not saved or sent anywhere unless you tick this box. If you do, they are kept on this device only, for your next visit.'),
-      h('div', { class: 'privacy-row' }, rememberSwitch, reset)));
+  const form = h('form', { class: 'pay-form', novalidate: true, onsubmit: (e) => e.preventDefault() },
+    contract, fteField, alScale, hoursField, typedField);
+  const el = h('details', { class: 'data race-extra' }, h('summary', {}, 'Part-time, hourly-paid or not listed?'), form);
 
-  // ---- results ----
-  const badge = h('p', { class: 'example-badge' });
-  const label = h('p', { class: 'pay-label' });
+  // The box holds a salary only when the figures use one the reader typed: never the page's example.
+  const typedOf = (sel) => (sel.gradeId === 'typed' && sel.touched ? String(Math.round(sel.typed * 100) / 100) : '');
+  const sync = (sel) => {
+    const hourly = sel.contract === 'hourly';
+    for (const r of form.querySelectorAll('input[name="pp-contract"]')) r.checked = r.value === sel.contract;
+    for (const r of form.querySelectorAll('input[name="pp-alscale"]')) r.checked = r.value === sel.alScale;
+    hourlyPill.hidden = !sectorOf(sel, SCALES).hourly; // only some jobs have hourly-paid contracts
+    fteField.hidden = sel.contract !== 'part';
+    alScale.hidden = !hourly;
+    hoursField.hidden = !hourly;
+    typedField.hidden = hourly; // an hourly rate comes from the scale
+    // The boxes follow the store (the pickers above can change what they mean), except one being typed in.
+    const active = document.activeElement;
+    if (active !== typedInput) typedInput.value = typedOf(sel);
+    if (active !== fteInput) fteInput.value = String(Math.round(sel.fte * 1000) / 10);
+    if (active !== hoursInput) hoursInput.value = sel.hoursPerYear ? String(sel.hoursPerYear) : '';
+  };
+
+  // Part-time, hours and the scale for an hourly rate change how the pay is counted, not whose
+  // pay it is: on the example salary they leave it an example.
+  form.addEventListener('change', (e) => {
+    const t = e.target;
+    if (t.name === 'pp-contract') store.set({ contract: t.value });
+    else if (t.name === 'pp-alscale') store.set({ alScale: t.value });
+  });
+  typedInput.addEventListener('input', () => {
+    const r = parseSalary(typedInput.value);
+    // A salary of the reader's own takes the place of a grade and point. The job, if one is chosen, stays.
+    if (r.ok) { typedError.textContent = ''; store.set({ gradeId: 'typed', typed: r.value, pointIndex: 0, touched: true }); }
+    // "Too low" waits for blur: every salary is too low while its first digits are typed.
+    else if (r.code !== 'low' && typedInput.value.trim() !== '') typedError.textContent = r.error;
+    else typedError.textContent = '';
+  });
+  typedInput.addEventListener('blur', () => {
+    if (typedInput.value.trim() === '') { typedError.textContent = ''; typedInput.value = typedOf(store.get()); return; }
+    const r = parseSalary(typedInput.value);
+    typedError.textContent = r.ok ? '' : r.error;
+  });
+  fteInput.addEventListener('input', () => store.set({ fte: clampFte(fteInput.value) }));
+  fteInput.addEventListener('blur', () => { fteInput.value = String(Math.round(store.get().fte * 1000) / 10); });
+  hoursInput.addEventListener('input', () => store.set({ hoursPerYear: clampHours(hoursInput.value) }));
+  hoursInput.addEventListener('blur', () => {
+    const used = store.get().hoursPerYear;
+    hoursInput.value = used ? String(used) : '';
+  });
+
+  // Open when it holds something that changes the figures, so a returning reader can see why.
+  const first = store.get();
+  if (first.contract !== 'full' || typedOf(first)) el.setAttribute('open', '');
+  store.subscribe((sel, meta) => {
+    if (meta?.reset) typedError.textContent = '';
+    sync(sel);
+  });
+  sync(first);
+  return el;
+}
+
+/**
+ * The figures in detail, under the chart: today's pay and where the deal takes it, the first
+ * rise, back pay, and every way of counting side by side.
+ */
+export function payDetail(store, data) {
   const from = h('span', { class: 'from' });
   const to = h('span', { class: 'to' });
   const per = h('span', { class: 'per' });
   const big = h('p', { class: 'pay-big' }, from, h('span', { class: 'arrow', 'aria-hidden': 'true' }, ' → '),
     h('span', { class: 'visually-hidden' }, ' rising to '), to, per);
   const gain = h('p', { class: 'pay-gain', 'aria-live': 'polite' });
-  const waysTitle = h('h3', { class: 'pay-ways-title' });
+  const waysTitle = h('h4', { class: 'pay-ways-title' });
   const ways = h('div', { class: 'pay-ways' });
-  const realLine = h('p', { class: 'pay-real' });
   const waysNote = h('p', { class: 'pay-ways-note' });
   const alt = h('div', { class: 'pay-alt' }, waysTitle, ways, waysNote);
   const caveat = h('p', { class: 'pay-caveat' });
@@ -187,68 +215,10 @@ export function render(root, { store, data, now = thisMonth() }) {
     h('div', {}, h('dt', {}, 'Back pay'), backDd),
     hoursDiv);
   const explain = h('p', { class: 'pay-explain' });
-  const results = h('div', { class: 'pay-result' },
-    h('div', { class: 'pay-panel' }, badge, label, big, gain, realLine),
-    h('div', { class: 'plate pay-detail' }, alt, caveat, facts, explain, notes));
+  const el = h('div', { class: 'race-detail' }, h('h3', {}, 'Your pay in detail'), big, gain, facts, alt, explain, caveat, notes);
   let shown = null; // the end figure on screen, so a change counts from it
 
-  root.append(h('div', { class: 'pay-grid' }, form, results));
-
-  // ---- syncing ----
-  const fillPoints = (gradeId) => {
-    listed.grade = gradeId;
-    const grade = SCALES.grades.find((g) => g.id === gradeId);
-    pointSelect.replaceChildren(...(grade ? grade.points : []).map((p, i) => h('option', { value: i }, `${p.label} (${eur(p.value)})`)));
-  };
-
-  const syncForm = (sel) => {
-    for (const r of form.querySelectorAll('input[name="pp-contract"]')) r.checked = r.value === sel.contract;
-    for (const r of form.querySelectorAll('input[name="pp-alscale"]')) r.checked = r.value === sel.alScale;
-    sectorSelect.value = sel.sector;
-    fillGrades(sel.sector);
-    gradeSelect.value = sel.gradeId;
-    fillPoints(sel.gradeId);
-    if (sel.gradeId !== 'typed') pointSelect.value = String(sel.pointIndex);
-    typedInput.value = sel.typed ? String(Math.round(sel.typed * 100) / 100) : '';
-    fteInput.value = String(Math.round(sel.fte * 1000) / 10);
-    hoursInput.value = sel.hoursPerYear ? String(sel.hoursPerYear) : '';
-    lbBox.checked = sel.includeLB;
-    owedBox.checked = sel.includeOwed;
-    rememberBox.checked = sel.remember;
-    typedError.textContent = '';
-  };
-
-  const showFields = (sel) => {
-    const hourly = sel.contract === 'hourly';
-    // What only some jobs have: hourly-paid contracts, and a rise owed from the last agreement.
-    hourlyPill.hidden = !sectorOf(sel, SCALES).hourly;
-    const owedDef = owedFor(sel, SCALES);
-    owedSwitch.hidden = !owedDef;
-    owedText.textContent = owedDef
-      ? `Count the ${owedDef.pct}% local bargaining from ${longDate(owedDef.since)}, with its back pay. ${owedDef.status}`
-      : '';
-    gradeField.hidden = hourly;
-    pointField.hidden = hourly || sel.gradeId === 'typed';
-    typedField.hidden = hourly || sel.gradeId !== 'typed';
-    fteField.hidden = sel.contract !== 'part';
-    alScale.hidden = !hourly;
-    hoursField.hidden = !hourly;
-  };
-
   const update = (sel) => {
-    showFields(sel);
-    // These can also be changed from other chapters, so they follow the store.
-    lbBox.checked = sel.includeLB;
-    owedBox.checked = sel.includeOwed;
-    rememberBox.checked = sel.remember; // another tab may have unticked it
-    for (const r of form.querySelectorAll('input[name="pp-contract"]')) r.checked = r.value === sel.contract;
-    // A job change can turn a scale point into a salary on its own: the box shows it, unless it is being typed in.
-    if (sel.gradeId === 'typed' && document.activeElement !== typedInput) typedInput.value = sel.typed ? String(Math.round(sel.typed * 100) / 100) : '';
-    if (listed.sector !== sel.sector) fillGrades(sel.sector);
-    sectorSelect.value = sel.sector;
-    gradeSelect.value = sel.gradeId;
-    if (listed.grade !== sel.gradeId) fillPoints(sel.gradeId);
-    if (sel.gradeId !== 'typed') pointSelect.value = String(sel.pointIndex);
     const m = model(sel, data);
     const u = m.unit;
     const perText = u === 'hour' ? ' an hour' : ' a year';
@@ -262,18 +232,10 @@ export function render(root, { store, data, now = thisMonth() }) {
       both: 'counting the general rises and both local bargaining 1%s',
     }[m.active];
 
-    badge.hidden = !m.isExample;
-    badge.textContent = `Example: ${m.label}. Pick your own job, grade and point${sel.gradeId === 'typed' ? ', or type your salary' : ''}.`;
-    const name = m.label[0].toUpperCase() + m.label.slice(1); // "a salary of €60,000" opens the panel with a capital
-    label.textContent = (sel.contract === 'part' ? `${name}, ${fteText(sel.fte)} of full-time` : name)
-      + (m.owedCounted ? `, with the ${m.owed.pct}% from ${longDate(m.owed.since.slice(0, 7))}` : '');
     from.textContent = money(nowR, u);
     const startFrom = shown && shown.unit === u ? shown.value : endR;
     countTo(to, startFrom, endR, (v) => money(roundFor(v, u), u));
     shown = { unit: u, value: endR };
-    realLine.replaceChildren(
-      `After inflation ${m.prices.phrase}, that would buy about ${pct(Math.abs(m.real))} ${m.real >= 0 ? 'more' : 'less'} than in July 2026. `,
-      h('a', { href: '#top' }, 'See pay against prices'));
     per.textContent = u === 'hour' ? ' an hour' : '';
     setText(gain, `${signedEur(endR - nowR, opts)}${perText} (+${pct(m.shown.pct)}) by March 2029, ${counting}.`);
     // Every way of counting, side by side; the one the big figure uses is marked.
@@ -296,7 +258,7 @@ export function render(root, { store, data, now = thisMonth() }) {
     waysNote.textContent = m.owed ? `${m.owed.note} Percentages are measured from today’s scale point.` : '';
     firstDd.textContent = `${signedEur(roundFor(m.firstRise.amount, u), opts)}${perText} from ${longDate(m.firstRise.date)}, backdated.`;
     backDd.replaceChildren(...(m.backPay === null
-      ? ['Add the hours you teach in a year to estimate it.']
+      ? ['Add the hours you teach in a year, under “Part-time, hourly-paid or not listed?”, to estimate it.']
       : [m.backPayOwed === null
         ? `About ${eur(m.backPay)} before tax, if the deal is accepted and first paid in ${longDate(sel.payMonth)}. `
         : `About ${eur(m.backPay + m.backPayOwed)} before tax if both are paid in ${longDate(sel.payMonth)}: ${eur(m.backPay)} from this deal and ${eur(m.backPayOwed)} for the ${m.owed.pct}% from ${longDate(m.owed.since.slice(0, 7))}. `,
@@ -312,59 +274,27 @@ export function render(root, { store, data, now = thisMonth() }) {
     notes.replaceChildren(...m.notes.map((n) => h('li', {}, n)));
   };
 
-  // ---- events ----
-  // A choice of job, grade or point makes the figures the reader's own and says where they stand
-  // this month: the month goes with it, so the point is read the same way on a later visit.
-  // Part-time, hours and the switches change neither, so they leave both alone.
-  const set = (patch) => store.set({ ...patch, touched: true, pointMonth: now });
-  form.addEventListener('change', (e) => {
-    const t = e.target;
-    if (t.name === 'pp-contract') store.set({ contract: t.value });
-    else if (t.name === 'pp-alscale') store.set({ alScale: t.value });
-    else if (t === lbBox) store.set({ includeLB: lbBox.checked });
-    else if (t === owedBox) store.set({ includeOwed: owedBox.checked });
-    else if (t === rememberBox) store.set({ remember: rememberBox.checked });
-    else if (t === pointSelect) set({ pointIndex: Number(pointSelect.value) });
-    else if (t === sectorSelect) {
-      // A new job starts at the first point of its first grade; `update` then refills the lists.
-      set(sectorPatch(store.get(), SCALES, sectorSelect.value));
-    }
-    else if (t === gradeSelect) {
-      const sel = store.get();
-      if (gradeSelect.value === 'typed') {
-        const base = resolvePay(sel, SCALES).published;
-        typedInput.value = String(base);
-        set({ gradeId: 'typed', typed: base });
-      } else {
-        set(gradePatch(sel, SCALES, gradeSelect.value));
-      }
-    }
-  });
-  typedInput.addEventListener('input', () => {
-    const r = parseSalary(typedInput.value);
-    if (r.ok) { typedError.textContent = ''; store.set({ typed: r.value, touched: true }); }
-    // "Too low" waits for blur: every salary is too low while its first digits are typed.
-    else if (r.code !== 'low' && typedInput.value.trim() !== '') typedError.textContent = r.error;
-    else typedError.textContent = '';
-  });
-  typedInput.addEventListener('blur', () => {
-    const r = parseSalary(typedInput.value);
-    typedError.textContent = r.ok ? '' : r.error;
-  });
-  fteInput.addEventListener('input', () => store.set({ fte: clampFte(fteInput.value) }));
-  fteInput.addEventListener('blur', () => { fteInput.value = String(Math.round(store.get().fte * 1000) / 10); });
-  hoursInput.addEventListener('input', () => store.set({ hoursPerYear: clampHours(hoursInput.value) }));
-  hoursInput.addEventListener('blur', () => {
-    const used = store.get().hoursPerYear;
-    hoursInput.value = used ? String(used) : '';
-  });
+  store.subscribe(update);
+  update(store.get());
+  return el;
+}
+
+/** Nothing is kept between visits unless the reader ticks the box. "Clear my choices" starts the page again. */
+export function rememberRow(store) {
+  const rememberBox = h('input', { id: 'pp-remember', type: 'checkbox' });
+  const reset = h('button', { type: 'button', class: 'button-quiet' }, 'Clear my choices');
+  const el = h('div', { class: 'privacy' },
+    h('p', {}, 'Your choices are not saved or sent anywhere unless you tick this box. If you do, they are kept on this device only, for your next visit.'),
+    h('div', { class: 'privacy-row' },
+      h('label', { class: 'switch', for: 'pp-remember' }, rememberBox, h('span', {}, 'Remember my choices on this device')),
+      reset));
+  rememberBox.addEventListener('change', () => store.set({ remember: rememberBox.checked }));
   reset.addEventListener('click', () => {
     forgetSelection();
-    store.reset({ ...DEFAULT_SELECTION }); // a reset: other sections drop what they hold themselves
-    syncForm(store.get());
+    store.reset({ ...DEFAULT_SELECTION }); // a reset: every part drops what it holds itself
   });
-
-  syncForm(store.get());
-  update(store.get());
-  store.subscribe(update);
+  const sync = (sel) => { rememberBox.checked = sel.remember; }; // another tab may have unticked it
+  store.subscribe(sync);
+  sync(store.get());
+  return el;
 }

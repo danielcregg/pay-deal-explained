@@ -48,7 +48,7 @@ test('a figure of your own is a fourth inflation path: one rate for every year, 
   assert.equal('lead' in own, false, 'no opening words for a sentence the page no longer has');
   assert.ok(INFLATION.scenarios.every((s) => !('lead' in s)));
   assert.equal(own.phrase, 'at your own figure (4.5% a year)');
-  assert.equal(own.note, 'Prices here rise by 4.5% a year, a figure of your own.');
+  assert.equal(own.note, 'Inflation here is 4.5% a year, a figure of your own.');
   assert.equal(scenarioOf({ ...DEFAULT_SELECTION, scenario: 'central', ownRate: 4.5 }, INFLATION).id, 'central', 'the figure waits until it is chosen');
 });
 
@@ -85,32 +85,25 @@ test('the opening chart: four inflation buttons, and a slider for your own figur
 
   radio('race-prices', 'own');
   assert.deepEqual([store.get().scenario, store.get().ownRate, store.get().touched], ['own', 3, true]);
-  assert.deepEqual([field.hidden, slider.value, field.querySelector('label').textContent], [false, '3', 'Prices rise by 3.0% a year']);
+  assert.deepEqual([field.hidden, slider.value, field.querySelector('label').textContent], [false, '3', 'Inflation: 3.0% a year']);
   assert.deepEqual(checked('race-prices'), ['own']);
   assert.equal(root.querySelector('.race-price-note').textContent, 'your own figure');
-  assert.match(root.querySelector('.race-source').textContent, /^Prices here rise by 3\.0% a year, a figure of your own\. Gross pay;/);
+  assert.match(root.querySelector('.race-source').textContent, /^Inflation here is 3\.0% a year, a figure of your own\. Gross pay;/);
 
   slide('#race-rate', 6);
   assert.equal(store.get().ownRate, 6);
   assert.deepEqual(tiles().slice(1), ['+10.2%', '+17.4%', '6.1% less']);
-  assert.equal(field.querySelector('label').textContent, 'Prices rise by 6.0% a year');
-  assert.match(root.querySelector('.race-legend li').textContent, /^Prices would be ahead of pay in \d+ of the 33 months$/);
-  assert.match(root.querySelector('.race-said').textContent, /prices are up 17\.4% at your own figure \(6\.0% a year\), so pay buys 6\.1% less\.$/);
+  assert.equal(field.querySelector('label').textContent, 'Inflation: 6.0% a year');
+  assert.match(root.querySelector('.race-legend li').textContent, /^Pay would be behind inflation in \d+ of the 33 months$/);
+  assert.match(root.querySelector('.race-said').textContent, /inflation is 17\.4% at your own figure \(6\.0% a year\), so pay buys 6\.1% less\.$/);
 
   slide('#race-rate', 0);
   assert.deepEqual(tiles().slice(1), ['+10.2%', '+0.0%', '10.2% more']);
-  assert.equal(root.querySelector('.race-legend li').textContent, 'Prices would never be ahead of pay in these 33 months');
+  assert.equal(root.querySelector('.race-legend li').textContent, 'Pay would never be behind inflation in these 33 months');
 
   radio('race-prices', 'central'); // back to a published path: the slider goes, the figure is kept for next time
   assert.deepEqual([store.get().scenario, store.get().ownRate, field.hidden], ['central', 0, true]);
   assert.deepEqual(tiles().slice(2), ['+7.5%', '2.5% more']);
-});
-
-test('chapter 1 says which inflation figure its sentence uses, your own included', () => {
-  const { root, store } = mount(yourPay, lecturer);
-  store.set({ scenario: 'own', ownRate: 6 });
-  assert.match(root.querySelector('.pay-real').textContent, /^After inflation at your own figure \(6\.0% a year\), that would buy about 6\.1% less than in July 2026\. /);
-  assert.equal(root.querySelector('.pay-real a').getAttribute('href'), '#top', 'the chart it points to is the opening one now');
 });
 
 // ---------- the numbers month by month ----------
@@ -121,15 +114,15 @@ test('the opening chart: every month’s pay in euro beside the two indices, in 
   assert.equal(table.querySelector('summary').textContent, 'Show the numbers month by month');
   const heads = () => table.querySelectorAll('thead th').map((th) => th.textContent);
   const row = (i) => table.querySelectorAll('tbody tr')[i].querySelectorAll('td').map((td) => td.textContent);
-  assert.deepEqual(heads(), ['Month', 'Yearly pay', 'Pay index', 'Price index', 'Ahead']);
+  assert.deepEqual(heads(), ['Month', 'Yearly pay', 'Pay index', 'Inflation index', 'Ahead']);
   assert.equal(table.querySelectorAll('tbody tr').length, 33);
   assert.deepEqual(row(0).slice(0, 3), ['Jul 2026', '€107,727', '100.0']);
-  assert.deepEqual(row(11), ['Jun 2027', '€110,980', '103.0', '103.2', 'Prices']);
+  assert.deepEqual(row(11), ['Jun 2027', '€110,980', '103.0', '103.2', 'Inflation']);
   assert.deepEqual(row(32), ['Mar 2029', '€118,684', '110.2', '107.5', 'Pay']);
   assert.match(table.querySelector('.note').textContent, /1 July 2026 = 100/);
   // the count in the key is the count of rows marked "Prices"
-  const ahead = table.querySelectorAll('tbody tr').filter((tr) => tr.querySelectorAll('td')[4].textContent === 'Prices').length;
-  assert.equal(root.querySelector('.race-legend li').textContent, `Prices are ahead of pay in ${ahead} of the 33 months`);
+  const ahead = table.querySelectorAll('tbody tr').filter((tr) => tr.querySelectorAll('td')[4].textContent === 'Inflation').length;
+  assert.equal(root.querySelector('.race-legend li').textContent, `Pay is behind inflation in ${ahead} of the 33 months`);
 
   store.set({ contract: 'hourly' });
   assert.equal(heads()[1], 'Hourly rate');
@@ -137,7 +130,7 @@ test('the opening chart: every month’s pay in euro beside the two indices, in 
 
   // with increments: the reader's own pay in euro, and the deal's index beside prices
   store.set({ contract: 'full', pointIndex: 4, incrementMonth: 9 });
-  assert.deepEqual(heads(), ['Month', 'Your pay, with increments', 'Deal index', 'Price index', 'Ahead']);
+  assert.deepEqual(heads(), ['Month', 'Your pay, with increments', 'Deal index', 'Inflation index', 'Ahead']);
   assert.deepEqual(row(32).slice(1, 3), ['€105,601', '110.2']);
   assert.equal(row(0)[1], '€86,936', 'July 2026: point 4, one below the point held in November, before that September’s increment');
 });
@@ -153,7 +146,7 @@ test('the opening chart: what other forecasters say is listed under it, with Oct
   assert.deepEqual(rows[1], ['IMF, World Economic Outlook, October 2026', '3.4%', '2.8%', '1.9%', '2.0%']);
   assert.equal(rows.length, 1 + INFLATION.others.length);
   assert.match(others.textContent, /sit close together/);
-  assert.match(others.textContent, /Prices rose 4\.0% in the year to October 2026 \(CSO flash estimate\)/);
+  assert.match(others.textContent, /Inflation was 4\.0% in the year to October 2026 \(CSO flash estimate\)/);
   assert.doesNotMatch(others.textContent, /as reported by RTÉ/);
 });
 
@@ -164,8 +157,8 @@ test('the page has no second pay-against-prices chapter, and the chapters after 
   assert.equal(existsSync(new URL('../site/js/sections/pay-vs-prices.js', import.meta.url)), false);
   assert.doesNotMatch(read('js/main.js'), /pay-vs-prices|payVsPrices/);
   const chapters = [...html.matchAll(/<section class="chapter" id="([\w-]+)" data-chapter="(\d+)"/g)].map((m) => [m[1], Number(m[2])]);
-  assert.deepEqual(chapters, [['your-pay', 1], ['nine-rises', 2], ['flat-or-percent', 3], ['compounding', 4], ['back-pay', 5],
-    ['vs-last-deal', 6], ['beyond-pay', 7], ['timeline', 8], ['glossary', 9], ['sources', 10]]);
+  assert.deepEqual(chapters, [['nine-rises', 1], ['flat-or-percent', 2], ['compounding', 3], ['back-pay', 4],
+    ['vs-last-deal', 5], ['beyond-pay', 6], ['timeline', 7], ['glossary', 8], ['sources', 9]]);
 });
 
 test('nothing on the page still points at the chapter that is gone', () => {

@@ -10,7 +10,7 @@ import { currentChapter } from '../site/js/rail.js';
 
 const html = readFileSync(new URL('../site/index.html', import.meta.url), 'utf8');
 const FAMILIES = ['teal', 'coral', 'sky', 'amber', 'violet', 'slate'];
-const ORDER = ['your-pay', 'nine-rises', 'flat-or-percent', 'compounding', 'back-pay',
+const ORDER = ['nine-rises', 'flat-or-percent', 'compounding', 'back-pay',
   'vs-last-deal', 'beyond-pay', 'timeline', 'glossary', 'sources'];
 
 test('colour: text on the navy band, the gold button and every chapter colour meet AA in both themes', () => {
@@ -72,7 +72,7 @@ test('copy: the 1% from 2025 is never stated as settled, and the 2029 assumption
   for (const file of ['js/sections/your-pay.js', 'js/sections/back-pay.js', 'js/selection.js']) {
     assert.doesNotMatch(read(file), /owed since|pay scales yet/, `${file} says "owed" or "yet" to readers`);
   }
-  assert.match(read('js/sections/your-pay.js'), /After inflation \$\{/); // the wiring test checks the full sentence
+  assert.match(data.INFLATION.scenarios.find((s) => s.id === 'central').phrase, /2029 assumed at 2%/, 'wherever the Central Bank’s path is named, its assumed year is too');
 });
 
 test('colour: the faded "from" figure is gone, and the browser bar matches the navy header', () => {

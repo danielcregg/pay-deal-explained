@@ -9,7 +9,6 @@ import { initPresent } from './present.js';
 import { trackHeaderHeight, mountMine } from './header.js';
 import { mountRail } from './rail.js';
 import * as hero from './sections/hero.js';
-import * as yourPay from './sections/your-pay.js';
 import * as staircase from './sections/staircase.js';
 import * as flatOrPercent from './sections/flat-or-percent.js';
 import * as compounding from './sections/compounding.js';
@@ -22,7 +21,6 @@ import * as sources from './sections/sources.js';
 
 const SECTIONS = [
   ['top', hero],
-  ['your-pay', yourPay],
   ['nine-rises', staircase],
   ['flat-or-percent', flatOrPercent],
   ['compounding', compounding],

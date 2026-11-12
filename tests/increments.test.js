@@ -145,7 +145,7 @@ function mountRace(selection) {
   document.body.append(root, form);
   const store = createStore({ ...D0, ...selection });
   hero.render(root, { store, data, now: NOW });
-  yourPay.render(form, { store, data, now: NOW });
+  hero.render(form, { store, data, now: NOW });
   const tiles = () => root.querySelectorAll('.race-tile b').map((b) => b.textContent);
   const pick = (id, value) => { const el = root.querySelector(id); el.value = String(value); el.dispatchEvent({ type: 'change', bubbles: true }); };
   return { root, form, store, tiles, pick };
@@ -185,12 +185,12 @@ test('the race: the pickers set job, grade, point and increment month, and the f
 
   pick('#race-point', 9); // point 10: one step from the top
   assert.equal(store.get().pointIndex, 9);
-  assert.equal(form.querySelector('#pp-point').value, '9', 'section 1 shows the same point');
+  assert.equal(form.querySelector('#race-point').value, '9', 'section 1 shows the same point');
   pick('#race-grade', 'sl1');
-  assert.deepEqual([store.get().gradeId, form.querySelector('#pp-grade').value], ['sl1', 'sl1']);
+  assert.deepEqual([store.get().gradeId, form.querySelector('#race-grade').value], ['sl1', 'sl1']);
   pick('#race-job', 'primary');
   assert.deepEqual([store.get().sector, store.get().gradeId, store.get().pointIndex], ['primary', 'pt-new', 0]);
-  assert.deepEqual([form.querySelector('#pp-sector').value, form.querySelector('#pp-grade').value], ['primary', 'pt-new']);
+  assert.deepEqual([form.querySelector('#race-job').value, form.querySelector('#race-grade').value], ['primary', 'pt-new']);
   assert.deepEqual(root.querySelectorAll('#race-grade option').map((o) => o.getAttribute('value')), ['pt-new', 'pt-pre2011']);
 
   pick('#race-inc', '');
@@ -232,7 +232,7 @@ test('the grade lists hold options and groups only, with no stray text', () => {
   for (const job of ['tu', 'primary', 'nurse', 'garda']) {
     pick('#race-job', job);
     assert.deepEqual(strays(root.querySelector('#race-grade')), [], `chart, ${job}`);
-    assert.deepEqual(strays(form.querySelector('#pp-grade')), [], `section 1, ${job}`);
+    assert.deepEqual(strays(form.querySelector('#race-grade')), [], `section 1, ${job}`);
   }
 });
 
@@ -281,7 +281,7 @@ test('the race: choosing a point stamps the month, from the chart and from secti
   pick('#race-point', 6);
   assert.deepEqual([store.get().pointIndex, store.get().pointMonth], [6, NOW]);
   store.set({ pointMonth: '2026-08' });
-  const point = form.querySelector('#pp-point');
+  const point = form.querySelector('#race-point');
   point.value = '2';
   point.dispatchEvent({ type: 'change', bubbles: true });
   assert.deepEqual([store.get().pointIndex, store.get().pointMonth], [2, NOW]);
@@ -290,7 +290,7 @@ test('the race: choosing a point stamps the month, from the chart and from secti
   pick('#race-grade', 'sl1');
   const points = root.querySelectorAll('#race-point option').map((o) => o.textContent);
   assert.deepEqual([points.length, points[0]], [8, 'Point 1 (€94,736)']);
-  assert.equal(form.querySelectorAll('#pp-point option').length, 8);
+  assert.equal(form.querySelectorAll('#race-point option').length, 8);
 });
 
 test('the race: a point chosen in an earlier month is described that way', () => {
@@ -334,28 +334,28 @@ test('the race: with increments on, the tiles still compare the deal with prices
   const labels = () => root.querySelectorAll('.race-tile small').map((s) => s.textContent);
   const tiles = () => root.querySelectorAll('.race-tile b').map((b) => b.textContent);
   assert.deepEqual(tiles(), ['€105,601', '+10.2%', '+7.5%', '2.5% more']);
-  assert.deepEqual(labels(), ['Yearly pay, before tax', 'The deal adds', 'Prices are up', 'So pay buys']);
+  assert.deepEqual(labels(), ['Yearly pay, before tax', 'The deal adds', 'Inflation', 'So pay buys']);
   const real = root.querySelector('.race-tile.real');
   assert.deepEqual([real.querySelector('.race-real-note').hidden, real.querySelector('.race-real-note').textContent], [false, 'increments not counted']);
   assert.equal(root.querySelector('.race-split').textContent,
-    'With your increments, your own pay is up +21.5% (point 4 to point 7). Increments are normal progression, so they are not counted against prices.');
-  assert.equal(root.querySelector('.race-legend li').textContent, 'Prices are ahead of the deal’s rises in 7 of the 33 months');
-  assert.equal(root.querySelector('.race-split-why').textContent, 'Increments are normal progression, so they are not counted against prices.');
+    'With your increments, your own pay is up +21.5% (point 4 to point 7). Increments are normal progression, so they are not counted against inflation.');
+  assert.equal(root.querySelector('.race-legend li').textContent, 'The deal’s rises are behind inflation in 7 of the 33 months');
+  assert.equal(root.querySelector('.race-split-why').textContent, 'Increments are normal progression, so they are not counted against inflation.');
   assert.equal(root.querySelector('.race-key-own').textContent, 'Your pay with increments', 'the key names the line; the sentence above it gives the reason');
   assert.match(root.querySelector('.race-source').textContent, /Gross pay; local bargaining is not counted\. The rest of the page shows the deal without your increments\. A projection, not a promise\./);
   assert.doesNotMatch(root.querySelector('.race-source').textContent, /not counted against prices/, 'said in the sentence by the figures, not again in the source note');
   const label = root.querySelector('svg').getAttribute('aria-label');
-  assert.match(label, /By the end, the deal’s rises add 10\.2% and prices are up 7\.5%\./);
-  assert.match(label, /With your increments, your own pay is up 21\.5%, which is not counted against prices\.$/);
+  assert.match(label, /By the end, the deal’s rises add 10\.2% and inflation is 7\.5%\./);
+  assert.match(label, /With your increments, your own pay is up 21\.5%, which is not counted against inflation\.$/);
   assert.equal(root.querySelectorAll('path.line-own').length, 1, 'a second line for the reader’s own pay');
   assert.equal(mineText({ ...D0, touched: true, incrementMonth: 9 }, data).tail, 'by 2029, before increments');
   assert.equal(mineText({ ...D0, touched: true, incrementMonth: 9, pointIndex: 10 }, data).tail, 'by 2029', 'nothing to add at the top');
 
   const plain = mountRace({ touched: true });
-  assert.deepEqual(plain.root.querySelectorAll('.race-tile small').map((s) => s.textContent), ['Yearly pay, before tax', 'Pay is up', 'Prices are up', 'So pay buys']);
+  assert.deepEqual(plain.root.querySelectorAll('.race-tile small').map((s) => s.textContent), ['Yearly pay, before tax', 'Pay is up', 'Inflation', 'So pay buys']);
   assert.equal(plain.root.querySelector('.race-real-note').hidden, true);
   assert.equal(plain.root.querySelectorAll('path.line-own').length, 0);
-  assert.equal(plain.root.querySelector('.race-legend li').textContent, 'Prices are ahead of pay in 7 of the 33 months');
+  assert.equal(plain.root.querySelector('.race-legend li').textContent, 'Pay is behind inflation in 7 of the 33 months');
   assert.doesNotMatch(plain.root.querySelector('svg').getAttribute('aria-label'), /increments/);
 });
 
@@ -415,8 +415,8 @@ test('copy: the glossary keeps increments out of every figure but the opening ch
 
 test('copy: increments are described as a line of their own, never set against prices, and no removed panel is named', () => {
   const glossary = data.GLOSSARY.find((g) => g.id === 'increment').text;
-  assert.match(glossary, /drawn as a second line, and prices are still compared with the deal’s rises alone/);
-  assert.ok(data.ASSUMPTIONS.some((a) => /^Annual increments are not included/.test(a) && /Prices are always compared with the deal’s rises alone, because an increment is normal progression up a scale and not part of the deal/.test(a)));
+  assert.match(glossary, /drawn as a second line, and the deal’s rises alone are compared with inflation/);
+  assert.ok(data.ASSUMPTIONS.some((a) => /^Annual increments are not included/.test(a) && /Only the deal’s rises are compared with inflation, because an increment is normal progression up a scale and not part of the deal/.test(a)));
   assert.doesNotMatch(JSON.stringify([data.ASSUMPTIONS, data.GLOSSARY]), /Advanced/);
 });
 

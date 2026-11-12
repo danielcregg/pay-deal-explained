@@ -65,8 +65,7 @@ test('the chart card says whose figures it shows only when the pickers do not sa
   const example = mount();
   const line = example.root.querySelector('.context-line');
   assert.deepEqual([line.hidden, line.textContent], [false, 'Example: Lecturer, point 5. Choose your own job, grade and point above.']);
-  const link = example.root.querySelector('.race-options .race-more a');
-  assert.deepEqual([link.getAttribute('href'), link.textContent], ['#your-pay', 'Part-time, hourly-paid or not listed? Use the full calculator']);
+  assert.equal(example.root.querySelector('details.race-extra summary').textContent, 'Part-time, hourly-paid or not listed?', 'the less common cases fold out here: there is no second calculator to send readers to');
 
   const own = mount({ touched: true });
   assert.equal(own.root.querySelector('.context-line').hidden, true, 'a full-time grade and point: the pickers already say it');
@@ -86,13 +85,13 @@ test('the chart counts the months when prices are ahead of pay, as the month-by-
   assert.equal(hero.monthsBehind(plain), series.ahead.length);
   assert.equal(hero.monthsBehind(plain), 7);
   const { root, store } = mount();
-  assert.equal(root.querySelector('.race-legend').textContent, 'Prices are ahead of pay in 7 of the 33 months');
+  assert.equal(root.querySelector('.race-legend').textContent, 'Pay is behind inflation in 7 of the 33 months');
   store.set({ includeLB: true });
   assert.equal(hero.monthsBehind(hero.model(89894, data, { includeLB: true })), 7, 'the 2029 1% comes too late to change it');
   // increments are normal progression: adding them does not change the count
   const career = careerOf({ ...D0, touched: true, incrementMonth: 9 }, data.SCALES, NOW);
   assert.equal(hero.monthsBehind(hero.model(89894, data, { includeLB: false, career })), 7);
   store.set({ touched: true, incrementMonth: 9 });
-  assert.match(root.querySelector('.race-legend').textContent, /^Prices are ahead of the deal’s rises in 7 of the 33 months/);
-  assert.match(root.querySelector('svg').getAttribute('aria-label'), /Prices are ahead of the deal’s rises in 7 of the 33 months\./);
+  assert.match(root.querySelector('.race-legend').textContent, /^The deal’s rises are behind inflation in 7 of the 33 months/);
+  assert.match(root.querySelector('svg').getAttribute('aria-label'), /The deal’s rises are behind inflation in 7 of the 33 months\./);
 });

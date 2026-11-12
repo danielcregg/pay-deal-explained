@@ -120,22 +120,14 @@ test('a salary typed with no job chosen: the chart shows it, and the pickers sti
   assert.equal(root.querySelector('.race-tile.euro b').textContent, `€${Math.round(finalSalary(52000, DEAL.steps, { includeLB: false })).toLocaleString('en-IE')}`);
 });
 
-test('chapter 1 opens on the example salary, with no job chosen and nothing that belongs to one job', () => {
-  const { root, store } = mount(yourPay);
-  const job = root.querySelector('#pp-sector');
-  assert.deepEqual([job.value, root.querySelector('#pp-sector option').textContent], ['any', 'Choose your job']);
-  assert.equal(root.querySelector('#pp-grade').value, 'typed');
-  assert.equal(root.querySelector('#pp-typed').value, '60000');
-  assert.equal(root.querySelector('.pay-label').textContent, 'A salary of €60,000');
-  assert.equal(root.querySelector('.example-badge').textContent, 'Example: a salary of €60,000. Pick your own job, grade and point, or type your salary.');
+test('the pay in detail opens on the example salary, with nothing that belongs to one job', () => {
+  const { root } = mount(hero);
+  assert.equal(root.querySelector('#pp-typed').value, '', 'the example is not shown as a salary the reader typed');
   assert.deepEqual([root.querySelector('.pay-big .from').textContent, root.querySelector('.pay-big .to').textContent], ['€60,000', '€66,103']);
-  assert.equal(root.querySelector('label.switch-owed').hidden, true);
+  assert.equal(root.querySelector('#race-owed').closest('label').hidden, true);
   assert.equal(root.querySelector('label.pill-hourly').hidden, true);
   assert.equal(root.querySelector('.pay-caveat').textContent, 'Gross pay on this salary: before tax, USC, PRSI and pension, and without annual increments.');
-  job.value = 'garda';
-  job.dispatchEvent({ type: 'change', bubbles: true });
-  assert.deepEqual([store.get().sector, store.get().gradeId, store.get().pointIndex, store.get().touched], ['garda', 'garda-2015', 0, true]);
-  assert.equal(root.querySelector('.example-badge').hidden, true);
+  assert.doesNotMatch(root.querySelector('.race-detail').textContent, /Lecturer|lecturer|point \d/);
 });
 
 test('the other chapters work with no job chosen', () => {

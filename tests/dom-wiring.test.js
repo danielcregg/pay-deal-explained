@@ -168,7 +168,7 @@ test('the charts carry tick boxes for the local bargaining 1%s, tied to the same
   document.body.append(opening, two);
   const store = createStore({ ...DEFAULT_SELECTION, touched: true, gradeId: 'lect', pointIndex: 10 });
   hero.render(opening, { store, data });
-  yourPay.render(two, { store, data });
+  hero.render(two, { store, data });
   const tiles = () => opening.querySelectorAll('.race-tile b').map((b) => b.textContent);
   assert.deepEqual(tiles().slice(0, 2), ['€118,684', '+10.2%']);
 
@@ -177,9 +177,9 @@ test('the charts carry tick boxes for the local bargaining 1%s, tied to the same
   lb.dispatchEvent({ type: 'change', bubbles: true });
   assert.equal(store.get().includeLB, true);
   assert.deepEqual(tiles().slice(0, 2), ['€119,871', '+11.3%']);
-  assert.equal(two.querySelector('#pp-lb').checked, true, 'chapter 1 shows the same choice');
+  assert.equal(two.querySelector('#race-lb').checked, true, 'a second copy of the calculator shows the same choice');
 
-  const owed = two.querySelector('#pp-owed');
+  const owed = two.querySelector('#race-owed');
   assert.equal(owed.closest('label').hidden, false, 'lecturers are offered the 1% from 2025 here too');
   owed.checked = true;
   owed.dispatchEvent({ type: 'change', bubbles: true });
@@ -188,34 +188,33 @@ test('the charts carry tick boxes for the local bargaining 1%s, tied to the same
   assert.equal(opening.querySelector('#race-owed').checked, true);
 });
 
-test('your pay: counting the 1% from 2025 moves the figure and the marked cell, and they agree', () => {
+test('the pay in detail: counting the 1% from 2025 moves the figure and the marked cell, and they agree', () => {
   const root = document.createElement('div');
   document.body.append(root);
   const store = createStore({ ...DEFAULT_SELECTION, touched: true, gradeId: 'lect', pointIndex: 10 });
-  yourPay.render(root, { store, data });
+  hero.render(root, { store, data });
   const text = (selector) => root.querySelector(selector).textContent;
   assert.equal(text('.pay-big .to'), '€118,684');
   assert.match(text('.pay-ways-table td.on'), /^€118,684 \+10\.2%/);
   assert.match(text('.pay-gain'), /\(\+10\.2%\)/);
-  assert.match(text('.pay-real'), /^After inflation on the Central Bank’s forecasts \(2029 assumed at 2%\), that would buy about 2\.5% more than in July 2026/);
 
-  const owed = root.querySelector('#pp-owed');
+  const owed = root.querySelector('#race-owed');
   owed.checked = true;
   owed.dispatchEvent({ type: 'change', bubbles: true });
   assert.equal(text('.pay-big .from'), '€107,727', 'the panel still starts from today’s scale figure');
   assert.equal(text('.pay-big .to'), '€119,871');
   assert.match(text('.pay-gain'), /^\+€12,144 a year \(\+11\.3%\)/);
   assert.match(text('.pay-ways-table td.on'), /^€119,871 \+11\.3%/);
-  assert.match(text('.pay-label'), /with the 1% from September 2025$/);
+  assert.match(text('.context-line'), /with the 1% from September 2025\.$/, 'the line under the pickers says what is counted');
   assert.equal(root.querySelectorAll('.pay-ways-table td.on').length, 1);
 });
 
-test('back pay: its checkbox for the 1% owed since 2025 and the one in section 1 are the same choice', () => {
+test('back pay: its checkbox for the 1% owed since 2025 and the one under the opening chart are the same choice', () => {
   const one = document.createElement('div');
   const six = document.createElement('div');
   document.body.append(one, six);
   const store = createStore({ ...DEFAULT_SELECTION, touched: true, gradeId: 'lect', pointIndex: 10 });
-  yourPay.render(one, { store, data });
+  hero.render(one, { store, data });
   backPay.render(six, { store, data });
   assert.equal(six.querySelector('.bp-owed').hidden, true);
 
@@ -223,56 +222,58 @@ test('back pay: its checkbox for the 1% owed since 2025 and the one in section 1
   box.checked = true;
   box.dispatchEvent({ type: 'change', bubbles: true });
   assert.equal(store.get().includeOwed, true);
-  assert.equal(one.querySelector('#pp-owed').checked, true, 'section 1 shows the same choice');
+  assert.equal(one.querySelector('#race-owed').checked, true, 'the calculator shows the same choice');
   assert.match(six.querySelector('.bp-owed').textContent, /about €1,424. .* about €2,149 before tax/);
 
-  const first = one.querySelector('#pp-owed');
+  const first = one.querySelector('#race-owed');
   first.checked = false;
   first.dispatchEvent({ type: 'change', bubbles: true });
   assert.equal(six.querySelector('#bp-owed').checked, false);
   assert.equal(six.querySelector('.bp-owed').hidden, true);
 });
 
-test('your pay: choosing another job swaps the grades and hides what does not apply to it', () => {
+test('the calculator: choosing another job swaps the grades and hides what does not apply to it', () => {
   const root = document.createElement('div');
   document.body.append(root);
-  const store = createStore({ ...DEFAULT_SELECTION });
-  yourPay.render(root, { store, data });
+  const store = createStore({ ...DEFAULT_SELECTION, touched: true }); // a lecturer who has chosen their point
+  hero.render(root, { store, data });
   const values = (selector) => root.querySelectorAll(selector).map((o) => o.getAttribute('value'));
   const texts = (selector) => root.querySelectorAll(selector).map((o) => o.textContent);
-  const owedSwitch = root.querySelector('label.switch-owed');
-  const jobs = root.querySelector('#pp-sector');
+  const said = () => root.querySelector('.race-said').textContent;
+  const owedSwitch = root.querySelector('#race-owed').closest('label');
+  const jobs = root.querySelector('#race-job');
   const choose = (id) => { jobs.value = id; jobs.dispatchEvent({ type: 'change', bubbles: true }); return store.get(); };
-  assert.deepEqual(values('#pp-sector option'), ['any', 'tu', 'primary', 'postprimary', 'nurse', 'garda']);
+  assert.deepEqual(values('#race-job option'), ['tu', 'primary', 'postprimary', 'nurse', 'garda']);
   assert.equal(jobs.closest('.field').hidden, false, 'the job list shows once there is more than one job');
   assert.equal(owedSwitch.hidden, false, 'lecturers are offered the 1% from September 2025');
   assert.equal(root.querySelector('label.pill-hourly').hidden, false);
+  assert.deepEqual(root.querySelectorAll('#race-grade optgroup').map((g) => g.getAttribute('label')), ['Current grades', 'Other or legacy scales'], 'legacy scales are kept apart, as they were in the fuller form');
 
   let s = choose('primary');
   assert.deepEqual([s.sector, s.gradeId, s.pointIndex, s.touched], ['primary', 'pt-new', 0, true]);
-  assert.deepEqual(values('#pp-grade option'), ['pt-new', 'pt-pre2011', 'typed']);
+  assert.deepEqual(values('#race-grade option'), ['pt-new', 'pt-pre2011']);
   assert.equal(owedSwitch.hidden, true);
   assert.equal(root.querySelector('label.pill-hourly').hidden, true);
-  assert.equal(root.querySelector('.pay-label').textContent, 'Primary teacher (started in 2011 or later), point 1');
+  assert.match(said(), /^Primary teacher \(started in 2011 or later\), point 1\. /);
   assert.equal(root.querySelector('.pay-big .from').textContent, '€45,833');
   assert.match(root.querySelector('.pay-caveat').textContent, /qualification allowances, posts of responsibility and other allowances are not included\.$/);
-  assert.equal(texts('#pp-point option')[3], 'Point 4, a skipped point (€50,280)');
+  assert.equal(texts('#race-point option')[3], 'Point 4, a skipped point (€50,280)');
 
   s = choose('nurse');
   assert.deepEqual([s.gradeId, s.includeOwed], ['nm-enhanced', false]);
   assert.match(root.querySelector('.pay-notes').textContent, /Two official documents give different figures/);
-  assert.equal(texts('#pp-point option').at(-1), 'Long service increment (€60,194)');
-  const grades = root.querySelector('#pp-grade');
+  assert.equal(texts('#race-point option').at(-1), 'Long service increment (€60,194)');
+  const grades = root.querySelector('#race-grade');
   grades.value = 'nm-staff-senior';
   grades.dispatchEvent({ type: 'change', bubbles: true });
-  assert.equal(root.querySelector('.pay-label').textContent, 'Senior Staff Nurse or Midwife, single rate');
+  assert.match(said(), /^Senior Staff Nurse or Midwife, single rate\. /);
   assert.equal(root.querySelector('.pay-notes').hidden, true, 'the note about the Enhanced scale goes with that grade only');
 
   s = choose('garda');
   assert.equal(s.gradeId, 'garda-2015');
   assert.equal(owedSwitch.hidden, false, 'gardaí are offered the 1% from September 2025 too');
   assert.match(owedSwitch.textContent, /GRA last reported/);
-  assert.deepEqual(texts('#pp-grade optgroup').length, 3);
+  assert.ok(values('#race-grade option').includes('garda-b'), 'the older scales are still offered');
   assert.match(root.querySelector('.pay-caveat').textContent, /may differ from your payslip by a euro or two\.$/);
 });
 

@@ -168,10 +168,10 @@ export function render(root, { store, data }) {
     cards.replaceChildren(card(m.deals[0], 'prev', low, sector.lastDealNote ?? null), card(m.deals[1], 'draft', low, null, Boolean(sector.lastDealLB) && !sel.includeLB));
     const said = (on) => (on ? 'counted' : 'left out');
     lbNote.textContent = sector.owed
-      ? `Each deal has a 1% for local bargaining, counted by its own switch in section 1: the 2024–26 deal’s, from 1 September 2025, is ${said(includePrevLB)}; the draft’s, on 1 March 2029, is ${said(sel.includeLB)}.`
+      ? `Each deal has a 1% for local bargaining, counted by its own switch under the chart at the top of the page: the 2024–26 deal’s, from 1 September 2025, is ${said(includePrevLB)}; the draft’s, on 1 March 2029, is ${said(sel.includeLB)}.`
       : noJob
-        ? `With no job chosen, each deal’s 1% for local bargaining is treated the same way: both are ${said(sel.includeLB)}. Switch them in section 1.`
-        : `The draft’s 1% local bargaining, on 1 March 2029, is ${said(sel.includeLB)}; switch it in section 1. The 2024–26 deal’s 1% is ${said(includePrevLB)}.`;
+        ? `With no job chosen, each deal’s 1% for local bargaining is treated the same way: both are ${said(sel.includeLB)}. Switch them under the chart at the top of the page.`
+        : `The draft’s 1% local bargaining, on 1 March 2029, is ${said(sel.includeLB)}; switch it under the chart at the top of the page. The 2024–26 deal’s 1% is ${said(includePrevLB)}.`;
 
     chart = buildChart(m, width, labelSize(wrap));
     for (const node of [...wrap.childNodes]) if (node.nodeName.toLowerCase() === 'svg') node.remove();

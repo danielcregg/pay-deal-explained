@@ -31,7 +31,7 @@ export function mineText(sel, data) {
   };
 }
 
-/** Keep the header chip (a link to section 1) in step with the reader's choices. */
+/** Keep the header chip (a link to the calculator at the top) in step with the reader's choices. */
 export function mountMine(el, store, data) {
   if (!el) return;
   const show = () => {

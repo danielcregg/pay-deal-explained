@@ -15,7 +15,7 @@ export const SITE = {
   lastUpdated: '2026-11-11',
   includeLBDefault: false,
   // Whether the 1% owed since 1 September 2025 (see the `owed` entry of a sector in SCALES) is counted from the start.
-  // It is unconfirmed for TU lecturers and for gardaí, so it is off; readers can switch it on in section 1.
+  // It is unconfirmed for TU lecturers and for gardaí, so it is off; readers can switch it on under the opening chart.
   includeOwedDefault: false,
   repoUrl: 'https://github.com/danielcregg/pay-deal-2026',
   issuesUrl: 'https://github.com/danielcregg/pay-deal-2026/issues',
@@ -137,7 +137,7 @@ export const SCALES = {
       hourly: true, // hourly-paid Assistant Lecturers: point 1 of the annual scale ÷ hourlyDivisor
       caveat: null,
       lastDealLB: false, // the 1% of September 2025 is not in these scales; the `owed` entry below lets readers count it
-      lastDealNote: 'For TU academic staff, the first local bargaining instalment (1%, due 1 September 2025) was still being sought by TUI in December 2025, and it does not appear in the February or June 2026 pay scales. This comparison leaves it out unless you count it in section 1.',
+      lastDealNote: 'For TU academic staff, the first local bargaining instalment (1%, due 1 September 2025) was still being sought by TUI in December 2025, and it does not appear in the February or June 2026 pay scales. This comparison leaves it out unless you count it under the chart at the top of the page.',
       // The 1% local bargaining due from 1 September 2025 under the 2024–2026 agreement is not
       // in these scales. While this entry exists, readers can choose to count it (sections 1 and 6)
       // and the page shows pay with and without it. Delete the entry once a circular applies
@@ -209,7 +209,7 @@ export const SCALES = {
       // official figures when a newer table is published.
       caveat: 'Basic pay only: allowances, unsocial hours payments and overtime are not included. We could not find a Garda pay table for 1 June 2026, so these figures are An Garda Síochána’s table of 1 August 2025 with the rises of 1 February 2026 (1% or €500) and 1 June 2026 (1%) applied. They may differ from your payslip by a euro or two.',
       lastDealLB: false,
-      lastDealNote: 'For garda rank, the first local bargaining instalment (1%, due 1 September 2025) had not been agreed when the GRA last reported on it, on 29 September 2026. We found no statement from AGSI for sergeants and inspectors. This comparison leaves it out unless you count it in section 1.',
+      lastDealNote: 'For garda rank, the first local bargaining instalment (1%, due 1 September 2025) had not been agreed when the GRA last reported on it, on 29 September 2026. We found no statement from AGSI for sergeants and inspectors. This comparison leaves it out unless you count it under the chart at the top of the page.',
       owed: {
         pct: 1,
         since: '2025-09-01',
@@ -350,19 +350,19 @@ export const INFLATION = {
     {
       id: 'lower', kind: 'illustration', label: 'Optimistic: 2%', rates: { 2026: 3.4, 2027: 2, 2028: 2, 2029: 2 },
       phrase: 'on the optimistic path (2% a year from 2027, an illustration)',
-      note: 'Prices here are an illustration, not a forecast: the Central Bank’s 3.4% for 2026, then 2% a year, the European Central Bank’s target.',
+      note: 'Inflation here is an illustration, not a forecast: the Central Bank’s 3.4% for 2026, then 2% a year, the European Central Bank’s target.',
       sourceIds: ['cbi-qb3-2026', 'ecb-target'],
     },
     {
       id: 'central', kind: 'forecast', label: 'Central Bank', rates: CENTRAL_RATES,
       phrase: 'on the Central Bank’s forecasts (2029 assumed at 2%)',
-      note: 'Prices follow the Central Bank of Ireland’s forecasts of September 2026: 3.4% in 2026, 3.1% in 2027 and 2% in 2028, with 2029 assumed at 2%.',
+      note: 'Inflation follows the Central Bank of Ireland’s forecasts of September 2026: 3.4% in 2026, 3.1% in 2027 and 2% in 2028, with 2029 assumed at 2%.',
       sourceIds: ['cbi-qb3-2026'],
     },
     {
       id: 'higher', kind: 'illustration', label: 'Pessimistic: 4%', rates: { 2026: 4, 2027: 4, 2028: 4, 2029: 4 },
       phrase: 'on the pessimistic path (4% a year, an illustration)',
-      note: 'Prices here are an illustration, not a forecast: prices keep rising by 4% a year, the rate in the year to October 2026 (CSO flash estimate).',
+      note: 'Inflation here is an illustration, not a forecast: it stays at 4% a year, the rate in the year to October 2026 (CSO flash estimate).',
       sourceIds: ['cso-hicp-oct2026'],
     },
   ],
@@ -403,7 +403,7 @@ export const GLOSSARY = [
   { id: 'ratification', term: 'Ratification', text: 'Formal acceptance of the deal by the unions after their members have voted. Until then, it is a draft.' },
   { id: 'wrc', term: 'WRC', text: 'The Workplace Relations Commission, the State body that hosted the talks where the draft deal was agreed.' },
   { id: 'ictu-psc', term: 'ICTU Public Services Committee', text: 'The committee of the Irish Congress of Trade Unions that brings the public service unions together to negotiate pay agreements and decide on them.' },
-  { id: 'increment', term: 'Increment', text: 'The yearly step up your pay scale for service. Increments are separate from this deal and are not included in the figures on this site. The one exception is the opening chart, if you add your increment month to it: your own pay is then drawn as a second line, and prices are still compared with the deal’s rises alone.' },
+  { id: 'increment', term: 'Increment', text: 'The yearly step up your pay scale for service. Increments are separate from this deal and are not included in the figures on this site. The one exception is the opening chart, if you add your increment month to it: your own pay is then drawn as a second line, and the deal’s rises alone are compared with inflation.' },
   { id: 'scale-point', term: 'Scale point', text: 'One step on your grade’s pay scale. The figures here are each scale’s point values for 1 June 2026; for gardaí they are worked out from the last published table.' },
 ];
 
@@ -444,18 +444,18 @@ export const ASSUMPTIONS = [
   'Everything is based on the proposed Public Service Agreement 2026–2029, issued through the Workplace Relations Commission on 11 November 2026. Its section 3.1.2 sets out the nine pay adjustments used here. It is a proposal until union members have voted.',
   'Until you choose a job, grade and point, every chapter shows an example salary of €60,000, the level at which the deal’s flat minimums stop applying.',
   'Figures are gross pay, before tax, USC, PRSI and pension deductions.',
-  'Annual increments are not included: the figures show only what the deal adds to your current scale point. The one exception is the opening chart: if you add your increment month, it draws your own pay with increments as a second line. Prices are always compared with the deal’s rises alone, because an increment is normal progression up a scale and not part of the deal.',
+  'Annual increments are not included: the figures show only what the deal adds to your current scale point. The one exception is the opening chart: if you add your increment month, it draws your own pay with increments as a second line. Only the deal’s rises are compared with inflation, because an increment is normal progression up a scale and not part of the deal.',
   'Where you add increments to the opening chart, each is counted from the 1st of the month you choose: one point a year, worked out from the point you are on now. Skipped points are passed over, and long service increments and promotions are left out.',
   'Local bargaining (1% on 1 March 2029) is left out of totals unless you switch it on. It is 1% of a bargaining unit’s pay bill, used as negotiated, so it may not reach you as a 1% rise.',
   'Lecturer, teacher and nurse figures are the pay scales in force from 1 June 2026. Garda figures are the official table of 1 August 2025 with the two rises since applied, because no later table could be found.',
   'For teachers, nurses, midwives and gardaí the figures are basic pay only: allowances, premium pay and overtime are not included.',
-  'The 1% local bargaining due from 1 September 2025 under the last agreement is in the post-primary teachers’ scale. For primary teachers, nurses and midwives it has been used so far for allowances and changes to particular grades. It is not in the lecturer or Garda figures, so for those jobs it is left out unless you switch it on in section 1. Counting it adds 1% to your current point before the new rises, and adds its back pay: 1% of the pay scale in force in each month since then, assuming it is backdated in full.',
+  'The 1% local bargaining due from 1 September 2025 under the last agreement is in the post-primary teachers’ scale. For primary teachers, nurses and midwives it has been used so far for allowances and changes to particular grades. It is not in the lecturer or Garda figures, so for those jobs it is left out unless you switch it on under the chart at the top of the page. Counting it adds 1% to your current point before the new rises, and adds its back pay: 1% of the pay scale in force in each month since then, assuming it is backdated in full.',
   'Amounts are worked out to the cent and shown in whole euros. Official pay scales may differ by about €1 because of rounding.',
   'Part-time pay is your full-time scale point times your FTE, so the flat minimums are pro-rated.',
   'Hourly rates for Assistant Lecturers are point 1 of the annual scale divided by 630 hours, which matches the 2026 pay circulars exactly.',
   'Back pay assumes the first rise is paid in the January 2027 payroll, with arrears from 1 September 2026. You can change the month.',
   'For hourly-paid lecturers, back pay assumes your teaching hours are spread evenly across the year.',
-  'Prices use the Central Bank of Ireland’s forecasts for 2026 to 2028 (Quarterly Bulletin, September 2026), with 2029 assumed to be 2%. The optimistic and pessimistic buttons under the opening chart are illustrations, not forecasts: 2% a year from 2027, and 4% a year throughout. You can also set a figure of your own there.',
+  'Inflation follows the Central Bank of Ireland’s forecasts for 2026 to 2028 (Quarterly Bulletin, September 2026), with 2029 assumed to be 2%. The optimistic and pessimistic buttons under the opening chart are illustrations, not forecasts: 2% a year from 2027, and 4% a year throughout. You can also set a figure of your own there.',
   'TU Dublin academic staff are assumed to be on the same scales as staff in the former institutes of technology.',
 ];
 

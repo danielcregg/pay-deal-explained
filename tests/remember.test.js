@@ -7,7 +7,7 @@ import { installDom } from './helpers/dom.js';
 import * as data from '../site/js/data.js';
 import { DEFAULT_SELECTION, STORAGE_KEY, restoreSelection, persistSelection, rememberChoices } from '../site/js/selection.js';
 import { createStore } from '../site/js/state.js';
-import * as yourPay from '../site/js/sections/your-pay.js';
+import * as hero from '../site/js/sections/hero.js';
 
 const document = installDom();
 const { SCALES } = data;
@@ -47,11 +47,11 @@ test('saving: choices are written only while remembering is on, and wiped as soo
   });
 });
 
-test('chapter 1: a tick box asks before anything is kept, and clearing forgets it', () => {
+test('the calculator: a tick box asks before anything is kept, and clearing forgets it', () => {
   const root = document.createElement('div');
   document.body.append(root);
   const store = createStore({ ...mine });
-  yourPay.render(root, { store, data, now: '2026-11' });
+  hero.render(root, { store, data, now: '2026-11' });
   const box = root.querySelector('#pp-remember');
   assert.equal(box.checked, false);
   assert.equal(box.closest('label').textContent, 'Remember my choices on this device');

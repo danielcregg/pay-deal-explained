@@ -93,32 +93,20 @@ test('the store: clearing replaces everything and tells the sections it was a re
   assert.deepEqual(store.get(), { ...DEFAULT_SELECTION });
 });
 
-test('chapter 1: the salary box always shows the salary the figures use', () => {
-  const { root, store, pick } = mount(yourPay);
-  pick('#pp-sector', 'primary');
-  pick('#pp-sector', 'any'); // back to no job: the point's salary stays, as a salary on its own
-  assert.equal(store.get().typed, 45833);
-  assert.equal(root.querySelector('.pay-big .from').textContent, '€45,833');
-  assert.equal(root.querySelector('#pp-typed').value, '45833', 'not the 60000 it opened with');
-  // the box is left alone while the reader is typing in it
-  const box = root.querySelector('#pp-typed');
-  box.focus();
-  box.value = '52,000';
-  box.dispatchEvent({ type: 'input', bubbles: true });
-  assert.deepEqual([store.get().typed, box.value], [52000, '52,000']);
-});
-
-test('chapter 1: part-time, or a share of full time, on the example salary is still the example', () => {
-  const { root, store, pick, radio } = mount(yourPay);
+test('part-time, or a share of full time, on the example salary is still the example', () => {
+  const { root, store, pick, radio } = mount(hero);
   radio('pp-contract', 'part');
   const fte = root.querySelector('#pp-fte');
   fte.value = '50';
   fte.dispatchEvent({ type: 'input', bubbles: true });
   assert.deepEqual([store.get().contract, store.get().fte, store.get().touched], ['part', 0.5, false]);
   assert.match(mineText(store.get(), data).label, /^Example: /);
-  assert.equal(root.querySelector('.example-badge').hidden, false);
-  pick('#pp-sector', 'nurse'); // so a job chosen next starts on its own scale, not on "a typed 60000"
-  assert.deepEqual([store.get().gradeId, store.get().touched], ['nm-enhanced', true]);
+  assert.match(root.querySelector('.context-line').textContent, /^Example: /);
+  // a job, grade and point chosen next are the reader's own, on the job's scale, still part-time
+  pick('#race-job', 'nurse');
+  pick('#race-grade', 'nm-staff');
+  pick('#race-point', 4);
+  assert.deepEqual([store.get().gradeId, store.get().typed, store.get().contract, store.get().touched], ['nm-staff', null, 'part', true]);
 });
 
 test('the month a point was given moves only when the job, grade or point is chosen', () => {
@@ -129,16 +117,16 @@ test('the month a point was given moves only when the job, grade or point is cho
   top.pick('#race-point', 5);
   assert.equal(top.store.get().pointMonth, NOW);
 
-  const one = mount(yourPay, given);
+  const one = mount(hero, given);
   one.radio('pp-contract', 'part');
   const fte = one.root.querySelector('#pp-fte');
   fte.value = '80';
   fte.dispatchEvent({ type: 'input', bubbles: true });
   assert.deepEqual([one.store.get().fte, one.store.get().pointMonth], [0.8, '2026-08'], 'nor does anything else about the job');
-  one.pick('#pp-point', 6);
+  one.pick('#race-point', 6);
   assert.equal(one.store.get().pointMonth, NOW);
   one.store.set({ pointMonth: '2026-08' });
-  one.pick('#pp-grade', 'sl1');
+  one.pick('#race-grade', 'sl1');
   assert.equal(one.store.get().pointMonth, NOW, 'a new grade is a new statement of where the reader stands');
 });
 
@@ -178,8 +166,8 @@ test('the opening chart: a half-made choice is dropped when the job is un-chosen
   assert.equal(store.get().touched, false);
 });
 
-test('chapter 1: "Clear my choices" is a reset, and the tick box follows the store', () => {
-  const { root, store } = mount(yourPay, { ...lecturer, remember: true });
+test('the calculator: "Clear my choices" is a reset, and the tick box follows the store', () => {
+  const { root, store } = mount(hero, { ...lecturer, remember: true });
   const box = root.querySelector('#pp-remember');
   assert.equal(box.checked, true);
   store.set({ remember: false }); // another tab unticked it
@@ -251,12 +239,12 @@ test('inflation paths: each says whether it is a forecast or an illustration, wh
   const { root, store } = mount(hero, lecturer);
   const tile = () => root.querySelector('.race-tile.price .race-price-note').textContent;
   const key = () => root.querySelector('.race-legend li').textContent;
-  assert.deepEqual([tile(), key()], ['forecast', 'Prices are ahead of pay in 7 of the 33 months']);
+  assert.deepEqual([tile(), key()], ['forecast', 'Pay is behind inflation in 7 of the 33 months']);
   store.set({ scenario: 'higher' });
-  assert.deepEqual([tile(), key()], ['illustration', 'Prices would be ahead of pay in 29 of the 33 months']);
-  assert.match(root.querySelector('svg').getAttribute('aria-label'), /Prices would be ahead of pay in 29 of the 33 months\./);
+  assert.deepEqual([tile(), key()], ['illustration', 'Pay would be behind inflation in 29 of the 33 months']);
+  assert.match(root.querySelector('svg').getAttribute('aria-label'), /Pay would be behind inflation in 29 of the 33 months\./);
   store.set({ scenario: 'lower' });
-  assert.deepEqual([tile(), key()], ['illustration', 'Prices would be ahead of pay in 4 of the 33 months']);
+  assert.deepEqual([tile(), key()], ['illustration', 'Pay would be behind inflation in 4 of the 33 months']);
 });
 
 test('the Central Bank path’s note states the same rates the chart uses', () => {
@@ -264,9 +252,9 @@ test('the Central Bank path’s note states the same rates the chart uses', () =
   const rates = data.INFLATION.scenarios.map((s) => s.rates);
   assert.match(scenario('lower').note, new RegExp(`${rates[0][2026]}% for 2026, then ${rates[0][2027]}% a year`));
   assert.match(scenario('lower').phrase, new RegExp(`${rates[0][2027]}% a year from 2027`));
-  assert.match(scenario('higher').note, new RegExp(`rising by ${rates[2][2027]}% a year`));
+  assert.match(scenario('higher').note, new RegExp(`it stays at ${rates[2][2027]}% a year`));
   assert.equal(rates[2][2026], data.INFLATION.current, 'the pessimistic path is "today’s rate goes on"');
-  const assumption = data.ASSUMPTIONS.find((a) => /^Prices use the Central Bank/.test(a));
+  const assumption = data.ASSUMPTIONS.find((a) => /^Inflation follows the Central Bank/.test(a));
   assert.match(assumption, new RegExp(`${rates[0][2027]}% a year from 2027, and ${rates[2][2027]}% a year throughout`));
   assert.match(assumption, new RegExp(`with 2029 assumed to be ${data.INFLATION.rates[2029]}%`));
 });
@@ -350,7 +338,7 @@ test('Present mode: whatever still runs over the screen comes off the chart, dow
 
 test('live regions are written only when their words change, so the same thing is not announced twice', () => {
   const cases = [
-    [yourPay, '.pay-gain', { includeLB: true }],
+    [hero, '.pay-gain', { includeLB: true }],
     [flat, '.fp-summary', { includeLB: true }],
     [hero, '.race-inc-note', { incrementMonth: 3 }],
   ];
@@ -370,9 +358,9 @@ test('the opening chart tells a screen reader what it now shows, once for each c
   const { root, store } = mount(hero);
   const said = root.querySelector('.race-said');
   assert.equal(said.getAttribute('aria-live'), 'polite');
-  assert.equal(said.textContent, 'Example: a salary of €60,000. €66,103 a year by the end of March 2029: pay is up 10.2% and prices are up 7.5% on the Central Bank’s forecasts (2029 assumed at 2%), so pay buys 2.5% more.');
+  assert.equal(said.textContent, 'Example: a salary of €60,000. €66,103 a year by the end of March 2029: pay is up 10.2% and inflation is 7.5% on the Central Bank’s forecasts (2029 assumed at 2%), so pay buys 2.5% more.');
   store.set({ ...lecturer, incrementMonth: 9, scenario: 'higher' });
-  assert.equal(said.textContent, 'Lecturer, point 5. €105,601 a year by the end of March 2029, with your increments: the deal adds 10.2% and prices are up 11.4% on the pessimistic path (4% a year, an illustration), so the deal’s rises buy 1.1% less.');
+  assert.equal(said.textContent, 'Lecturer, point 5. €105,601 a year by the end of March 2029, with your increments: the deal adds 10.2% and inflation is 11.4% on the pessimistic path (4% a year, an illustration), so the deal’s rises buy 1.1% less.');
   const before = said.childNodes[0];
   const scrub = root.querySelector('input.race-scrub');
   scrub.value = '12';

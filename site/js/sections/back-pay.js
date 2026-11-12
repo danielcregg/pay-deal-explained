@@ -45,7 +45,7 @@ export function render(root, { store, data }) {
 
   const context = h('p', { class: 'context-line' });
   const hourlyNote = h('p', { class: 'note', hidden: true });
-  // The same choice as in section 1, offered here where its back pay shows.
+  // The same choice as under the opening chart, offered here where its back pay shows.
   const owedBox = h('input', { id: 'bp-owed', type: 'checkbox' });
   const owedText = h('span');
   const owedSwitch = h('label', { class: 'switch bp-owed-switch', for: 'bp-owed', hidden: true }, owedBox, owedText);
@@ -88,7 +88,7 @@ export function render(root, { store, data }) {
     hourlyNote.textContent = m.note ?? '';
 
     if (m.needsHours) {
-      intro.textContent = 'Add the hours you teach in a year in section 1 to estimate your back pay. Hourly rates are backdated too: the first rise applies from 1 September 2026.';
+      intro.textContent = 'Add the hours you teach in a year at the top of the page, under “Part-time, hourly-paid or not listed?”, to estimate your back pay. Hourly rates are backdated too: the first rise applies from 1 September 2026.';
       tiles.replaceChildren();
       replay.hidden = true;
       return;

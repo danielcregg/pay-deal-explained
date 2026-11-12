@@ -52,7 +52,7 @@ export function scenarioOf(sel, inflation) {
       id: OWN_PATH, kind: 'your own figure', label: 'Your own figure',
       rates: Object.fromEntries(Object.keys(inflation.rates).map((year) => [year, sel.ownRate])),
       phrase: `at your own figure (${said} a year)`,
-      note: `Prices here rise by ${said} a year, a figure of your own.`,
+      note: `Inflation here is ${said} a year, a figure of your own.`,
       sourceIds: [],
     };
   }

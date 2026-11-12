@@ -39,9 +39,9 @@ test('changing job: the 1% switch is reset, a typed salary is kept, and an hourl
 });
 
 test('your pay: the contract buttons follow a job change away from hourly-paid, and back', () => {
-  const { root, store } = mount(yourPay, { touched: true, contract: 'hourly' });
+  const { root, store } = mount(hero, { touched: true, contract: 'hourly' });
   const checked = () => root.querySelectorAll('input[name="pp-contract"]').filter((r) => r.checked).map((r) => r.value);
-  const jobs = root.querySelector('#pp-sector');
+  const jobs = root.querySelector('#race-job');
   const choose = (id) => { jobs.value = id; jobs.dispatchEvent({ type: 'change', bubbles: true }); };
   assert.deepEqual(checked(), ['hourly']);
   choose('primary');
@@ -52,8 +52,8 @@ test('your pay: the contract buttons follow a job change away from hourly-paid, 
 });
 
 test('your pay: a typed salary survives a job change and does not borrow the job’s caveat about its scale', () => {
-  const { root, store } = mount(yourPay, { touched: true, gradeId: 'typed', typed: 52000 });
-  const jobs = root.querySelector('#pp-sector');
+  const { root, store } = mount(hero, { touched: true, gradeId: 'typed', typed: 52000 });
+  const jobs = root.querySelector('#race-job');
   jobs.value = 'garda';
   jobs.dispatchEvent({ type: 'change', bubbles: true });
   assert.deepEqual([store.get().sector, store.get().gradeId, store.get().typed], ['garda', 'typed', 52000]);
@@ -172,7 +172,7 @@ test('the published text of the proposed agreement is the source for the deal', 
 test('nothing still speaks only to lecturers where every job reads it', () => {
   assert.ok(data.ASSUMPTIONS.some((a) => /^For hourly-paid lecturers, back pay assumes/.test(a)));
   assert.match(data.GLOSSARY.find((g) => g.id === 'scale-point').text, /gardaí/);
-  assert.match(read('site/js/sections/your-pay.js'), /Pick your own job, grade and point/);
+  assert.match(read('site/js/selection.js'), /Pick your own job, grade and point/);
   assert.doesNotMatch(read('package.json'), /for TU lecturers/);
   assert.doesNotMatch(read('README.md'), /tuLbNote/);
 });

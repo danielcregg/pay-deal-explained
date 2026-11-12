@@ -30,7 +30,7 @@ export function model(base, steps, { includeLB }) {
   };
 }
 
-/** The figures the summary line shows, rounded the same way as section 1 so they agree. */
+/** The figures the summary line shows, rounded the same way as the calculator so they agree. */
 export function summaryNumbers(pay, m) {
   const now = pay.base * pay.factor;
   const end = m.endSalary * pay.factor;

@@ -44,7 +44,7 @@ export function pricesSwitch(store, data, idPrefix) {
   const radios = paths.map(([value]) => h('input', { type: 'radio', name, value }));
   const rateOut = h('output', { for: `${idPrefix}-rate` });
   const rate = h('input', { type: 'range', id: `${idPrefix}-rate`, class: 'prices-range', min: OWN_RATE.min, max: OWN_RATE.max, step: OWN_RATE.step });
-  const rateField = h('div', { class: 'field prices-own', hidden: true }, h('label', { for: `${idPrefix}-rate` }, 'Prices rise by ', rateOut, ' a year'), rate);
+  const rateField = h('div', { class: 'field prices-own', hidden: true }, h('label', { for: `${idPrefix}-rate` }, 'Inflation: ', rateOut, ' a year'), rate);
   const el = h('fieldset', { class: 'seg prices-seg' },
     h('legend', {}, 'Inflation'),
     h('div', { class: 'seg-options' }, paths.map(([, label], i) => h('label', { class: 'pill' }, radios[i], h('span', {}, label)))),

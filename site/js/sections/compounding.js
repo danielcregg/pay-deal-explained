@@ -74,7 +74,7 @@ export function render(root, { data }) {
     h('p', { class: 'cmp-note' },
       `The second bar ends €${two(extra)} further along, because each rise is worked out on pay that has already gone up. `
       + `This explains the ${withLB.sum}% headline, which counts local bargaining as a 1% rise. `
-      + `Without local bargaining, which section 1 leaves out unless you switch it on, ${two(general.sum)}% added up becomes ${two(general.compounded)}%.`),
+      + `Without local bargaining, which the calculator leaves out unless you switch it on, ${two(general.sum)}% added up becomes ${two(general.compounded)}%.`),
     h('div', { class: 'chart-foot' },
       h('ul', { class: 'legend' },
         h('li', {}, h('span', { class: 'swatch pct' }), 'A percentage rise'),

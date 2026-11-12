@@ -48,15 +48,24 @@ input[type="number"] {
 .field-error { color: var(--red); font-size: 0.9rem; margin: 0; }
 .field-error:empty { display: none; }
 
-/* ---------- 1. Your pay ---------- */
+/* ---------- the reader's own pay, inside the calculator at the top ---------- */
 
-.pay-grid { display: grid; gap: 1.25rem; }
-
-@media (min-width: 820px) {
-  .pay-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: start; }
-}
-
-.pay-form { display: grid; gap: 1.15rem; }
+/* The less common cases, folded away under the four pickers. */
+.race-extra { margin: 0 0 0.5rem; }
+.race-extra summary { min-height: 1.9rem; font-size: 0.9rem; }
+.race-extra .pay-form { display: grid; gap: 0.9rem; padding: 0.5rem 0 0.75rem; }
+.race-extra .field > label, .race-extra .seg > legend { font-size: 0.9rem; }
+.race-extra .field[hidden], .race-extra fieldset[hidden] { display: none; }
+/* The figures in detail, under the chart. */
+.race-detail { display: grid; gap: 0.5rem; margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--line); }
+.race-detail > h3 { font-family: var(--sans); font-size: 1rem; font-weight: 650; margin: 0; }
+.race-detail > p { margin: 0; }
+.race-detail .pay-big { font-size: clamp(1.4rem, 1.1rem + 1.2vw, 1.8rem); color: var(--teal-ink); }
+.race-detail .pay-gain { font-size: 0.98rem; }
+.race-detail .pay-alt { margin-top: 0.4rem; }
+.race-detail .pay-explain, .race-detail .pay-caveat, .race-detail .pay-notes { color: var(--muted); font-size: 0.9rem; }
+.race-detail .pay-notes[hidden] { display: none; }
+.race-options .privacy { padding-top: 0.6rem; border-top: 1px solid var(--line); }
 .privacy { color: var(--muted); font-size: 0.9rem; margin: 0; display: grid; gap: 0.5rem; }
 .privacy p { margin: 0; }
 .privacy-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.25rem; }
@@ -64,44 +73,6 @@ input[type="number"] {
 .privacy .switch input { margin: 0; }
 
 .switch[hidden] { display: none; }
-.pay-result { display: grid; gap: 0.9rem; }
-
-/* The result itself: a solid teal panel with the figure in white. */
-.pay-panel {
-  display: grid;
-  gap: 0.45rem;
-  background: var(--fam-teal);
-  color: #fff;
-  border-radius: 16px;
-  padding: clamp(1.1rem, 3vw, 1.6rem);
-}
-.pay-panel > p { margin: 0; }
-.pay-detail { display: grid; gap: 0.6rem; }
-.pay-detail > p { margin: 0; }
-
-.example-badge {
-  justify-self: start;
-  background: #fff;
-  color: var(--fam-teal);
-  font-size: 0.85rem;
-  font-weight: 650;
-  border-radius: 999px;
-  padding: 0.2rem 0.75rem;
-}
-.example-badge[hidden] { display: none; }
-
-.pay-label { font-weight: 600; }
-.pay-real {
-  justify-self: start;
-  margin-top: 0.35rem;
-  background: var(--navy);
-  color: var(--on-navy);
-  border-radius: 12px;
-  padding: 0.5rem 0.85rem;
-  font-size: 0.95rem;
-}
-.pay-real a { color: var(--gold); font-weight: 650; white-space: nowrap; }
-.pay-panel :focus-visible { outline-color: var(--gold); }
 
 .pay-big {
   font-family: var(--sans);
