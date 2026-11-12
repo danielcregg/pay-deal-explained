@@ -14,7 +14,6 @@ import * as staircase from './sections/staircase.js';
 import * as flatOrPercent from './sections/flat-or-percent.js';
 import * as compounding from './sections/compounding.js';
 import * as backPay from './sections/back-pay.js';
-import * as payVsPrices from './sections/pay-vs-prices.js';
 import * as vsLastDeal from './sections/vs-last-deal.js';
 import * as beyondPay from './sections/beyond-pay.js';
 import * as timeline from './sections/timeline.js';
@@ -24,7 +23,6 @@ import * as sources from './sections/sources.js';
 const SECTIONS = [
   ['top', hero],
   ['your-pay', yourPay],
-  ['pay-vs-prices', payVsPrices],
   ['nine-rises', staircase],
   ['flat-or-percent', flatOrPercent],
   ['compounding', compounding],

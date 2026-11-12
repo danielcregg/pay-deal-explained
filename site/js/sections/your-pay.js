@@ -1,12 +1,11 @@
 // Section 1: Your pay. Pick a grade and point (or type a salary), full-time, part-time
 // or hourly, and see what the draft deal adds. The choice then flows into every demo.
 
-import { applySteps, finalSalary, summarise, backPay, owedBackPay } from '../pay.js';
+import { applySteps, finalSalary, summarise, backPay, owedBackPay, payAgainstPrices } from '../pay.js';
 import { resolvePay, parseSalary, clampFte, clampHours, DEFAULT_SELECTION, forgetSelection, sectorOf, gradesIn, gradeOf, owedFor, scenarioOf, sectorPatch, gradePatch, thisMonth, ANY_JOB } from '../selection.js';
 import { eur, signedEur, pct, longDate, listSteps } from '../format.js';
 import { h, setText } from '../dom.js';
 import { countTo } from '../motion.js';
-import { model as payVsPrices } from './pay-vs-prices.js';
 
 /** Everything "Your pay" shows, as plain numbers and text. */
 export function model(sel, data) {
@@ -58,7 +57,7 @@ export function model(sel, data) {
     owedCounted,
     lbStep,
     // What the shown rise is worth once prices have risen too (the price index ends above 100).
-    real: ((1 + counted.pct / 100) * 100 / payVsPrices(base, steps, data.INFLATION, { includeLB: sel.includeLB, rates: scenarioOf(sel, data.INFLATION).rates }).price.at(-1).value - 1) * 100,
+    real: ((1 + counted.pct / 100) * 100 / payAgainstPrices(base, steps, data.INFLATION, { includeLB: sel.includeLB, rates: scenarioOf(sel, data.INFLATION).rates }).price.at(-1).value - 1) * 100,
     prices: scenarioOf(sel, data.INFLATION),
     published: today * factor,
     unit: pay.unit,
@@ -274,7 +273,7 @@ export function render(root, { store, data, now = thisMonth() }) {
     shown = { unit: u, value: endR };
     realLine.replaceChildren(
       `After inflation ${m.prices.phrase}, that would buy about ${pct(Math.abs(m.real))} ${m.real >= 0 ? 'more' : 'less'} than in July 2026. `,
-      h('a', { href: '#pay-vs-prices' }, 'See pay against prices'));
+      h('a', { href: '#top' }, 'See pay against prices'));
     per.textContent = u === 'hour' ? ' an hour' : '';
     setText(gain, `${signedEur(endR - nowR, opts)}${perText} (+${pct(m.shown.pct)}) by March 2029, ${counting}.`);
     // Every way of counting, side by side; the one the big figure uses is marked.

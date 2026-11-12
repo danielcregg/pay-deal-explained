@@ -7,7 +7,7 @@ import { clampFte, figuresFor } from '../site/js/selection.js';
 import { LECTURER_EXAMPLE as D0 } from './helpers/selections.js';
 import { model as yourPay } from '../site/js/sections/your-pay.js';
 import { model as backPay } from '../site/js/sections/back-pay.js';
-import { model as payVsPrices, readoutText } from '../site/js/sections/pay-vs-prices.js';
+import { payAgainstPrices } from '../site/js/pay.js';
 import { model as stairs, summaryNumbers } from '../site/js/sections/staircase.js';
 import { LECTURER_NOTE } from '../site/js/sections/flat-or-percent.js';
 import { splitRounded, roundedGain } from '../site/js/format.js';
@@ -47,12 +47,13 @@ test('F5: the compounding demo explains the headline, not "your pay"', () => {
 });
 
 test('F6: pay vs prices is framed neutrally and as a projection', () => {
-  const m = payVsPrices(100000, data.DEAL.steps, data.INFLATION, { includeLB: false });
-  assert.match(readoutText(m, null), /^On the Central Bank’s forecasts, by March 2029 your pay would buy about 2\.5% more than in July 2026\./);
-  const m6 = payVsPrices(100000, data.DEAL.steps, data.INFLATION, { includeLB: false, flatRate: 6 });
-  assert.match(readoutText(m6, 6), /^If prices rose by 6\.0% a year, by March 2029 your pay would buy about 6\.1% less/);
+  const m = payAgainstPrices(100000, data.DEAL.steps, data.INFLATION, { includeLB: false });
+  assert.ok(Math.abs(m.real - 2.52) < 0.01);
   assert.doesNotMatch(read('index.html'), /only helps/);
-  assert.match(read('js/sections/pay-vs-prices.js'), /1 July 2026 = 100/);
+  // the opening chart, where these figures are now shown: an index with its base, said to be a projection
+  assert.match(read('js/sections/hero.js'), /1 July 2026 = 100/);
+  assert.match(read('js/sections/hero.js'), /A projection, not a promise\./);
+  assert.match(read('js/sections/your-pay.js'), /that would buy about/);
 });
 
 test('F7: the glossary makes no unsourced claim about how ratification works', () => {

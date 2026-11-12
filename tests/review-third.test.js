@@ -12,7 +12,6 @@ import { finalSalary } from '../site/js/pay.js';
 import { DEFAULT_SELECTION, sectorPatch } from '../site/js/selection.js';
 import * as hero from '../site/js/sections/hero.js';
 import * as yourPay from '../site/js/sections/your-pay.js';
-import * as pvp from '../site/js/sections/pay-vs-prices.js';
 import * as beyondPay from '../site/js/sections/beyond-pay.js';
 import * as flat from '../site/js/sections/flat-or-percent.js';
 import * as vsLastDeal from '../site/js/sections/vs-last-deal.js';
@@ -192,24 +191,6 @@ test('chapter 1: "Clear my choices" is a reset, and the tick box follows the sto
   assert.deepEqual(store.get(), { ...DEFAULT_SELECTION });
 });
 
-test('chapter 2: a path chosen on the opening chart replaces a figure of your own, and clearing drops it', () => {
-  const { root, store, radio } = mount(pvp);
-  const checked = () => root.querySelectorAll('input[name="pvp-mode"]').filter((r) => r.checked).map((r) => r.value);
-  const slider = root.querySelector('#pvp-rate');
-  const own = () => { radio('pvp-mode', 'own'); slider.value = '5.5'; slider.dispatchEvent({ type: 'input', bubbles: true }); };
-  own();
-  assert.deepEqual(checked(), ['own']);
-  assert.match(root.querySelector('.pvp-source').textContent, /^Prices here rise by 5\.5% a year/);
-  store.set({ scenario: 'higher' }); // the pessimistic button on the opening chart
-  assert.deepEqual([checked(), slider.closest('.field').hidden], [['higher'], true]);
-  assert.match(root.querySelector('.pvp-source').textContent, /^Prices here are an illustration/);
-  own();
-  store.set({ includeLB: true }); // something else changing leaves the reader's own figure alone
-  assert.deepEqual(checked(), ['own']);
-  store.reset({ ...DEFAULT_SELECTION });
-  assert.deepEqual([checked(), slider.closest('.field').hidden, slider.value], [['central'], true, '3']);
-});
-
 // ---------- what the page says ----------
 
 const beyond = Object.fromEntries(data.BEYOND_PAY.map((b) => [b.id, b]));
@@ -282,7 +263,7 @@ test('the Central Bank path’s note states the same rates the chart uses', () =
   assert.ok(scenario('central').note.includes(hero.forecastText(data.INFLATION)), 'a change to the rates has to reach the sentence that quotes them');
   const rates = data.INFLATION.scenarios.map((s) => s.rates);
   assert.match(scenario('lower').note, new RegExp(`${rates[0][2026]}% for 2026, then ${rates[0][2027]}% a year`));
-  assert.match(scenario('lower').lead, new RegExp(`${rates[0][2027]}% a year from 2027`));
+  assert.match(scenario('lower').phrase, new RegExp(`${rates[0][2027]}% a year from 2027`));
   assert.match(scenario('higher').note, new RegExp(`rising by ${rates[2][2027]}% a year`));
   assert.equal(rates[2][2026], data.INFLATION.current, 'the pessimistic path is "today’s rate goes on"');
   const assumption = data.ASSUMPTIONS.find((a) => /^Prices use the Central Bank/.test(a));
@@ -315,14 +296,6 @@ test('copy: a salary of exactly the threshold, a salary with no scale point, and
   assert.doesNotMatch(earlier.root.querySelector('.race-inc-note').textContent, /This month/);
   const thisMonth = mount(hero, { ...lecturer, incrementMonth: 11, pointMonth: NOW });
   assert.match(thisMonth.root.querySelector('.race-inc-note').textContent, /This month’s increment is taken as already paid, so choose the point you are on after it\.$/);
-});
-
-test('chapter 2: the source note gives October’s rate once', () => {
-  const { root, store } = mount(pvp);
-  const count = () => (root.querySelector('.pvp-source').textContent.match(/October 2026/g) ?? []).length;
-  assert.equal(count(), 1);
-  store.set({ scenario: 'higher' }); // this path's own note already says "the rate in the year to October 2026"
-  assert.equal(count(), 1);
 });
 
 test('chapter 7 with no job chosen: the two deals’ 1% for local bargaining are counted or left out together', () => {
@@ -379,7 +352,6 @@ test('live regions are written only when their words change, so the same thing i
   const cases = [
     [yourPay, '.pay-gain', { includeLB: true }],
     [flat, '.fp-summary', { includeLB: true }],
-    [pvp, '.pvp-readout', { scenario: 'higher' }],
     [hero, '.race-inc-note', { incrementMonth: 3 }],
   ];
   for (const [mod, selector, change] of cases) {

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DEAL, INFLATION } from '../site/js/data.js';
-import { model } from '../site/js/sections/pay-vs-prices.js';
+import { payAgainstPrices as model } from '../site/js/pay.js';
 
 const near = (a, b, t = 0.01) => assert.ok(Math.abs(a - b) <= t, `${a} ≉ ${b}`);
 

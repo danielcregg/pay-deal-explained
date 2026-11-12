@@ -10,7 +10,7 @@ import { currentChapter } from '../site/js/rail.js';
 
 const html = readFileSync(new URL('../site/index.html', import.meta.url), 'utf8');
 const FAMILIES = ['teal', 'coral', 'sky', 'amber', 'violet', 'slate'];
-const ORDER = ['your-pay', 'pay-vs-prices', 'nine-rises', 'flat-or-percent', 'compounding', 'back-pay',
+const ORDER = ['your-pay', 'nine-rises', 'flat-or-percent', 'compounding', 'back-pay',
   'vs-last-deal', 'beyond-pay', 'timeline', 'glossary', 'sources'];
 
 test('colour: text on the navy band, the gold button and every chapter colour meet AA in both themes', () => {
@@ -33,7 +33,7 @@ test('colour: text on the navy band, the gold button and every chapter colour me
   }
 });
 
-test('chapters: pay against prices moves up to second, and every chapter has a colour family', () => {
+test('chapters: numbered in order, and every chapter has a colour family', () => {
   const found = [...html.matchAll(/<section class="chapter" id="([\w-]+)" data-chapter="(\d+)" data-family="(\w+)"[^>]*>\s*<div class="chapter-head">\s*<span class="chapter-num" aria-hidden="true">(\d+)<\/span>/g)]
     .map((m) => ({ id: m[1], chapter: Number(m[2]), family: m[3], shown: Number(m[4]) }));
   assert.deepEqual(found.map((s) => s.id), ORDER);

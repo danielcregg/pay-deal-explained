@@ -31,14 +31,33 @@ export const DEFAULT_SELECTION = Object.freeze({
   includeOwed: SITE.includeOwedDefault, // count the 1% from September 2025 (the sector's `owed` entry)
   payMonth: '2027-01',
   incrementMonth: null,    // 1 to 12: the opening chart then adds a yearly increment in that month
-  scenario: INFLATION.defaultScenario, // which inflation path the charts use: one of INFLATION.scenarios
+  scenario: INFLATION.defaultScenario, // which inflation path the chart uses: one of INFLATION.scenarios, or 'own'
   pointMonth: null,        // 'YYYY-MM': the month in which the point above was chosen, so a later visit reads "the point you are on now" the same way
   remember: false,         // keep these choices on this device for the next visit: only if the reader asks
+  ownRate: 3,              // % a year: the reader's own inflation figure, used when `scenario` is 'own'
 });
 
-/** The inflation path the reader has chosen for the charts (the Central Bank's forecast unless they switch). */
-export const scenarioOf = (sel, inflation) => inflation.scenarios.find((s) => s.id === sel.scenario)
-  ?? inflation.scenarios.find((s) => s.id === inflation.defaultScenario);
+/** Besides the published paths in INFLATION.scenarios, the reader can set one rate of their own for every year. */
+export const OWN_PATH = 'own';
+export const OWN_RATE = Object.freeze({ min: 0, max: 6, step: 0.1, start: 3 });
+
+/**
+ * The inflation path the reader has chosen for the charts (the Central Bank's forecast unless
+ * they switch). Their own figure comes back in the same shape as a published path, worded as theirs.
+ */
+export function scenarioOf(sel, inflation) {
+  if (sel.scenario === OWN_PATH) {
+    const said = `${sel.ownRate.toFixed(1)}%`;
+    return {
+      id: OWN_PATH, kind: 'your own figure', label: 'Your own figure',
+      rates: Object.fromEntries(Object.keys(inflation.rates).map((year) => [year, sel.ownRate])),
+      phrase: `at your own figure (${said} a year)`,
+      note: `Prices here rise by ${said} a year, a figure of your own.`,
+      sourceIds: [],
+    };
+  }
+  return inflation.scenarios.find((s) => s.id === sel.scenario) ?? inflation.scenarios.find((s) => s.id === inflation.defaultScenario);
+}
 
 /** The month we are in, as 'YYYY-MM'. */
 export function thisMonth(today = new Date()) {
@@ -241,7 +260,8 @@ const SETTINGS = {
   includeLB: (v) => typeof v === 'boolean',
   includeOwed: (v) => typeof v === 'boolean',
   incrementMonth: (v) => v === null || (Number.isInteger(v) && v >= 1 && v <= 12),
-  scenario: (v) => INFLATION.scenarios.some((s) => s.id === v),
+  scenario: (v) => v === OWN_PATH || INFLATION.scenarios.some((s) => s.id === v),
+  ownRate: (v) => typeof v === 'number' && v >= OWN_RATE.min && v <= OWN_RATE.max,
   pointMonth: (v) => v === null || (typeof v === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(v)),
   fte: (v) => typeof v === 'number' && v >= 0.01 && v <= 1,
   alScale: (v) => ['al-ne', 'al-pre'].includes(v),

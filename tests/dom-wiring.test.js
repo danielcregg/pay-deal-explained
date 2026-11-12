@@ -11,7 +11,6 @@ import * as staircase from '../site/js/sections/staircase.js';
 import * as hero from '../site/js/sections/hero.js';
 import * as yourPay from '../site/js/sections/your-pay.js';
 import * as backPay from '../site/js/sections/back-pay.js';
-import * as payVsPrices from '../site/js/sections/pay-vs-prices.js';
 import { enhanceTerms } from '../site/js/sections/glossary.js';
 import { presentKeyAction } from '../site/js/present.js';
 import { countTo } from '../site/js/motion.js';
@@ -169,7 +168,7 @@ test('the charts carry tick boxes for the local bargaining 1%s, tied to the same
   document.body.append(opening, two);
   const store = createStore({ ...DEFAULT_SELECTION, touched: true, gradeId: 'lect', pointIndex: 10 });
   hero.render(opening, { store, data });
-  payVsPrices.render(two, { store, data });
+  yourPay.render(two, { store, data });
   const tiles = () => opening.querySelectorAll('.race-tile b').map((b) => b.textContent);
   assert.deepEqual(tiles().slice(0, 2), ['€118,684', '+10.2%']);
 
@@ -178,41 +177,15 @@ test('the charts carry tick boxes for the local bargaining 1%s, tied to the same
   lb.dispatchEvent({ type: 'change', bubbles: true });
   assert.equal(store.get().includeLB, true);
   assert.deepEqual(tiles().slice(0, 2), ['€119,871', '+11.3%']);
-  assert.equal(two.querySelector('#pvp-lb').checked, true, 'chapter 2 shows the same choice');
+  assert.equal(two.querySelector('#pp-lb').checked, true, 'chapter 1 shows the same choice');
 
-  const owed = two.querySelector('#pvp-owed');
+  const owed = two.querySelector('#pp-owed');
   assert.equal(owed.closest('label').hidden, false, 'lecturers are offered the 1% from 2025 here too');
   owed.checked = true;
   owed.dispatchEvent({ type: 'change', bubbles: true });
   assert.equal(store.get().includeOwed, true);
   assert.equal(tiles()[0], '€121,070');
   assert.equal(opening.querySelector('#race-owed').checked, true);
-});
-
-test('chapter 2: every month gives the pay in euro beside the two indices', () => {
-  const root = document.createElement('div');
-  document.body.append(root);
-  const store = createStore({ ...DEFAULT_SELECTION, touched: true, gradeId: 'lect', pointIndex: 10 });
-  payVsPrices.render(root, { store, data });
-  const heads = () => root.querySelectorAll('.pvp-months thead th').map((th) => th.textContent);
-  const row = (i) => root.querySelectorAll('.pvp-months tbody tr')[i].querySelectorAll('td').map((td) => td.textContent);
-  assert.deepEqual(heads(), ['Month', 'Yearly pay', 'Pay index', 'Price index', 'Ahead']);
-  assert.deepEqual(row(0).slice(0, 3), ['Jul 2026', '€107,727', '100.0']);
-  assert.deepEqual(row(11), ['Jun 2027', '€110,980', '103.0', '103.2', 'Prices']);
-  assert.deepEqual(row(32).slice(0, 3), ['Mar 2029', '€118,684', '110.2']);
-
-  root.querySelector('svg').focus(); // the keyboard read-out starts on the last month
-  assert.equal(root.querySelector('p.visually-hidden').textContent,
-    'Mar 2029, Your pay €118,684 a year, Pay index 110.2, Price index 107.5, Pay ahead');
-  assert.deepEqual(root.querySelectorAll('.tip span').map((s) => s.textContent),
-    ['Your pay €118,684 a year', 'Pay index 110.2', 'Price index 107.5', 'Pay ahead']);
-
-  store.set({ contract: 'hourly' });
-  assert.equal(heads()[1], 'Hourly rate');
-  assert.deepEqual([row(0)[1], row(32)[1]], ['€75.51', '€84.34']);
-
-  store.set({ contract: 'part', fte: 0.5 });
-  assert.equal(row(32)[1], '€59,342', 'half of full-time pay for a half-time post');
 });
 
 test('your pay: counting the 1% from 2025 moves the figure and the marked cell, and they agree', () => {

@@ -8,9 +8,9 @@
 // (print, background tabs, reduced motion). The first time it is seen, it replays from
 // the start.
 
-import { applySteps, priceIndexSeries, careerEvents, positionIn } from '../pay.js';
+import { applySteps, priceIndexSeries, careerEvents, positionIn, monthsBetween } from '../pay.js';
 import { resolvePay, figuresFor, lowestScalePoint, sectorOf, gradesIn, gradeOf, careerOf, scenarioOf, owedFor, sectorPatch, gradePatch, thisMonth, ANY_JOB } from '../selection.js';
-import { eur, pct, longDate } from '../format.js';
+import { eur, pct, longDate, monthLabel } from '../format.js';
 import { svgEl, scaleLinear } from '../svg.js';
 import { h, setText } from '../dom.js';
 import { niceRange, labelSize } from '../chart.js';
@@ -73,7 +73,7 @@ export function model(base, data, { includeLB, career = null, rates = data.INFLA
 /**
  * Pay and price indices `t` months in, and what pay then buys compared with the start (%).
  * "Pay" is the deal's rises alone. A whole number of months is the end of a month, so a
- * rise dated the 1st of the next month is not in it yet (the same convention as chapter 2).
+ * rise dated the 1st of the next month is not in it yet.
  * With increments added, `own` is the reader's own pay index and `label` the point held.
  */
 export function stateAt(m, t) {
@@ -99,7 +99,7 @@ export function whenText(t, startYm, months) {
   return t >= months ? `By the end of ${name}` : `In ${name}`;
 }
 
-/** How many of the months end with prices above pay (the same count as chapter 2 makes). */
+/** How many of the months end with prices above pay (the same count as `payAgainstPrices` makes). */
 export function monthsBehind(m) {
   let count = 0;
   for (let t = 1; t <= m.months; t++) {
@@ -408,7 +408,29 @@ export function render(root, { store, data, now = thisMonth() }) {
   const mine = h('button', { type: 'button', 'aria-pressed': 'true' });
   const lowest = h('button', { type: 'button', 'aria-pressed': 'false' });
   const picks = h('div', { class: 'race-picks', role: 'group', 'aria-label': 'Whose pay' }, mine, lowest);
-  const options = h('div', { class: 'race-options' }, pricesSwitch(store, data, 'race'), extrasSwitches(store, data, 'race'), picks,
+  // The numbers behind the chart, month by month, for anyone who wants to check them.
+  const monthsBody = h('tbody');
+  const payHead = h('th', { scope: 'col', class: 'r' });
+  const indexHead = h('th', { scope: 'col', class: 'r' });
+  const monthsTable = h('details', { class: 'data race-months' }, h('summary', {}, 'Show the numbers month by month'),
+    h('div', { class: 'table-scroll' }, h('table', {},
+      h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Month'), payHead, indexHead,
+        h('th', { scope: 'col', class: 'r' }, 'Price index'), h('th', { scope: 'col' }, 'Ahead'))),
+      monthsBody)),
+    h('p', { class: 'note' }, 'Index: 1 July 2026 = 100. Each month shows its end-of-month value.'));
+  // What others forecast: close to the Central Bank, which is why two of the buttons are illustrations.
+  const inflation = data.INFLATION;
+  const years = Object.keys(inflation.rates).map(Number).sort();
+  const rateCell = (rates, year) => h('td', { class: 'r' }, typeof rates[year] === 'number' && !(rates === inflation.rates && inflation.assumedYears.includes(year)) ? `${rates[year].toFixed(1)}%` : 'not given');
+  const others = h('details', { class: 'data race-others' }, h('summary', {}, 'What other forecasters say'),
+    h('p', { class: 'note' }, 'Published forecasts for Ireland sit close together, so the optimistic and pessimistic buttons are round-number illustrations that go wider, not forecasts. '
+      + `Prices rose ${inflation.current.toFixed(1)}% in the year to October 2026 (CSO flash estimate).`),
+    h('div', { class: 'table-scroll' }, h('table', {},
+      h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Forecast'), years.map((y) => h('th', { scope: 'col', class: 'r' }, String(y))))),
+      h('tbody', {},
+        h('tr', {}, h('th', { scope: 'row' }, 'Central Bank of Ireland, September 2026'), years.map((y) => rateCell(inflation.rates, y))),
+        inflation.others.map((o) => h('tr', {}, h('th', { scope: 'row' }, `${o.who}, ${o.what}`), years.map((y) => rateCell(o.rates, y))))))));
+  const options = h('div', { class: 'race-options' }, pricesSwitch(store, data, 'race'), extrasSwitches(store, data, 'race'), picks, monthsTable, others,
     h('p', { class: 'race-more' }, h('a', { href: '#your-pay' }, 'Part-time, hourly-paid or not listed? Use the full calculator')));
   const source = h('p', { class: 'note race-source' });
 
@@ -542,14 +564,27 @@ export function render(root, { store, data, now = thisMonth() }) {
       `${prices.note} `
       + `Gross pay; ${counted}. `
       + (counting ? 'The rest of the page shows the deal without your increments. ' : '')
-      + 'A projection, not a promise. ',
-      h('a', { href: '#pay-vs-prices' }, 'Try your own inflation figure'));
+      + 'A projection, not a promise.');
 
     const endPay = eur(payThen(m, N) * money.factor, { cents: money.unit === 'hour' });
     const whose = pay.isExample ? `Example: ${pay.label}` : who === 'low' ? `The ${sector.low}` : pay.label;
     setText(said, `${whose}. ${endPay} ${money.unit === 'hour' ? 'an hour' : 'a year'} by the end of March 2029${m.own ? ', with your increments' : ''}: `
       + `${m.own ? 'the deal adds' : 'pay is up'} ${pct(end.pay - 100)} and prices are up ${pct(end.price - 100)} ${prices.phrase}, `
       + `so ${m.own ? 'the deal’s rises buy' : 'pay buys'} ${pct(Math.abs(end.real))} ${end.real >= 0 ? 'more' : 'less'}.`);
+
+    // The table: each month's pay in euro (the reader's own, increments included where they are added),
+    // with the deal's index beside the price index and which of the two is ahead.
+    payHead.textContent = m.own ? 'Your pay, with increments' : money.unit === 'hour' ? 'Hourly rate' : 'Yearly pay';
+    indexHead.textContent = m.own ? 'Deal index' : 'Pay index';
+    monthsBody.replaceChildren(...monthsBetween(inflation.from, inflation.to).map((month, i) => {
+      const s = stateAt(m, i + 1);
+      return h('tr', {},
+        h('td', {}, monthLabel(month)),
+        h('td', { class: 'r' }, eur(payThen(m, i + 1) * money.factor, { cents: money.unit === 'hour' })),
+        h('td', { class: 'r' }, s.pay.toFixed(1)),
+        h('td', { class: 'r' }, s.price.toFixed(1)),
+        h('td', {}, s.price > s.pay ? 'Prices' : 'Pay'));
+    }));
 
     const mountChart = (height) => {
       chart = buildChart(m, width, labelSize(wrap), height);

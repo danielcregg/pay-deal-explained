@@ -1,5 +1,5 @@
 // Inflation scenarios: the Central Bank's forecast by default, with a lower and a higher
-// path as labelled illustrations, switched from either pay-against-prices chart.
+// path as labelled illustrations, switched from the opening chart.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installDom } from './helpers/dom.js';
@@ -9,7 +9,7 @@ import { LECTURER_EXAMPLE as D0 } from './helpers/selections.js';
 import { createStore } from '../site/js/state.js';
 import * as hero from '../site/js/sections/hero.js';
 import * as yourPay from '../site/js/sections/your-pay.js';
-import * as payVsPrices from '../site/js/sections/pay-vs-prices.js';
+import { payAgainstPrices } from '../site/js/pay.js';
 
 const document = installDom();
 const { INFLATION, SCALES, DEAL } = data;
@@ -29,7 +29,7 @@ test('scenarios: the Central Bank forecast is the default, with a lower and a hi
   assert.doesNotMatch(scenario('central').note, /illustration/);
   assert.match(scenario('central').note, /2029 assumed at 2%/);
   for (const s of INFLATION.scenarios) {
-    assert.ok(s.lead && s.phrase && s.note, `${s.id} has its wording`);
+    assert.ok(s.phrase && s.note, `${s.id} has its wording`);
     for (const id of s.sourceIds) assert.ok(source(id), `${s.id} cites ${id}`);
   }
   assert.equal(INFLATION.current, 4);
@@ -70,30 +70,29 @@ test('scenarios: prices by March 2029, and what a salary of €60,000 or more th
   assert.ok(behind('lower') < behind('central') && behind('central') < behind('higher'), `${behind('lower')} < ${behind('central')} < ${behind('higher')}`);
   assert.equal(behind('central'), 7);
   // chapter 2 works from the same rates
-  near(payVsPrices.model(89894, DEAL.steps, INFLATION, { includeLB: false, rates: scenario('higher').rates }).real, -1.09);
+  near(payAgainstPrices(89894, DEAL.steps, INFLATION, { includeLB: false, rates: scenario('higher').rates }).real, -1.09);
 });
 
 function mountAll(selection = {}) {
-  const [opening, form, two] = [0, 1, 2].map(() => { const el = document.createElement('div'); document.body.append(el); return el; });
+  const [opening, form] = [0, 1].map(() => { const el = document.createElement('div'); document.body.append(el); return el; });
   const store = createStore({ ...D0, ...selection });
   hero.render(opening, { store, data, now: '2026-11' });
   yourPay.render(form, { store, data, now: '2026-11' });
-  payVsPrices.render(two, { store, data });
   const pick = (root, name, value) => {
     const radio = root.querySelectorAll(`input[name="${name}"]`).find((r) => r.value === value);
     for (const r of root.querySelectorAll(`input[name="${name}"]`)) r.checked = r === radio;
     radio.dispatchEvent({ type: 'change', bubbles: true });
   };
   const checked = (root, name) => root.querySelectorAll(`input[name="${name}"]`).filter((r) => r.checked).map((r) => r.value);
-  return { opening, form, two, store, pick, checked };
+  return { opening, form, store, pick, checked };
 }
 
-test('the main chart: three buttons switch the inflation path, and every figure follows', () => {
-  const { opening, form, two, store, pick, checked } = mountAll();
+test('the main chart: the buttons switch the inflation path, and every figure follows', () => {
+  const { opening, form, store, pick, checked } = mountAll();
   const tiles = () => opening.querySelectorAll('.race-tile b').map((b) => b.textContent);
   const buttons = opening.querySelectorAll('.race-options input[name="race-prices"]');
-  assert.deepEqual(buttons.map((r) => r.value), ['lower', 'central', 'higher']);
-  assert.deepEqual(opening.querySelectorAll('.race-options .prices-seg .pill').map((p) => p.textContent), ['Optimistic: 2%', 'Central Bank', 'Pessimistic: 4%']);
+  assert.deepEqual(buttons.map((r) => r.value), ['lower', 'central', 'higher', 'own']);
+  assert.deepEqual(opening.querySelectorAll('.race-options .prices-seg .pill').map((p) => p.textContent), ['Optimistic: 2%', 'Central Bank', 'Pessimistic: 4%', 'Your own figure']);
   assert.deepEqual(checked(opening, 'race-prices'), ['central']);
   assert.deepEqual(tiles().slice(2), ['+7.5%', '2.5% more']);
   assert.match(opening.querySelector('.race-source').textContent, /^Prices follow the Central Bank of Ireland’s forecasts/);
@@ -105,40 +104,14 @@ test('the main chart: three buttons switch the inflation path, and every figure 
   assert.match(opening.querySelector('.race-source').textContent, /an illustration, not a forecast: prices keep rising by 4% a year/);
   const behind = hero.monthsBehind(hero.model(89894, data, { includeLB: false, rates: scenario('higher').rates }));
   assert.equal(opening.querySelector('.race-legend').textContent, `Prices would be ahead of pay in ${behind} of the 33 months`);
-  // the same choice shows in chapter 2 and in the pay panel
-  assert.deepEqual(checked(two, 'pvp-mode'), ['higher']);
-  assert.match(two.querySelector('.pvp-readout').textContent, /^If prices kept rising by 4% a year, by March 2029 your pay would buy about 1\.1% less than in July 2026\./);
+  // the same choice shows in the pay panel
   assert.match(form.querySelector('.pay-real').textContent, /^After inflation on the pessimistic path \(4% a year, an illustration\), that would buy about 1\.1% less than in July 2026/);
 
-  pick(two, 'pvp-mode', 'lower');
+  pick(opening, 'race-prices', 'lower');
   assert.equal(store.get().scenario, 'lower');
   assert.deepEqual(checked(opening, 'race-prices'), ['lower']);
   assert.deepEqual(tiles().slice(2), ['+6.3%', '3.6% more']);
   assert.match(form.querySelector('.pay-real').textContent, /^After inflation on the optimistic path \(2% a year from 2027, an illustration\), that would buy about 3\.6% more/);
-});
-
-test('chapter 2: your own figure is still there, and the other forecasts are listed', () => {
-  const { two, store, pick, checked } = mountAll();
-  assert.deepEqual(two.querySelectorAll('input[name="pvp-mode"]').map((r) => r.value), ['lower', 'central', 'higher', 'own']);
-  assert.deepEqual(checked(two, 'pvp-mode'), ['central']);
-  const slider = two.querySelector('#pvp-rate').closest('.field');
-  assert.equal(slider.hidden, true);
-  pick(two, 'pvp-mode', 'own');
-  assert.equal(slider.hidden, false);
-  assert.equal(store.get().scenario, 'central', 'trying a figure does not change the saved path');
-  assert.match(two.querySelector('.pvp-readout').textContent, /^If prices rose by 3\.0% a year/);
-  pick(two, 'pvp-mode', 'higher');
-  assert.equal(slider.hidden, true);
-  assert.equal(store.get().scenario, 'higher');
-  const rows = two.querySelectorAll('.pvp-others tbody tr').map((tr) => tr.querySelectorAll('th, td').map((c) => c.textContent));
-  assert.deepEqual(rows[0], ['Central Bank of Ireland, September 2026', '3.4%', '3.1%', '2.0%', 'not given']);
-  assert.deepEqual(rows[1], ['IMF, World Economic Outlook, October 2026', '3.4%', '2.8%', '1.9%', '2.0%']);
-  assert.equal(rows.length, 4);
-  assert.match(two.querySelector('.pvp-others').textContent, /sit close together/);
-  assert.match(two.textContent, /the rate in the year to October 2026 \(CSO flash estimate\)/, 'on the 4% path its own note gives October’s rate, with its source');
-  pick(two, 'pvp-mode', 'central');
-  assert.match(two.textContent, /Prices rose 4\.0% in the year to October 2026 \(CSO flash estimate\)/);
-  assert.doesNotMatch(two.textContent, /as reported by RTÉ/);
 });
 
 test('copy: the assumptions name the forecast’s own source and say what the other two paths are', () => {

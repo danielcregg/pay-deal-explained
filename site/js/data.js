@@ -335,7 +335,7 @@ export const SCALES = {
 // Prices. The Central Bank's forecast is the default. Published forecasts sit close
 // together (see `others`), so the lower and higher paths are round-number illustrations,
 // labelled as such wherever they are shown. Each scenario carries its own wording:
-// `lead` opens chapter 2's sentence, `phrase` goes in the pay panel, `note` under the charts.
+// `phrase` goes in the pay panel and in what the opening chart tells a screen reader, `note` under that chart.
 const CENTRAL_RATES = { 2026: 3.4, 2027: 3.1, 2028: 2, 2029: 2 };
 export const INFLATION = {
   from: '2026-07',
@@ -349,21 +349,18 @@ export const INFLATION = {
   scenarios: [
     {
       id: 'lower', kind: 'illustration', label: 'Optimistic: 2%', rates: { 2026: 3.4, 2027: 2, 2028: 2, 2029: 2 },
-      lead: 'If inflation fell to 2% a year from 2027',
       phrase: 'on the optimistic path (2% a year from 2027, an illustration)',
       note: 'Prices here are an illustration, not a forecast: the Central Bank’s 3.4% for 2026, then 2% a year, the European Central Bank’s target.',
       sourceIds: ['cbi-qb3-2026', 'ecb-target'],
     },
     {
       id: 'central', kind: 'forecast', label: 'Central Bank', rates: CENTRAL_RATES,
-      lead: 'On the Central Bank’s forecasts',
       phrase: 'on the Central Bank’s forecasts (2029 assumed at 2%)',
       note: 'Prices follow the Central Bank of Ireland’s forecasts of September 2026: 3.4% in 2026, 3.1% in 2027 and 2% in 2028, with 2029 assumed at 2%.',
       sourceIds: ['cbi-qb3-2026'],
     },
     {
       id: 'higher', kind: 'illustration', label: 'Pessimistic: 4%', rates: { 2026: 4, 2027: 4, 2028: 4, 2029: 4 },
-      lead: 'If prices kept rising by 4% a year',
       phrase: 'on the pessimistic path (4% a year, an illustration)',
       note: 'Prices here are an illustration, not a forecast: prices keep rising by 4% a year, the rate in the year to October 2026 (CSO flash estimate).',
       sourceIds: ['cso-hicp-oct2026'],
@@ -433,7 +430,7 @@ export const BEYOND_PAY = [
   },
   {
     id: 'reform', title: 'Reform commitments', status: 'known',
-    text: 'Chapter 2 sets out commitments on workplace change: digital services, skills, flexible ways of working and action plans for each sector. An appendix lists the Government’s reform programmes sector by sector.',
+    text: 'Chapter 2 of the agreement sets out commitments on workplace change: digital services, skills, flexible ways of working and action plans for each sector. An appendix lists the Government’s reform programmes sector by sector.',
     sourceIds: ['psa-2026-text'],
   },
   {
@@ -458,7 +455,7 @@ export const ASSUMPTIONS = [
   'Hourly rates for Assistant Lecturers are point 1 of the annual scale divided by 630 hours, which matches the 2026 pay circulars exactly.',
   'Back pay assumes the first rise is paid in the January 2027 payroll, with arrears from 1 September 2026. You can change the month.',
   'For hourly-paid lecturers, back pay assumes your teaching hours are spread evenly across the year.',
-  'Prices use the Central Bank of Ireland’s forecasts for 2026 to 2028 (Quarterly Bulletin, September 2026), with 2029 assumed to be 2%. The optimistic and pessimistic buttons on the charts are illustrations, not forecasts: 2% a year from 2027, and 4% a year throughout.',
+  'Prices use the Central Bank of Ireland’s forecasts for 2026 to 2028 (Quarterly Bulletin, September 2026), with 2029 assumed to be 2%. The optimistic and pessimistic buttons under the opening chart are illustrations, not forecasts: 2% a year from 2027, and 4% a year throughout. You can also set a figure of your own there.',
   'TU Dublin academic staff are assumed to be on the same scales as staff in the former institutes of technology.',
 ];
 

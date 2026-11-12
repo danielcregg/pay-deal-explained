@@ -9,7 +9,7 @@ import { careerOf } from '../site/js/selection.js';
 import { LECTURER_EXAMPLE as D0 } from './helpers/selections.js';
 import { createStore } from '../site/js/state.js';
 import * as hero from '../site/js/sections/hero.js';
-import { model as payVsPrices } from '../site/js/sections/pay-vs-prices.js';
+import { payAgainstPrices } from '../site/js/pay.js';
 
 const document = installDom();
 const html = readFileSync(new URL('../site/index.html', import.meta.url), 'utf8');
@@ -80,10 +80,10 @@ test('the chart card says whose figures it shows only when the pickers do not sa
   assert.deepEqual([own.root.querySelector('.context-line').hidden, own.root.querySelector('.context-line').textContent], [false, 'Showing: Typed salary.']);
 });
 
-test('the chart counts the months when prices are ahead of pay, as chapter 2 does', () => {
+test('the chart counts the months when prices are ahead of pay, as the month-by-month sums do', () => {
   const plain = hero.model(89894, data, { includeLB: false });
-  const chapter2 = payVsPrices(89894, data.DEAL.steps, data.INFLATION, { includeLB: false });
-  assert.equal(hero.monthsBehind(plain), chapter2.ahead.length);
+  const series = payAgainstPrices(89894, data.DEAL.steps, data.INFLATION, { includeLB: false });
+  assert.equal(hero.monthsBehind(plain), series.ahead.length);
   assert.equal(hero.monthsBehind(plain), 7);
   const { root, store } = mount();
   assert.equal(root.querySelector('.race-legend').textContent, 'Prices are ahead of pay in 7 of the 33 months');

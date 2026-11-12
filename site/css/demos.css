@@ -198,8 +198,11 @@ input[type="number"] {
 .prices-seg { gap: 0.3rem; }
 .prices-seg > legend { margin-bottom: 0.3rem; font-size: 0.9rem; }
 .race-options .prices-seg .pill span { min-height: 2.35rem; padding: 0.25rem 0.85rem; font-size: 0.9rem; }
-.pvp-others { margin-top: 0.75rem; }
-.pvp-others .note { margin: 0.5rem 0; }
+.prices-own { margin-top: 0.5rem; }
+.prices-own > label { font-weight: 400; font-size: 0.9rem; }
+.prices-own output { font-weight: 650; }
+.prices-range { width: 100%; min-height: 2.5rem; accent-color: var(--mark-price); }
+.race-months .note, .race-others .note { margin: 0.5rem 0; }
 .race-picks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; }
 .race-more { margin: 0; font-size: 0.9rem; }
 .race-picks[hidden], .race .context-line[hidden] { display: none; }
@@ -498,10 +501,8 @@ tr.muted td { color: var(--muted); }
 .bp-tiles.pre .bp-fill { transform: scaleY(0); }
 .bp-tiles.pre .bp-total { opacity: 0; transform: translateY(6px); }
 
-/* ---------- 6. Pay vs prices ---------- */
+/* ---------- pay against prices: the lines, shading and keys the charts share ---------- */
 
-.pvp-svg { cursor: crosshair; }
-.pvp-svg:focus-visible { outline: 3px solid var(--teal); outline-offset: 4px; border-radius: 4px; }
 .line-pay, .line-price { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .line-pay { stroke: var(--mark-pct); }
 .line-price { stroke: var(--mark-price); }
@@ -511,8 +512,6 @@ tr.muted td { color: var(--muted); }
 .dot-pay, .dot-price { stroke: var(--card); stroke-width: 2; }
 .dot-pay { fill: var(--mark-pct); }
 .dot-price { fill: var(--mark-price); }
-.pvp-readout { font-size: 1.1rem; font-weight: 600; margin: 1.1rem 0 0.9rem; max-width: var(--measure); }
-.pvp-range { width: 100%; min-height: 2.5rem; accent-color: var(--mark-price); }
 .swatch.line { width: 1.1rem; height: 3px; border-radius: 2px; }
 .swatch.line.pay { background: var(--mark-pct); }
 .swatch.line.price { background: var(--mark-price); }

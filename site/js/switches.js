@@ -4,7 +4,7 @@
 // in the store, so ticking one anywhere changes the whole page.
 
 import { h } from './dom.js';
-import { owedFor, scenarioOf } from './selection.js';
+import { owedFor, scenarioOf, OWN_PATH, OWN_RATE } from './selection.js';
 import { longDate } from './format.js';
 
 export function extrasSwitches(store, data, idPrefix) {
@@ -34,20 +34,39 @@ export function extrasSwitches(store, data, idPrefix) {
 }
 
 /**
- * The inflation path as three buttons: the Central Bank's forecast, and a lower and a
- * higher illustration. Every copy reads and writes the same choice in the store.
+ * The inflation path as four buttons: the Central Bank's forecast, a lower and a higher
+ * illustration, and a figure of the reader's own with a slider for it. They read and write
+ * the same choice in the store, so every figure on the page follows.
  */
 export function pricesSwitch(store, data, idPrefix) {
   const name = `${idPrefix}-prices`;
-  const radios = data.INFLATION.scenarios.map((s) => h('input', { type: 'radio', name, value: s.id }));
+  const paths = [...data.INFLATION.scenarios.map((s) => [s.id, s.label]), [OWN_PATH, 'Your own figure']];
+  const radios = paths.map(([value]) => h('input', { type: 'radio', name, value }));
+  const rateOut = h('output', { for: `${idPrefix}-rate` });
+  const rate = h('input', { type: 'range', id: `${idPrefix}-rate`, class: 'prices-range', min: OWN_RATE.min, max: OWN_RATE.max, step: OWN_RATE.step });
+  const rateField = h('div', { class: 'field prices-own', hidden: true }, h('label', { for: `${idPrefix}-rate` }, 'Prices rise by ', rateOut, ' a year'), rate);
   const el = h('fieldset', { class: 'seg prices-seg' },
     h('legend', {}, 'Inflation'),
-    h('div', { class: 'seg-options' }, data.INFLATION.scenarios.map((s, i) => h('label', { class: 'pill' }, radios[i], h('span', {}, s.label)))));
+    h('div', { class: 'seg-options' }, paths.map(([, label], i) => h('label', { class: 'pill' }, radios[i], h('span', {}, label)))),
+    rateField);
   const sync = () => {
-    const chosen = scenarioOf(store.get(), data.INFLATION).id;
+    const sel = store.get();
+    const chosen = scenarioOf(sel, data.INFLATION).id;
     for (const r of radios) r.checked = r.value === chosen;
+    rateField.hidden = chosen !== OWN_PATH;
+    rateOut.textContent = `${sel.ownRate.toFixed(1)}%`;
+    rate.value = String(sel.ownRate);
   };
   el.addEventListener('change', (e) => { if (radios.includes(e.target)) store.set({ scenario: e.target.value }); });
+  // Dragging fires many times a second, and every chapter follows the store: one update a frame is enough.
+  const nextFrame = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (fn) => fn();
+  let waiting = false;
+  rate.addEventListener('input', () => {
+    rateOut.textContent = `${Number(rate.value).toFixed(1)}%`;
+    if (waiting) return;
+    waiting = true;
+    nextFrame(() => { waiting = false; store.set({ ownRate: Number(rate.value) }); });
+  });
   store.subscribe(sync);
   sync();
   return el;

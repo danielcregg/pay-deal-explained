@@ -204,3 +204,16 @@ export function priceIndexSeries({ from, to, rates = {}, flatRate = null }) {
 export function monthsPricesAhead(pay, price) {
   return pay.filter((p, i) => price[i].value > p.value).map((p) => p.month);
 }
+
+/**
+ * Pay against prices over the deal: both indices month by month (100 at the start), what pay
+ * buys at the end compared with the start (%), and the months that end with prices ahead.
+ * `inflation` gives the span and the default rates; `flatRate` is one rate for every year.
+ */
+export function payAgainstPrices(base, steps, inflation, { includeLB, flatRate = null, rates = inflation.rates }) {
+  const span = { from: inflation.from, to: inflation.to };
+  const pay = payIndexSeries(base, steps, { ...span, includeLB });
+  const price = priceIndexSeries({ ...span, rates, flatRate });
+  const real = (pay[pay.length - 1].value / price[price.length - 1].value - 1) * 100;
+  return { pay, price, real, ahead: monthsPricesAhead(pay, price) };
+}
