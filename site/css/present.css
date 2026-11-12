@@ -140,10 +140,9 @@ body.present .race-options { margin-top: 0.4rem; padding-top: 0.4rem; gap: 0.3re
 body.present .race .extras { gap: 0.25rem; }
 body.present .race .extras .switch { font-size: 0.85rem; }
 body.present .race-when-row { margin: 0.4rem 0 0.3rem; }
-/* The two tables under the chart are for reading at a desk, not for a slide. */
-body.present .race-months, body.present .race-others { display: none; }
-/* So are the fold-out for the less common cases and the pay in detail: the pickers, the figures and the chart are the slide. */
-body.present .race-extra, body.present .race-detail { display: none; }
+/* The pickers, the figures and the chart are the slide. The fold-out for the less common cases, the
+   pay in detail, and the tables and remember row under it are for reading at a desk. */
+body.present .race-extra, body.present .race-detail, body.present .race-reference { display: none; }
 /* The tile beside it says "increments not counted": one line here keeps the card on a short screen. */
 body.present .race-split-why { display: none; }
 @media (max-height: 1059px) {

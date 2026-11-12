@@ -110,7 +110,7 @@ test('the opening chart: four inflation buttons, and a slider for your own figur
 
 test('the opening chart: every month’s pay in euro beside the two indices, in a table under the chart', () => {
   const { root, store } = mount(hero, { ...lecturer, pointIndex: 10 });
-  const table = root.querySelector('.race-options details.race-months');
+  const table = root.querySelector('.race-reference details.race-months');
   assert.equal(table.querySelector('summary').textContent, 'Show the numbers month by month');
   const heads = () => table.querySelectorAll('thead th').map((th) => th.textContent);
   const row = (i) => table.querySelectorAll('tbody tr')[i].querySelectorAll('td').map((td) => td.textContent);
@@ -139,7 +139,7 @@ test('the opening chart: every month’s pay in euro beside the two indices, in 
 
 test('the opening chart: what other forecasters say is listed under it, with October’s rate', () => {
   const { root } = mount(hero);
-  const others = root.querySelector('.race-options details.race-others');
+  const others = root.querySelector('.race-reference details.race-others');
   assert.equal(others.querySelector('summary').textContent, 'What other forecasters say');
   const rows = others.querySelectorAll('tbody tr').map((tr) => tr.querySelectorAll('th, td').map((c) => c.textContent));
   assert.deepEqual(rows[0], ['Central Bank of Ireland, September 2026', '3.4%', '3.1%', '2.0%', 'not given']);
@@ -175,7 +175,7 @@ test('nothing on the page still points at the chapter that is gone', () => {
 });
 
 test('Present mode: the two tables under the chart are for reading, not for a slide', () => {
-  assert.match(readCss('present.css'), /body\.present \.race-months,\s*body\.present \.race-others\s*\{\s*display:\s*none;/);
+  assert.match(readCss('present.css'), /body\.present \.race-reference\s*\{\s*display:\s*none;/);
 });
 
 test('the slider moves the figures at once, even where animation frames never come (a tab in the background)', () => {
@@ -194,6 +194,6 @@ test('the slider moves the figures at once, even where animation frames never co
 
 test('a wide table under the chart scrolls inside the card: it cannot push the options past the card’s edge', () => {
   const css = readCss('demos.css');
-  assert.match(css, /\.race-options\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/,
+  assert.match(css, /\.race-reference\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/,
     'a grid column sized by its content grows to the table’s width: 348px in a 311px card on a phone');
 });

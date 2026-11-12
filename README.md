@@ -31,7 +31,7 @@ repository's Pages settings, not by a `CNAME` file.
   no cookies.
 - Your salary never leaves your browser. The page opens the same way for everyone, on an
   example salary. Your choices are kept for a later visit only if you tick "Remember my
-  choices on this device" in chapter 1: they are then held in local storage on your own
+  choices on this device" under the calculator: they are then held in local storage on your own
   device, and unticking the box or pressing "Clear my choices" removes them.
 - Not affiliated with any union, employer or Government body. Not financial advice.
 
@@ -82,7 +82,7 @@ Every fact lives in [`site/js/data.js`](site/js/data.js).
    - the footer's `data-bind="last-updated"` date (for example `11 November 2026`)
 
    `npm test` fails until the `<noscript>` sentence and both dates match.
-5. If the deal is accepted, the items in chapter 8 that come from the agreement's text are no
+5. If the deal is accepted, the items under "Beyond pay" that come from the agreement's text are no
    longer proposals: in `site/js/sections/beyond-pay.js`, change the `known` badge from
    "In the proposed text" to "In the agreement", and reword "the proposed agreement says"
    and "the proposed text" in `BEYOND_PAY`, `TIMELINE` and the sectors' notes in `data.js`.
@@ -109,7 +109,7 @@ Each job is an entry in `SCALES.sectors` and its grades are the entries of
 (`sourceId`), what they leave out (`caveat`), whether the 1% local bargaining of
 1 September 2025 is already in its scale (`lastDealLB`, explained to readers by
 `lastDealNote`), and which grade's first point is the "low point" used in the opening
-chart and chapter 7 (`lowGrade`).
+chart and in "This deal vs the last one" (`lowGrade`).
 
 - **Lecturers, teachers, nurses and midwives** use the scales in force from 1 June 2026.
 - **Nurses:** two official documents disagree on the Enhanced scale, so both versions are
@@ -143,10 +143,12 @@ the price figure and uses in its key ("are ahead" or "would be ahead").
 - `INFLATION.others` lists what other institutions forecast, for the table under the
   opening chart. Only add figures you have read at the source.
 
-There used to be a second pay-against-prices chart, as chapter 2. It was folded into the
-opening chart: the reader's own figure, the month-by-month table and the forecasters'
-table are all under that chart now, and `payAgainstPrices` in `site/js/pay.js` keeps the
-month-by-month sums that the tests check the chart against.
+There used to be a second pay-against-inflation chart, as its own chapter. It was folded
+into the opening chart: the reader's own figure, the month-by-month table and the
+forecasters' table are all under that chart now, and `payAgainstPrices` in
+`site/js/pay.js` keeps the month-by-month sums that the tests check the chart against.
+The page says "inflation" for the line, the tile and the key; the code still calls the
+series `price`.
 
 ### How the page opens
 
@@ -158,8 +160,11 @@ every rise is a percentage). That state is `DEFAULT_SELECTION` in
 - The opening chart has four pickers: job, grade, the point the reader is on now and,
   optionally, the month their increment falls in. Nothing changes until job, grade and
   point have all been chosen; after that each change applies at once.
-- Chapter 1 has the same choices in full, with part-time and hourly-paid contracts and a
-  box for typing a salary.
+- That card is the page's one calculator. Under the pickers a fold-out holds the less
+  common cases (part-time, hourly-paid, a salary typed in for a job that is not listed);
+  under the chart come its controls, then the pay in detail (first rise, back pay, every
+  way of counting). `site/js/sections/your-pay.js` supplies those parts and the sums
+  behind them (`model`); `hero.js` places them. There is no separate "Your pay" chapter.
 - Choices are kept between visits only for a reader who ticks "Remember my choices on
   this device" (`remember` in the selection). `rememberChoices` keeps the browser's storage in step: a
   tab that is not remembering leaves storage alone, and unticking the box in one tab
@@ -168,13 +173,13 @@ every rise is a percentage). That state is `DEFAULT_SELECTION` in
 
 ### Increments in the opening chart
 
-Every figure on the site shows what the deal adds to one scale point. Prices are always
-compared with those rises alone, because an increment is normal progression up a scale
-and not part of the deal.
+Every figure on the site shows what the deal adds to one scale point. Only those rises
+are compared with inflation, because an increment is normal progression up a scale and
+not part of the deal.
 
 A reader who picks an increment month in the opening chart also sees their own pay, as a
 second dashed line that climbs one point a year on top of the deal's rises. It has its
-own key and its own sentence, and it is never compared with prices.
+own key and its own sentence, and it is never compared with inflation.
 
 - The rules are in `positionIn` and `careerEvents` (`site/js/pay.js`) and `careerOf`
   (`site/js/selection.js`); `tests/increments.test.js` works examples through.
@@ -224,7 +229,7 @@ increment month chosen.
 | `site/js/pay.js` | The pay maths: pure functions, no data or DOM |
 | `site/js/selection.js` | The reader's job, grade, point, contract and switches; kept on their device only if they ask |
 | `site/js/switches.js` | The tick boxes and inflation buttons that several charts share |
-| `site/js/sections/` | One module per section, each with a testable `model()` and a `render()` |
+| `site/js/sections/` | One module per section, each with a testable `model()` and a `render()`. `hero.js` is the opening calculator; `your-pay.js` supplies its parts about the reader's own pay |
 | `site/js/present.js` | Present mode for projectors |
 | `tests/` | Node's built-in test runner; `tests/helpers/` has a CSS reader and a small stand-in DOM, so tests can run the real render code |
 | `docs/superpowers/` | The design and the implementation plan |

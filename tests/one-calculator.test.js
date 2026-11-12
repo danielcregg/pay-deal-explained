@@ -56,13 +56,15 @@ test('nothing on the page still sends readers to a second calculator, or to "sec
   assert.doesNotMatch(sources, /full calculator/);
 });
 
-test('the calculator: the four pickers, a fold-out for the less common cases, the figures, the chart, then the pay in detail', () => {
+test('the calculator: the four pickers, a fold-out for the less common cases, the figures, the chart and its controls, then the pay in detail', () => {
   const { root, text } = mount();
   const order = root.children.map((el) => el.className.split(' ').find((c) => c.startsWith('race-') || c === 'chart-wrap') ?? el.localName);
   const pos = (name) => { const i = order.indexOf(name); assert.ok(i >= 0, `${name} is in the card: ${order.join(', ')}`); return i; };
   assert.equal(order[0], 'h2');
   assert.ok(pos('race-picker') < pos('race-extra') && pos('race-extra') < pos('race-tiles'));
-  assert.ok(pos('race-tiles') < pos('chart-wrap') && pos('chart-wrap') < pos('race-detail') && pos('race-detail') < pos('race-options'));
+  assert.ok(pos('race-tiles') < pos('chart-wrap') && pos('chart-wrap') < pos('race-options'), 'the inflation buttons and tick boxes sit under the chart they change');
+  assert.ok(pos('race-options') < pos('race-detail') && pos('race-detail') < pos('race-reference'), 'then the pay in detail, then the tables for checking');
+  assert.equal(root.querySelector('.race-options details'), null, 'no tables among the controls');
 
   // one set of pickers: the form the chapter had is not repeated
   for (const id of ['#pp-sector', '#pp-grade', '#pp-point', '#pp-lb', '#pp-owed']) assert.equal(root.querySelector(id), null, id);
@@ -83,8 +85,13 @@ test('the calculator: the four pickers, a fold-out for the less common cases, th
   assert.match(text('.race-detail .pay-gain'), /^\+€6,103 a year \(\+10\.2%\) by March 2029, from the general rises\.$/);
   assert.match(text('.race-detail .pay-facts'), /First rise.*Back pay/);
   assert.match(text('.race-detail .pay-ways-title'), /counted two ways/);
+  // the long notes fold away, so the detail stays short on a phone
+  const about = detail.querySelector('details.pay-about');
+  assert.equal(about.querySelector('summary').textContent, 'About these figures');
+  assert.equal(about.hasAttribute('open'), false);
+  for (const part of ['.pay-ways-note', '.pay-explain', '.pay-caveat', '.pay-notes']) assert.ok(about.querySelector(part), `${part} is inside it`);
 
-  const privacy = root.querySelector('.race-options .privacy');
+  const privacy = root.querySelector('.race-reference .privacy');
   assert.equal(privacy.querySelector('#pp-remember').checked, false);
   assert.ok(root.querySelectorAll('button').some((b) => b.textContent === 'Clear my choices'));
 });
@@ -183,5 +190,5 @@ test('the notes on the page call it inflation too', () => {
 // ---------- Present mode ----------
 
 test('Present mode: the fold-out and the pay in detail are for reading, not for the slide', () => {
-  assert.match(readCss('present.css'), /body\.present \.race-extra,\s*body\.present \.race-detail\s*\{\s*display:\s*none;/);
+  assert.match(readCss('present.css'), /body\.present \.race-extra,\s*body\.present \.race-detail,\s*body\.present \.race-reference\s*\{\s*display:\s*none;/);
 });

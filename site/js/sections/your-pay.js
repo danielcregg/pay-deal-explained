@@ -204,7 +204,7 @@ export function payDetail(store, data) {
   const waysTitle = h('h4', { class: 'pay-ways-title' });
   const ways = h('div', { class: 'pay-ways' });
   const waysNote = h('p', { class: 'pay-ways-note' });
-  const alt = h('div', { class: 'pay-alt' }, waysTitle, ways, waysNote);
+  const alt = h('div', { class: 'pay-alt' }, waysTitle, ways);
   const caveat = h('p', { class: 'pay-caveat' });
   const notes = h('ul', { class: 'pay-notes' });
   const firstDd = h('dd');
@@ -215,7 +215,9 @@ export function payDetail(store, data) {
     h('div', {}, h('dt', {}, 'Back pay'), backDd),
     hoursDiv);
   const explain = h('p', { class: 'pay-explain' });
-  const el = h('div', { class: 'race-detail' }, h('h3', {}, 'Your pay in detail'), big, gain, facts, alt, explain, caveat, notes);
+  // The notes run long for some jobs: they fold away, so the figures stay together on a phone.
+  const about = h('details', { class: 'data pay-about' }, h('summary', {}, 'About these figures'), waysNote, explain, caveat, notes);
+  const el = h('div', { class: 'race-detail' }, h('h3', {}, 'Your pay in detail'), big, gain, facts, alt, about);
   let shown = null; // the end figure on screen, so a change counts from it
 
   const update = (sel) => {

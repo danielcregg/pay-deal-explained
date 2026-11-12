@@ -442,7 +442,10 @@ export function render(root, { store, data, now = thisMonth() }) {
       h('tbody', {},
         h('tr', {}, h('th', { scope: 'row' }, 'Central Bank of Ireland, September 2026'), years.map((y) => rateCell(inflation.rates, y))),
         inflation.others.map((o) => h('tr', {}, h('th', { scope: 'row' }, `${o.who}, ${o.what}`), years.map((y) => rateCell(o.rates, y))))))));
-  const options = h('div', { class: 'race-options' }, pricesSwitch(store, data, 'race'), extrasSwitches(store, data, 'race'), picks, monthsTable, others, rememberRow(store));
+  // The controls sit under the chart they change. The tables for checking the figures, and the
+  // row that asks before anything is remembered, come after the pay in detail.
+  const options = h('div', { class: 'race-options' }, pricesSwitch(store, data, 'race'), extrasSwitches(store, data, 'race'), picks);
+  const reference = h('div', { class: 'race-reference' }, monthsTable, others, rememberRow(store));
   const source = h('p', { class: 'note race-source' });
 
   root.append(
@@ -451,7 +454,7 @@ export function render(root, { store, data, now = thisMonth() }) {
     h('div', { class: 'race-when-row' }, when, h('span', { class: 'race-hint' }, 'Press play, or slide to any month')),
     tiles, split,
     h('div', { class: 'race-controls' }, playBtn, scrub), // beside the figures it changes
-    wrap, legend, payDetail(store, data), options, source);
+    wrap, legend, options, payDetail(store, data), reference, source);
 
   const m0 = data.DEAL.start.slice(0, 7);
   let who = 'mine';

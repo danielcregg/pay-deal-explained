@@ -51,8 +51,9 @@ input[type="number"] {
 /* ---------- the reader's own pay, inside the calculator at the top ---------- */
 
 /* The less common cases, folded away under the four pickers. */
-.race-extra { margin: 0 0 0.5rem; }
-.race-extra summary { min-height: 1.9rem; font-size: 0.9rem; }
+/* `details.` so these win over the general rules for a fold-out: this one is a single quiet line. */
+details.race-extra { margin: 0 0 0.35rem; }
+details.race-extra summary { min-height: 1.6rem; font-size: 0.9rem; }
 .race-extra .pay-form { display: grid; gap: 0.9rem; padding: 0.5rem 0 0.75rem; }
 .race-extra .field > label, .race-extra .seg > legend { font-size: 0.9rem; }
 .race-extra .field[hidden], .race-extra fieldset[hidden] { display: none; }
@@ -65,7 +66,9 @@ input[type="number"] {
 .race-detail .pay-alt { margin-top: 0.4rem; }
 .race-detail .pay-explain, .race-detail .pay-caveat, .race-detail .pay-notes { color: var(--muted); font-size: 0.9rem; }
 .race-detail .pay-notes[hidden] { display: none; }
-.race-options .privacy { padding-top: 0.6rem; border-top: 1px solid var(--line); }
+.race-detail details.pay-about { margin-top: 0; }
+.pay-about > p { margin: 0.4rem 0; }
+.race-reference .privacy { padding-top: 0.6rem; border-top: 1px solid var(--line); }
 .privacy { color: var(--muted); font-size: 0.9rem; margin: 0; display: grid; gap: 0.5rem; }
 .privacy p { margin: 0; }
 .privacy-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.25rem; }
@@ -165,7 +168,7 @@ input[type="number"] {
 .race-key-inc[hidden] { display: none; }
 .race-key-mark { color: var(--ink); }
 /* One column that cannot grow past the card: the month table then scrolls inside it on a phone. */
-.race-options { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.55rem; margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--line); }
+.race-options, .race-reference { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.55rem; margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--line); }
 .race-options .extras { margin: 0; }
 .prices-seg { gap: 0.3rem; }
 .prices-seg > legend { margin-bottom: 0.3rem; font-size: 0.9rem; }
@@ -175,7 +178,7 @@ input[type="number"] {
 .prices-own output { font-weight: 650; }
 .prices-range { width: 100%; min-height: 2.5rem; accent-color: var(--mark-price); }
 .race-months .note, .race-others .note { margin: 0.5rem 0; }
-.race-options details.data { margin-top: 0; }
+.race-reference details.data { margin-top: 0; }
 /* Five columns in a phone-width card: tighter cells, so "Ahead" is not left off the edge. */
 .race-months table, .race-others table { font-size: 0.85rem; }
 .race-months th, .race-months td, .race-others th, .race-others td { padding: 0.4rem 0.3rem; }
@@ -650,7 +653,7 @@ button.term[aria-expanded="true"] { color: var(--teal); }
 /* ---------- narrow screens: nothing forces the page wider than the phone ---------- */
 
 /* Grid columns may shrink below their content, so a wide table scrolls inside its own box. */
-.pay-grid > *, .pay-result > *, .pay-detail > * { min-width: 0; }
+.race-detail > * { min-width: 0; }
 @media (max-width: 480px) {
   .pay-ways-pct { display: block; }
   .pay-ways-table th, .pay-ways-table td { padding-left: 0.4rem; padding-right: 0.4rem; }
